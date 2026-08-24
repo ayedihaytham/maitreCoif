@@ -4,17 +4,25 @@ import { timeToMinutes } from '@/lib/slots'
 export type Periode = 'semaine' | 'mois' | 'annee'
 
 export function getPlage(periode: Periode) {
+  const now = new Date()
   const to = new Date()
   to.setUTCHours(23, 59, 59, 999)
   const from = new Date()
   from.setUTCHours(0, 0, 0, 0)
 
   if (periode === 'semaine') {
+    // "7 derniers jours" est par nature borné à aujourd'hui.
     from.setUTCDate(from.getUTCDate() - 6)
   } else if (periode === 'mois') {
+    // Le mois entier, y compris les rendez-vous à venir plus tard dans le
+    // mois — pas seulement jusqu'à aujourd'hui.
     from.setUTCDate(1)
+    to.setUTCFullYear(now.getUTCFullYear(), now.getUTCMonth() + 1, 0)
+    to.setUTCHours(23, 59, 59, 999)
   } else {
     from.setUTCMonth(0, 1)
+    to.setUTCFullYear(now.getUTCFullYear(), 11, 31)
+    to.setUTCHours(23, 59, 59, 999)
   }
 
   return { from, to }
