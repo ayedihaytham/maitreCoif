@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: maitre-coif-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: maitrecoif
+      POSTGRES_PASSWORD: maitrecoif
+      POSTGRES_DB: maitrecoif
+    ports:
+      - '5433:5432'
+    volumes:
+      - maitre-coif-db-data:/var/lib/postgresql/data
+
+volumes:
+  maitre-coif-db-data:

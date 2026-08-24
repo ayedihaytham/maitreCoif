@@ -1,0 +1,65 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-gold: var(--gold);
+  --color-anthracite: var(--anthracite);
+  --font-sans: var(--font-manrope);
+  --font-display: var(--font-cormorant);
+}
+
+:root {
+  color-scheme: dark;
+  --background: #0a0a0a;
+  --foreground: #f5f3ee;
+  --card: #1a1a1a;
+  --card-foreground: #f5f3ee;
+  --popover: #1a1a1a;
+  --popover-foreground: #f5f3ee;
+  --primary: #d4af37;
+  --primary-foreground: #0a0a0a;
+  --secondary: #1a1a1a;
+  --secondary-foreground: #f5f3ee;
+  --muted: #1a1a1a;
+  --muted-foreground: #a09d96;
+  --accent: #d4af37;
+  --accent-foreground: #0a0a0a;
+  --border: #3a3832;
+  --input: #3a3832;
+  --ring: #d4af37;
+  --gold: #d4af37;
+  --anthracite: #1a1a1a;
+  --radius: 0.15rem;
+}
+
+* { @apply border-border outline-ring/50; }
+html { scroll-behavior: smooth; background: #0a0a0a; overflow-x: hidden; }
+body { @apply bg-background text-foreground antialiased; overflow-x: hidden; }
+::selection { background: var(--gold); color: var(--background); }
+
+/* Barres de défilement masquées sur tout le site (accueil comme conteneurs
+   internes : dates de réservation, planning admin, tableaux...) tout en
+   conservant le défilement, pour un rendu épuré conforme à la charte. */
+* { scrollbar-width: none; -ms-overflow-style: none; }
+*::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.eyebrow { display: flex; align-items: center; gap: 1rem; color: var(--gold); font-size: 0.625rem; font-weight: 500; letter-spacing: 0.35em; text-transform: uppercase; }

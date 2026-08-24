@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CLIENT
+  COIFFEUR
+  ADMIN
+}
+
+enum StatutRendezVous {
+  EN_ATTENTE
+  CONFIRME
+  TERMINE
+  ANNULE
+}
+
+// Modélise l'héritage Utilisateur -> Coiffeur -> Administrateur du cahier des
+// charges via un rôle unique : un ADMIN possède nativement les capacités
+// COIFFEUR (planning, rendez-vous propres) + la gestion globale du salon.
+model User {
+  id             String   @id @default(uuid())
+  nom            String
+  prenom         String
+  email          String   @unique
+  telephone      String?
+  motDePasseHash String
+  role           Role     @default(CLIENT)
+  dateCreation   DateTime @default(now())
+
+  // Champs spécifiques Coiffeur/Administrateur (null pour un simple Client)
+  // photo : data URI (redimensionnée côté client avant envoi), cf. PhotoSalon.
+  photo        String?   @db.Text
+  specialites  String[]  @default([])
+  bio          String?
+  actif        Boolean   @default(true)
+
+  disponibilites      Disponibilite[]
+  rendezVousCoiffeur  RendezVous[]      @relation("RendezVousCoiffeur")
+  rendezVousClient    RendezVous[]      @relation("RendezVousClient")
+  resetTokens         PasswordResetToken[]
+
+  @@index([role])
+}
+
+model Service {
+  id          String   @id @default(uuid())
+  nom         String
+  description String?
+  prix        Decimal  @db.Decimal(10, 2)
+  duree       Int // minutes
+  categorie   String?
+  actif       Boolean  @default(true)
+
+  rendezVous RendezVous[]
+}
+
+model Disponibilite {
+  id          String @id @default(uuid())
+  coiffeurId  String
+  coiffeur    User   @relation(fields: [coiffeurId], references: [id], onDelete: Cascade)
+  jourSemaine Int // 0 = dimanche ... 6 = samedi
+  heureDebut  String // "10:00"
+  heureFin    String // "19:30"
+
+  @@index([coiffeurId, jourSemaine])
+}
+
+model RendezVous {
+  id           String           @id @default(uuid())
+  codeSuivi    String           @unique
+  coiffeurId   String
+  coiffeur     User             @relation("RendezVousCoiffeur", fields: [coiffeurId], references: [id])
+  serviceId    String
+  service      Service          @relation(fields: [serviceId], references: [id])
+  clientUserId String?
+  clientUser   User?            @relation("RendezVousClient", fields: [clientUserId], references: [id])
+
+  clientNom       String
+  clientTelephone String
+  clientEmail     String?
+
+  date        DateTime // date du rendez-vous (00:00 UTC, jour civil)
+  heureDebut  String // "10:00"
+  heureFin    String // "10:30"
+  statut      StatutRendezVous @default(EN_ATTENTE)
+  notes       String?
+  dateCreation DateTime        @default(now())
+
+  avis Avis?
+
+  @@index([coiffeurId, date])
+  @@index([clientUserId])
+}
+
+model Avis {
+  id           String     @id @default(uuid())
+  rendezVousId String     @unique
+  rendezVous   RendezVous @relation(fields: [rendezVousId], references: [id], onDelete: Cascade)
+  note         Int
+  commentaire  String?
+  dateCreation DateTime   @default(now())
+}
+
+// Galerie de photos du salon, gérée par l'administrateur et affichée aux
+// visiteurs sur le site public (accueil). L'image est stockée en base
+// (data URI, redimensionnée côté client avant envoi) pour rester compatible
+// avec un déploiement serverless (Vercel) sans stockage fichier externe.
+model PhotoSalon {
+  id           String   @id @default(uuid())
+  url          String   @db.Text
+  legende      String?
+  ordre        Int      @default(0)
+  dateCreation DateTime @default(now())
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  @@index([userId])
+}
