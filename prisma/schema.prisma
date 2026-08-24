@@ -3,8 +3,13 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // Connexion poolée (PgBouncer) utilisée par l'application à l'exécution.
+  url       = env("DATABASE_URL")
+  // Connexion directe utilisée par Prisma Migrate (les migrations DDL ne
+  // doivent pas passer par le pooler). Sur une base locale sans pooling
+  // (Docker), les deux variables pointent simplement vers la même URL.
+  directUrl = env("DIRECT_URL")
 }
 
 enum Role {
