@@ -23,6 +23,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# assistant session files
+.claude/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
