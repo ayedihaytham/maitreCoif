@@ -48,18 +48,42 @@ interface SmsDetails {
   message: string
 }
 
+// Les numéros tunisiens sont saisis sur 8 chiffres sans indicatif ; Twilio
+// exige le format E.164 (+216XXXXXXXX).
+function normaliserTelephoneTunisien(tel: string): string {
+  const digits = tel.replace(/[^\d+]/g, '')
+  if (digits.startsWith('+')) return digits
+  if (digits.startsWith('00')) return `+${digits.slice(2)}`
+  return `+216${digits.replace(/^0+/, '')}`
+}
+
 export async function envoyerSms(details: SmsDetails) {
   const sid = process.env.TWILIO_ACCOUNT_SID
   const token = process.env.TWILIO_AUTH_TOKEN
   const from = process.env.TWILIO_FROM_NUMBER
+  const to = normaliserTelephoneTunisien(details.to)
 
   if (!sid || !token || !from) {
-    console.log(`[sms:stub] à ${details.to} — ${details.message}`)
+    console.log(`[sms:stub] à ${to} — ${details.message}`)
     return { sent: false, stub: true }
   }
 
   const twilio = (await import('twilio')).default
   const client = twilio(sid, token)
-  await client.messages.create({ to: details.to, from, body: details.message })
+  await client.messages.create({ to, from, body: details.message })
   return { sent: true, stub: false }
+}
+
+interface ConfirmationSmsDetails {
+  to: string
+  coiffeurNom: string
+  serviceNom: string
+  date: string
+  heureDebut: string
+  codeSuivi: string
+}
+
+export async function envoyerConfirmationSms(details: ConfirmationSmsDetails) {
+  const message = `Maitre Coif : RDV confirme le ${details.date} a ${details.heureDebut} avec ${details.coiffeurNom} (${details.serviceNom}). Code de suivi : ${details.codeSuivi}. Suivi/annulation : maitrecoif.tn/suivi`
+  return envoyerSms({ to: details.to, message })
 }

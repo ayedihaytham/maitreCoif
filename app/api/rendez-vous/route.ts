@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { genererCodeSuiviUnique } from '@/lib/code-suivi'
-import { envoyerConfirmationEmail } from '@/lib/notifications'
+import { envoyerConfirmationEmail, envoyerConfirmationSms } from '@/lib/notifications'
 import { checkRateLimit, clientIpFrom } from '@/lib/rate-limit'
 import { creneauEstLibre, minutesToTime, timeToMinutes } from '@/lib/slots'
 import { guestBookingSchema } from '@/lib/validators'
@@ -61,16 +61,35 @@ export async function POST(request: Request) {
     },
   })
 
-  if (clientEmail) {
-    await envoyerConfirmationEmail({
-      to: clientEmail,
-      clientNom,
+  // Le rendez-vous est déjà enregistré à ce stade : un échec d'envoi
+  // (Twilio/Resend indisponible, numéro invalide...) ne doit jamais faire
+  // échouer la réservation elle-même côté client.
+  const notifications: Promise<unknown>[] = [
+    envoyerConfirmationSms({
+      to: clientTelephone,
       coiffeurNom: `${coiffeur.prenom} ${coiffeur.nom}`,
       serviceNom: service.nom,
       date,
       heureDebut,
       codeSuivi,
-    })
+    }),
+  ]
+  if (clientEmail) {
+    notifications.push(
+      envoyerConfirmationEmail({
+        to: clientEmail,
+        clientNom,
+        coiffeurNom: `${coiffeur.prenom} ${coiffeur.nom}`,
+        serviceNom: service.nom,
+        date,
+        heureDebut,
+        codeSuivi,
+      }),
+    )
+  }
+  const results = await Promise.allSettled(notifications)
+  for (const result of results) {
+    if (result.status === 'rejected') console.error('Échec de notification de confirmation :', result.reason)
   }
 
   return NextResponse.json({ id: rendezVous.id, codeSuivi }, { status: 201 })
