@@ -3,7 +3,8 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { genererCodeSuiviUnique } from '@/lib/code-suivi'
-import { envoyerConfirmationEmail, envoyerConfirmationSms } from '@/lib/notifications'
+import { envoyerConfirmationEmail } from '@/lib/notifications'
+import { envoyerConfirmationWhatsapp } from '@/lib/whatsapp'
 import { checkRateLimit, clientIpFrom } from '@/lib/rate-limit'
 import { creneauEstLibre, minutesToTime, timeToMinutes } from '@/lib/slots'
 import { guestBookingSchema } from '@/lib/validators'
@@ -65,7 +66,7 @@ export async function POST(request: Request) {
   // (Twilio/Resend indisponible, numéro invalide...) ne doit jamais faire
   // échouer la réservation elle-même côté client.
   const notifications: Promise<unknown>[] = [
-    envoyerConfirmationSms({
+    envoyerConfirmationWhatsapp({
       to: clientTelephone,
       coiffeurNom: `${coiffeur.prenom} ${coiffeur.nom}`,
       serviceNom: service.nom,
