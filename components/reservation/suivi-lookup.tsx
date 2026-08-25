@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2, Search, X } from 'lucide-react'
+import { Check, Loader2, PencilLine, Search, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { cn, formatPrix } from '@/lib/utils'
 
@@ -45,6 +46,10 @@ export function SuiviLookup() {
   const [error, setError] = useState<string | null>(null)
   const [results, setResults] = useState<RendezVousSuivi[] | null>(null)
   const [cancellingId, setCancellingId] = useState<string | null>(null)
+  const [modifyingId, setModifyingId] = useState<string | null>(null)
+  const [modifyMessage, setModifyMessage] = useState('')
+  const [submittingModifyId, setSubmittingModifyId] = useState<string | null>(null)
+  const [modifySentIds, setModifySentIds] = useState<string[]>([])
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault()
@@ -87,6 +92,35 @@ export function SuiviLookup() {
       setError('Impossible de contacter le serveur.')
     } finally {
       setCancellingId(null)
+    }
+  }
+
+  async function handleModificationRequest(rdv: RendezVousSuivi) {
+    if (modifyMessage.trim().length < 5) {
+      setError('Merci de préciser votre demande (5 caractères minimum).')
+      return
+    }
+    setSubmittingModifyId(rdv.id)
+    setError(null)
+    try {
+      const res = await fetch('/api/rendez-vous/modification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: rdv.id, codeSuivi: rdv.codeSuivi, message: modifyMessage }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error ?? "Impossible d'envoyer cette demande.")
+        return
+      }
+      setResults((prev) => prev?.map((r) => (r.id === rdv.id ? { ...r, statut: 'EN_ATTENTE' } : r)) ?? null)
+      setModifySentIds((prev) => [...prev, rdv.id])
+      setModifyingId(null)
+      setModifyMessage('')
+    } catch {
+      setError('Impossible de contacter le serveur.')
+    } finally {
+      setSubmittingModifyId(null)
     }
   }
 
@@ -170,20 +204,62 @@ export function SuiviLookup() {
                   <span className="text-foreground">Heure :</span> {rdv.heureDebut} — {rdv.heureFin}
                 </p>
               </div>
-              {rdv.notes && <p className="mt-3 text-xs italic text-muted-foreground">&quot;{rdv.notes}&quot;</p>}
+              {rdv.notes && <p className="mt-3 whitespace-pre-line text-xs italic text-muted-foreground">&quot;{rdv.notes}&quot;</p>}
 
               {(rdv.statut === 'EN_ATTENTE' || rdv.statut === 'CONFIRME') && (
                 <div className="mt-5 border-t border-border/60 pt-4">
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => handleCancel(rdv)}
-                    disabled={cancellingId === rdv.id}
-                  >
-                    {cancellingId === rdv.id ? <Loader2 className="size-3.5 animate-spin" /> : <X className="size-3.5" />}
-                    Annuler ce rendez-vous
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleCancel(rdv)}
+                      disabled={cancellingId === rdv.id}
+                    >
+                      {cancellingId === rdv.id ? <Loader2 className="size-3.5 animate-spin" /> : <X className="size-3.5" />}
+                      Annuler ce rendez-vous
+                    </Button>
+                    {!modifySentIds.includes(rdv.id) && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setModifyingId(modifyingId === rdv.id ? null : rdv.id)
+                          setModifyMessage('')
+                          setError(null)
+                        }}
+                      >
+                        <PencilLine className="size-3.5" /> Demander une modification
+                      </Button>
+                    )}
+                  </div>
+
+                  {modifySentIds.includes(rdv.id) && (
+                    <p className="mt-3 flex items-center gap-2 text-xs text-gold">
+                      <Check className="size-3.5" /> Votre demande a été transmise au salon.
+                    </p>
+                  )}
+
+                  {modifyingId === rdv.id && (
+                    <div className="mt-4 space-y-3">
+                      <Textarea
+                        placeholder="Ex. Pourriez-vous décaler mon rendez-vous à 15h ?"
+                        value={modifyMessage}
+                        onChange={(e) => setModifyMessage(e.target.value)}
+                        rows={3}
+                      />
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => handleModificationRequest(rdv)}
+                        disabled={submittingModifyId === rdv.id}
+                      >
+                        {submittingModifyId === rdv.id && <Loader2 className="size-3.5 animate-spin" />}
+                        Envoyer la demande
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </article>

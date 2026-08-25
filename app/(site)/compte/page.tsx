@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ProfileForm } from '@/components/compte/profile-form'
+import { EmailForm, PasswordForm } from '@/components/compte/security-forms'
 import { ReviewDialog } from '@/components/compte/review-dialog'
 
 export const metadata: Metadata = {
@@ -68,6 +69,16 @@ export default async function ComptePage() {
         <section className="mt-12">
           <h2 className="mb-4 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Mes informations</h2>
           <ProfileForm initial={{ nom: user.nom, prenom: user.prenom, telephone: user.telephone }} />
+        </section>
+
+        <section className="mt-12">
+          <h2 className="mb-4 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Adresse email</h2>
+          <EmailForm initialEmail={user.email} />
+        </section>
+
+        <section className="mt-12">
+          <h2 className="mb-4 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Mot de passe</h2>
+          <PasswordForm />
         </section>
 
         <section className="mt-12">

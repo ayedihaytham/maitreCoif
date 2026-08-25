@@ -180,7 +180,7 @@ export function PlanningBoard({ role, currentUserId, coiffeurs }: { role: Role; 
                           {rdv.clientNom} · {rdv.clientTelephone}
                         </p>
                         {rdv.notes && (
-                          <p className="mt-1 text-[11px] italic text-muted-foreground">&quot;{rdv.notes}&quot;</p>
+                          <p className="mt-1 whitespace-pre-line text-[11px] italic text-muted-foreground">&quot;{rdv.notes}&quot;</p>
                         )}
 
                         {(rdv.statut === 'EN_ATTENTE' || rdv.statut === 'CONFIRME') && (

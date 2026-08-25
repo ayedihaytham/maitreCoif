@@ -75,3 +75,19 @@ export const accountUpdateSchema = z.object({
 export const rendezVousStatutSchema = z.object({
   statut: z.enum(['EN_ATTENTE', 'CONFIRME', 'TERMINE', 'ANNULE']),
 })
+
+export const changeEmailSchema = z.object({
+  email: z.string().email('Adresse email invalide'),
+  password: z.string().min(1, 'Mot de passe requis pour confirmer'),
+})
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Mot de passe actuel requis'),
+  newPassword: z.string().min(8, 'Le nouveau mot de passe doit contenir au moins 8 caractères'),
+})
+
+export const demandeModificationSchema = z.object({
+  id: z.string().uuid(),
+  codeSuivi: z.string().min(4),
+  message: z.string().min(5, 'Merci de préciser votre demande').max(500),
+})
