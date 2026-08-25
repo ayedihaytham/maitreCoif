@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { signOut } from 'next-auth/react'
 import { LayoutDashboard, LogOut, Menu, User, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -98,7 +97,10 @@ function AccountLink({ user, onNavigate }: { user: { name?: string | null; role:
         variant="ghost"
         size="icon-sm"
         aria-label="Se déconnecter"
-        onClick={() => signOut({ callbackUrl: '/' })}
+        onClick={async () => {
+          const { signOut } = await import('next-auth/react')
+          signOut({ callbackUrl: '/' })
+        }}
       >
         <LogOut className="size-3.5" />
       </Button>

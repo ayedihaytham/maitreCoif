@@ -2,7 +2,6 @@ import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Cormorant_Garamond, Manrope } from 'next/font/google'
 import './globals.css'
-import { Toaster } from '@/components/ui/sonner'
 
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope' })
 const cormorant = Cormorant_Garamond({ subsets: ['latin'], variable: '--font-cormorant' })
@@ -26,7 +25,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="fr" className="bg-background">
       <body className={`${manrope.variable} ${cormorant.variable}`}>
         {children}
-        <Toaster />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

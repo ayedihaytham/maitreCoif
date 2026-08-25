@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { signOut } from 'next-auth/react'
 import { BarChart3, CalendarRange, Images, LogOut, Scissors, Users } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -53,7 +52,10 @@ export function AdminSidebar({ role, nom }: { role: Role; nom: string }) {
         </Link>
         <button
           type="button"
-          onClick={() => signOut({ callbackUrl: '/' })}
+          onClick={async () => {
+            const { signOut } = await import('next-auth/react')
+            signOut({ callbackUrl: '/' })
+          }}
           className="flex w-full items-center gap-2.5 px-3 py-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground"
         >
           <LogOut className="size-3.5" /> Déconnexion
