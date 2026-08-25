@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: 'Découvrez les prestations proposées par Maitre Coif : coupe, barbe, coloration, soins.',
 }
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 export default async function ServicesPage() {
   const services = await prisma.service.findMany({ where: { actif: true }, orderBy: [{ categorie: 'asc' }, { prix: 'asc' }] })

@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import { CalendarDays, MapPin } from 'lucide-react'
 
@@ -23,7 +24,7 @@ export function Footer() {
   return (
     <footer className="border-t border-gold/30 bg-background px-5 py-8 sm:px-8 lg:px-12">
       <div className="mx-auto mb-10 flex max-w-7xl justify-center sm:justify-start">
-        <img src="/logo-gold.png" alt="Maitre Coif" className="h-16 w-auto opacity-90" />
+        <Image src="/logo-gold.png" alt="Maitre Coif" width={376} height={310} className="h-16 w-auto opacity-90" />
       </div>
       <div className="mx-auto grid max-w-7xl gap-8 pb-8 sm:grid-cols-3">
         <div>

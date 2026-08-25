@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import Image from 'next/image'
 import { Check, ChevronLeft, ChevronRight, Loader2, PartyPopper } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -215,12 +216,8 @@ export function ReservationWizard({
                 coiffeurId === c.id ? 'border-gold bg-anthracite' : 'border-border/70 hover:border-gold/60',
               )}
             >
-              <div className="size-14 shrink-0 overflow-hidden rounded-full border border-gold/40">
-                <img
-                  src={c.photo || '/maitre-coif-team.png'}
-                  alt=""
-                  className="size-full object-cover"
-                />
+              <div className="relative size-14 shrink-0 overflow-hidden rounded-full border border-gold/40">
+                <Image src={c.photo || '/maitre-coif-team.png'} alt="" fill sizes="56px" className="object-cover" />
               </div>
               <div>
                 <p className="text-sm font-light tracking-[0.04em]">

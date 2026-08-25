@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, Scissors, Star } from 'lucide-react'
 
@@ -10,7 +11,11 @@ export const metadata: Metadata = {
   title: 'Accueil',
 }
 
-export const dynamic = 'force-dynamic'
+// Régénération périodique plutôt que rendu forcé à chaque requête : le
+// contenu (services, équipe, avis) ne change pas seconde par seconde, et
+// ça évite l'en-tête Cache-Control: no-store qui empêche le bfcache du
+// navigateur (retour arrière instantané).
+export const revalidate = 60
 
 async function getAccueilData() {
   const [services, coiffeurs, avis, photosSalon] = await Promise.all([
@@ -43,10 +48,13 @@ export default async function AccueilPage() {
   return (
     <main>
       <section className="relative overflow-hidden border-b border-border/60">
-        <img
+        <Image
           src="/maitre-coif-facade.jpg"
           alt="Enseigne du salon Maitre Coif"
-          className="absolute inset-0 size-full object-cover object-center opacity-70"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center opacity-70"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/85 to-background/50" />
         <div className="relative mx-auto max-w-7xl px-5 pb-20 pt-28 sm:px-8 sm:pb-28 sm:pt-36 lg:px-12">
@@ -115,17 +123,17 @@ export default async function AccueilPage() {
       <section className="px-5 py-16 sm:px-8 sm:py-24 lg:px-12">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-2 lg:items-center lg:gap-16">
           {galerie.length === 1 ? (
-            <div className="aspect-[4/3] overflow-hidden border border-border/70">
-              <img src={galerie[0].src} alt={galerie[0].alt} className="size-full object-cover" />
+            <div className="relative aspect-[4/3] overflow-hidden border border-border/70">
+              <Image src={galerie[0].src} alt={galerie[0].alt} fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
               {galerie.map((photo, i) => (
                 <div
                   key={i}
-                  className={cn('overflow-hidden border border-border/70', i === 0 && galerie.length === 3 && 'col-span-2 aspect-[16/9]', 'aspect-square')}
+                  className={cn('relative overflow-hidden border border-border/70', i === 0 && galerie.length === 3 && 'col-span-2 aspect-[16/9]', 'aspect-square')}
                 >
-                  <img src={photo.src} alt={photo.alt} className="size-full object-cover" />
+                  <Image src={photo.src} alt={photo.alt} fill sizes="(min-width: 1024px) 25vw, 50vw" className="object-cover" />
                 </div>
               ))}
             </div>
@@ -167,11 +175,13 @@ export default async function AccueilPage() {
                   href={`/reservation?coiffeurId=${c.id}`}
                   className="group border border-border/70 bg-anthracite p-5 transition-all hover:-translate-y-1 hover:border-gold/80"
                 >
-                  <div className="size-16 overflow-hidden rounded-full border border-gold/40">
-                    <img
+                  <div className="relative size-16 overflow-hidden rounded-full border border-gold/40">
+                    <Image
                       src={c.photo || '/maitre-coif-team.png'}
                       alt={`Portrait de ${c.prenom} ${c.nom}`}
-                      className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      fill
+                      sizes="64px"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   </div>
                   <h3 className="mt-4 text-sm font-light tracking-[0.06em]">

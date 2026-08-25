@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, Star } from 'lucide-react'
 
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
   description: "Découvrez l'équipe de coiffeurs et barbiers de Maitre Coif.",
 }
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 async function getEquipe() {
   const coiffeurs = await prisma.user.findMany({
@@ -82,10 +83,12 @@ export default async function EquipePage() {
                 >
                   <div className="flex items-start justify-between">
                     <div className="relative size-24 overflow-hidden rounded-full border border-gold/40 sm:size-28">
-                      <img
+                      <Image
                         src={member.photo}
                         alt={`Portrait de ${member.nom}`}
-                        className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        fill
+                        sizes="(min-width: 640px) 112px, 96px"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     </div>
                     {member.isFondateur && (
