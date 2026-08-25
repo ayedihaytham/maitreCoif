@@ -96,6 +96,17 @@ Par défaut, les emails de confirmation et de réinitialisation de mot de passe 
 dans les logs du serveur (`[email:stub] ...`). Pour activer l'envoi réel, renseignez `RESEND_API_KEY` et
 `RESEND_FROM` dans `.env`. Le SMS (Twilio) suit le même principe et reste optionnel.
 
+## Tests et audit d'accessibilité
+
+```bash
+pnpm test    # tests unitaires (Vitest) + un test d'intégration contre la base locale
+pnpm a11y    # audit WCAG 2.1 A/AA (axe-core) sur les pages publiques et le back-office
+```
+
+Le test d'intégration (`tests/booking-overlap.test.ts`) et l'audit d'accessibilité nécessitent que la base
+locale (`docker compose up -d`) et le serveur de dev (`pnpm dev`) tournent — l'audit prend l'URL du serveur
+en argument (`pnpm a11y http://localhost:3000`, `http://localhost:3001` par défaut).
+
 ## Déploiement (Vercel + Neon/Supabase)
 
 1. Créez une base PostgreSQL managée (Neon ou Supabase) et récupérez son `DATABASE_URL`.

@@ -50,7 +50,7 @@ interface SmsDetails {
 
 // Les numéros tunisiens sont saisis sur 8 chiffres sans indicatif ; Twilio
 // exige le format E.164 (+216XXXXXXXX).
-function normaliserTelephoneTunisien(tel: string): string {
+export function normaliserTelephoneTunisien(tel: string): string {
   const digits = tel.replace(/[^\d+]/g, '')
   if (digits.startsWith('+')) return digits
   if (digits.startsWith('00')) return `+${digits.slice(2)}`

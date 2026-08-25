@@ -10,7 +10,9 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "a11y": "node scripts/a11y-audit.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
@@ -35,16 +37,20 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^24",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
+    "dotenv": "^17.4.2",
+    "playwright": "^1.62.1",
     "postcss": "^8.5",
     "prisma": "^6.2.1",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.19.2",
-    "typescript": "5.7.3"
+    "typescript": "5.7.3",
+    "vitest": "^4.1.11"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

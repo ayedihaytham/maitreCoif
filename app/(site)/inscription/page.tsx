@@ -24,7 +24,7 @@ export default function InscriptionPage() {
         </div>
         <p className="mt-6 text-center text-[11px] text-muted-foreground">
           Déjà un compte ?{' '}
-          <Link href="/connexion" className="text-gold hover:text-foreground">
+          <Link href="/connexion" className="text-gold underline underline-offset-2 hover:text-foreground">
             Se connecter
           </Link>
         </p>

@@ -34,7 +34,7 @@ const STATUT_LABEL: Record<RendezVousSuivi['statut'], string> = {
 const STATUT_STYLE: Record<RendezVousSuivi['statut'], string> = {
   EN_ATTENTE: 'bg-secondary text-secondary-foreground',
   CONFIRME: 'bg-primary text-primary-foreground',
-  TERMINE: 'border border-border text-muted-foreground',
+  TERMINE: 'bg-transparent border border-border text-foreground',
   ANNULE: 'bg-destructive/10 text-destructive',
 }
 
