@@ -154,8 +154,8 @@ export function ReservationWizard({
         <PartyPopper className="mx-auto size-8 text-gold" aria-hidden="true" />
         <h2 className="mt-6 text-2xl font-light uppercase tracking-[0.1em]">Rendez-vous confirmé</h2>
         <p className="mt-4 text-sm leading-6 text-muted-foreground">
-          Votre demande a bien été enregistrée. Conservez votre code de suivi pour consulter ou annuler votre
-          rendez-vous à tout moment.
+          Votre rendez-vous est confirmé, aucune validation supplémentaire n&apos;est nécessaire. Conservez votre
+          code de suivi pour le consulter, l&apos;annuler ou demander une modification à tout moment.
         </p>
         <p className="mt-6 inline-block border border-gold px-6 py-3 font-display text-2xl tracking-[0.2em] text-gold">
           {confirmation.codeSuivi}

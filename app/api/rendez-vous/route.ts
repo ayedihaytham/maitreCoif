@@ -59,6 +59,9 @@ export async function POST(request: Request) {
       heureDebut,
       heureFin,
       notes: notes || null,
+      // Confirmation automatique : le créneau était libre à l'instant de la
+      // réservation, aucune validation manuelle du gérant n'est nécessaire.
+      statut: 'CONFIRME',
     },
   })
 

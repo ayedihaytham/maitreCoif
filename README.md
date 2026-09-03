@@ -120,8 +120,11 @@ en argument (`pnpm a11y http://localhost:3000`, `http://localhost:3001` par déf
 ## Guide rapide du back-office (pour le gérant et son équipe)
 
 - **Connexion** : `/connexion` avec l'email et le mot de passe du compte coiffeur/administrateur.
-- **Planning** (`/admin/planning`) : naviguez par jour, confirmez, terminez ou annulez un rendez-vous. Le
-  gérant peut basculer entre « Toute l'équipe » (une colonne par coiffeur) et « Mon planning ».
+- **Planning** (`/admin/planning`) : naviguez par jour, terminez ou annulez un rendez-vous. Les réservations
+  sont **confirmées automatiquement** dès qu'un créneau est réservé (pas de validation manuelle) ; le statut
+  "en attente" ne réapparaît que si un client demande une modification depuis la page de suivi, pour que la
+  demande soit relue avant d'être re-confirmée. Le gérant peut basculer entre « Toute l'équipe » (une colonne
+  par coiffeur) et « Mon planning ».
 - **Équipe** (`/admin/equipe`, gérant uniquement) : ajoutez un coiffeur, modifiez ses informations et ses
   disponibilités hebdomadaires, ou désactivez son compte (l'historique de ses rendez-vous est conservé).
 - **Services** (`/admin/services`, gérant uniquement) : créez, modifiez, activez ou désactivez une
