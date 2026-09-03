@@ -26,7 +26,7 @@ export async function POST(request: Request) {
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000)
     await prisma.passwordResetToken.create({ data: { userId: user.id, token, expiresAt } })
 
-    const origin = process.env.AUTH_URL ?? new URL(request.url).origin
+    const origin = process.env.AUTH_URL || new URL(request.url).origin
     const resetUrl = `${origin}/reinitialiser-mot-de-passe?token=${token}`
     await envoyerResetPasswordEmail(user.email, user.prenom, resetUrl)
   }
