@@ -6,7 +6,7 @@ import { genererCodeSuiviUnique } from '@/lib/code-suivi'
 import { envoyerConfirmationEmail } from '@/lib/notifications'
 import { envoyerConfirmationWhatsapp } from '@/lib/whatsapp'
 import { checkRateLimit, clientIpFrom } from '@/lib/rate-limit'
-import { creneauEstLibre, minutesToTime, timeToMinutes } from '@/lib/slots'
+import { creneauEstLibre, estDatePassee, minutesToTime, timeToMinutes } from '@/lib/slots'
 import { guestBookingSchema } from '@/lib/validators'
 
 export async function POST(request: Request) {
@@ -34,6 +34,10 @@ export async function POST(request: Request) {
 
   if (!coiffeur || !service) {
     return NextResponse.json({ error: 'Coiffeur ou service introuvable' }, { status: 404 })
+  }
+
+  if (estDatePassee(date)) {
+    return NextResponse.json({ error: 'Impossible de réserver une date déjà passée.' }, { status: 400 })
   }
 
   const heureFin = minutesToTime(timeToMinutes(heureDebut) + service.duree)

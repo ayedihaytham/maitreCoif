@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { minutesToTime, timeToMinutes } from './slots'
+import { estDatePassee, minutesToTime, timeToMinutes } from './slots'
 
 describe('timeToMinutes', () => {
   it('convertit une heure en minutes depuis minuit', () => {
@@ -23,5 +23,23 @@ describe('minutesToTime', () => {
     for (const time of ['09:00', '13:45', '19:30', '23:59']) {
       expect(minutesToTime(timeToMinutes(time))).toBe(time)
     }
+  })
+})
+
+describe('estDatePassee', () => {
+  it("détecte une date d'hier comme passée", () => {
+    const hier = new Date()
+    hier.setUTCDate(hier.getUTCDate() - 1)
+    expect(estDatePassee(hier.toISOString().slice(0, 10))).toBe(true)
+  })
+
+  it("ne détecte pas aujourd'hui comme passé", () => {
+    expect(estDatePassee(new Date().toISOString().slice(0, 10))).toBe(false)
+  })
+
+  it('ne détecte pas une date future comme passée', () => {
+    const demain = new Date()
+    demain.setUTCDate(demain.getUTCDate() + 1)
+    expect(estDatePassee(demain.toISOString().slice(0, 10))).toBe(false)
   })
 })

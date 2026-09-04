@@ -19,6 +19,16 @@ function rangesOverlap(aStart: number, aEnd: number, bStart: number, bEnd: numbe
   return aStart < bEnd && bStart < aEnd
 }
 
+function todayUTC(): Date {
+  const now = new Date()
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+}
+
+/** Une date (jour civil, sans l'heure) déjà entièrement passée. */
+export function estDatePassee(dateISO: string): boolean {
+  return new Date(`${dateISO}T00:00:00Z`) < todayUTC()
+}
+
 /**
  * Calcule les créneaux libres d'un coiffeur pour un service et une date
  * donnés : intersecte ses disponibilités récurrentes du jour avec la durée
@@ -27,6 +37,8 @@ function rangesOverlap(aStart: number, aEnd: number, bStart: number, bEnd: numbe
  * indisponible dès qu'il est réservé").
  */
 export async function getCreneauxDisponibles(coiffeurId: string, serviceId: string, dateISO: string) {
+  if (estDatePassee(dateISO)) return []
+
   const service = await prisma.service.findUnique({ where: { id: serviceId } })
   if (!service || !service.actif) return []
 
@@ -43,8 +55,8 @@ export async function getCreneauxDisponibles(coiffeurId: string, serviceId: stri
 
   const duree = service.duree
   const now = new Date()
-  const isToday = date.toDateString() === now.toDateString()
-  const nowMinutes = now.getHours() * 60 + now.getMinutes()
+  const isToday = date.getTime() === todayUTC().getTime()
+  const nowMinutes = now.getUTCHours() * 60 + now.getUTCMinutes()
 
   const creneaux: string[] = []
 
@@ -78,6 +90,8 @@ export async function creneauEstLibre(
   heureFin: string,
   excludeRendezVousId?: string,
 ) {
+  if (estDatePassee(dateISO)) return false
+
   const date = new Date(`${dateISO}T00:00:00Z`)
   const rendezVousExistants = await prisma.rendezVous.findMany({
     where: {
