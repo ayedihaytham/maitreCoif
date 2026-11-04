@@ -5,6 +5,7 @@ import { ArrowRight } from 'lucide-react'
 
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { salonUrl } from '@/lib/salon-host'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ProfileForm } from '@/components/compte/profile-form'
@@ -37,7 +38,7 @@ export default async function ComptePage() {
   // proxy ne partage pas de session avec Auth.js.
   if (!session?.user) redirect('/connexion?redirect=/compte')
   // Le personnel n'a pas d'espace client : son compte se gère dans Clerk.
-  if (session.user.role !== 'CLIENT') redirect('/admin/planning')
+  if (session.user.role !== 'CLIENT') redirect(salonUrl('/planning'))
 
   const [user, rendezVous] = await Promise.all([
     prisma.user.findUnique({ where: { id: session.user.id } }),

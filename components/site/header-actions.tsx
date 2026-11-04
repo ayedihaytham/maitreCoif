@@ -6,6 +6,7 @@ import { LayoutDashboard, LogOut, Menu, User, X } from 'lucide-react'
 
 import { StaffSignOutButton } from '@/components/auth/staff-sign-out'
 import { Button } from '@/components/ui/button'
+import { salonUrl } from '@/lib/salon-host'
 import type { Role } from '@prisma/client'
 
 const NAV_LINKS = [
@@ -86,7 +87,7 @@ function AccountLink({ user, onNavigate }: { user: { name?: string | null; role:
   return (
     <div className="flex items-center gap-4">
       <Link
-        href={isStaff ? '/admin/planning' : '/compte'}
+        href={isStaff ? salonUrl('/planning') : '/compte'}
         onClick={onNavigate}
         className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-gold"
       >

@@ -31,7 +31,7 @@ export default async function AdminStatistiquesPage({
   searchParams: Promise<{ periode?: string }>
 }) {
   const session = await auth()
-  if (session?.user.role !== 'ADMIN') redirect('/admin/planning')
+  if (session?.user.role !== 'ADMIN') redirect('/planning')
 
   const { periode: periodeParam } = await searchParams
   const periode: Periode = periodeParam === 'semaine' || periodeParam === 'annee' ? periodeParam : 'mois'
@@ -46,7 +46,7 @@ export default async function AdminStatistiquesPage({
           {PERIODES.map((p) => (
             <Link
               key={p.value}
-              href={`/admin/statistiques?periode=${p.value}`}
+              href={`/statistiques?periode=${p.value}`}
               className={cn(
                 'border px-3 py-1.5 text-[10px] uppercase tracking-[0.14em]',
                 periode === p.value ? 'border-gold bg-gold text-background' : 'border-border/70 text-muted-foreground',

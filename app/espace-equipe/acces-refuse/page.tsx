@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: 'Accès refusé',
 }
 
+// Rendu à la demande : le bouton dépend de la session Clerk, absente au build.
+export const dynamic = 'force-dynamic'
+
 export default function AccesRefusePage() {
   return (
     <main className="px-5 pb-24 pt-16 sm:px-8 lg:px-12">
@@ -19,7 +22,9 @@ export default function AccesRefusePage() {
           Demandez à l&apos;administrateur du salon de vérifier votre fiche dans « Équipe », ou connectez-vous avec une autre adresse.
         </p>
         <div className="mt-8">
-          <StaffSignOutButton redirectUrl="/espace-equipe" variant="outline" label="Changer de compte" />
+          {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && (
+            <StaffSignOutButton redirectUrl="/connexion" variant="outline" label="Changer de compte" />
+          )}
         </div>
       </div>
     </main>

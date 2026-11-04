@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function AdminEquipePage() {
   const session = await auth()
-  if (session?.user.role !== 'ADMIN') redirect('/admin/planning')
+  if (session?.user.role !== 'ADMIN') redirect('/planning')
 
   const equipe = await prisma.user.findMany({
     where: { role: { in: ['COIFFEUR', 'ADMIN'] } },

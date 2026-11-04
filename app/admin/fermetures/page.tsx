@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function AdminFermeturesPage() {
   const session = await auth()
-  if (session?.user.role !== 'ADMIN') redirect('/admin/planning')
+  if (session?.user.role !== 'ADMIN') redirect('/planning')
 
   const aujourdhui = new Date(`${maintenantSalon().dateISO}T00:00:00Z`)
   const [fermetures, coiffeurs] = await Promise.all([

@@ -2,9 +2,13 @@ import { SignIn } from '@clerk/nextjs'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
+import { siteUrl } from '@/lib/salon-host'
+
 export const metadata: Metadata = {
   title: 'Espace équipe',
 }
+
+export const dynamic = 'force-dynamic'
 
 export default function EspaceEquipePage() {
   return (
@@ -19,14 +23,14 @@ export default function EspaceEquipePage() {
         </p>
         <div className="mt-10">
           {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? (
-            <SignIn path="/espace-equipe" signUpUrl="/espace-equipe/inscription" fallbackRedirectUrl="/admin/planning" />
+            <SignIn path="/connexion" signUpUrl="/inscription" fallbackRedirectUrl="/planning" />
           ) : (
             <p className="text-sm text-muted-foreground">
               L&apos;authentification de l&apos;équipe n&apos;est pas configurée sur ce déploiement (clés Clerk manquantes).
             </p>
           )}
         </div>
-        <Link href="/connexion" className="mt-8 text-[11px] text-muted-foreground hover:text-foreground">
+        <Link href={siteUrl('/connexion')} className="mt-8 text-[11px] text-muted-foreground hover:text-foreground">
           Vous êtes client ? Accédez à votre compte
         </Link>
       </div>

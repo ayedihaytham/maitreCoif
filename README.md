@@ -168,16 +168,22 @@ pnpm db:studio    # interface graphique pour explorer la base de données
 pnpm db:seed      # réinitialise les données de démonstration
 ```
 
-## Authentification du personnel (Clerk)
+## Authentification du personnel (Clerk) et sous-domaine salon
 
-- **Deux systèmes, une règle** : les clients restent sur Auth.js (`/connexion`, `/compte`) ; le personnel utilise Clerk
-  (`/espace-equipe`). `auth()` de `lib/auth.ts` renvoie la session du personnel (Clerk) en priorité, sinon celle du
-  client : le reste du code n'a pas changé.
-- **Les rôles restent en base** : un compte Clerk n'a accès à `/admin` que si son **email vérifié** correspond à un
-  membre actif (`COIFFEUR` ou `ADMIN`) de la table `User` (`lib/staff.ts`). Un compte Clerk inconnu est renvoyé sur
-  `/espace-equipe/acces-refuse`.
-- **Ajouter un membre** : `/admin/equipe` crée la fiche et envoie une invitation Clerk par email ; la personne crée
-  son mot de passe via le lien. Aucun mot de passe n'est stocké pour le personnel (Auth.js le refuse).
-- **Sans clés Clerk** (preview, tests) : le site public et l'espace client fonctionnent, `/admin` est fermé.
-- Configuration du tableau de bord Clerk : voir `.env.example` pour les variables, et les étapes de mise en service
-  (instance de production, DNS, claim `email`, inscriptions restreintes).
+- **Espace sécurisé sur un sous-domaine** : le back-office et la connexion du personnel sont servis sur
+  `NEXT_PUBLIC_SALON_HOST` (ex. `salon.maitrecoif.com`) : `/planning`, `/equipe`, `/fermetures`, `/services`,
+  `/galerie`, `/statistiques`, `/connexion`, `/inscription`. C'est la même application ; `proxy.ts` réécrit ces
+  adresses vers les routes internes `/admin/*` et `/espace-equipe/*`, qui redirigent vers le sous-domaine quand on
+  les appelle depuis le site public. Sans `NEXT_PUBLIC_SALON_HOST`, le back-office n'est servi nulle part.
+- **Local** : `NEXT_PUBLIC_SALON_HOST=salon.localhost:3000`, puis ouvrir `http://salon.localhost:3000` (les navigateurs
+  résolvent `*.localhost` vers votre machine).
+- **Deux systèmes, une règle** : les clients restent sur Auth.js (`/connexion`, `/compte`, site public) ; le
+  personnel utilise Clerk. `auth()` de `lib/auth.ts` renvoie la session du personnel (Clerk) en priorité, sinon celle
+  du client : le reste du code n'a pas changé.
+- **Les rôles restent en base** : un compte Clerk n'a accès au back-office que si son **email vérifié** correspond à
+  un membre actif (`COIFFEUR` ou `ADMIN`) de la table `User` (`lib/staff.ts`). Un compte Clerk inconnu est renvoyé
+  sur `/acces-refuse`.
+- **Ajouter un membre** : la page Équipe crée la fiche et envoie automatiquement une invitation Clerk par email ;
+  la personne y crée son mot de passe, puis se connecte sur le sous-domaine. Aucun mot de passe n'est stocké pour
+  le personnel (Auth.js le refuse).
+- **Sans clés Clerk** (preview, tests) : le site public et l'espace client fonctionnent, le back-office est fermé.

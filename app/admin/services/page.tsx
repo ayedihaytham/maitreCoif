@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function AdminServicesPage() {
   const session = await auth()
-  if (session?.user.role !== 'ADMIN') redirect('/admin/planning')
+  if (session?.user.role !== 'ADMIN') redirect('/planning')
 
   const services = await prisma.service.findMany({ orderBy: { nom: 'asc' } })
   const servicesForClient = services.map((s) => ({ ...s, prix: Number(s.prix) }))

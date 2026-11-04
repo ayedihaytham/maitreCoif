@@ -3,8 +3,8 @@
 //
 // Le back-office est protégé par Clerk (pas de formulaire de mot de passe à
 // automatiser). Pour l'auditer, ouvrez une session avec Playwright puis
-// enregistrez-la :  npx playwright codegen --save-storage=.a11y-admin.json <url>/espace-equipe
-// et lancez :  A11Y_STORAGE_STATE=.a11y-admin.json node scripts/a11y-audit.mjs
+// enregistrez-la :  npx playwright codegen --save-storage=.a11y-admin.json <url-salon>/connexion
+// et lancez :  A11Y_STORAGE_STATE=.a11y-admin.json A11Y_SALON_URL=<url-salon> node scripts/a11y-audit.mjs
 // Sans cette variable, seules les pages publiques sont auditées.
 import { chromium } from 'playwright'
 import AxeBuilder from '@axe-core/playwright'
@@ -14,7 +14,8 @@ const BASE_URL = process.argv[2] || 'http://localhost:3001'
 const PUBLIC_PAGES = ['/', '/equipe', '/services', '/reservation', '/suivi', '/connexion', '/inscription', '/mot-de-passe-oublie']
 
 const ADMIN_STORAGE_STATE = process.env.A11Y_STORAGE_STATE
-const ADMIN_PAGES = ['/admin/planning', '/admin/equipe', '/admin/services', '/admin/galerie', '/admin/fermetures', '/admin/statistiques']
+const SALON_URL = process.env.A11Y_SALON_URL || 'http://salon.localhost:3001'
+const ADMIN_PAGES = ['/planning', '/equipe', '/services', '/galerie', '/fermetures', '/statistiques']
 
 async function auditPage(page, url) {
   await page.goto(url, { waitUntil: 'networkidle' })
@@ -54,9 +55,9 @@ async function main() {
     const adminContext = await browser.newContext({ storageState: ADMIN_STORAGE_STATE })
     const adminPage = await adminContext.newPage()
     console.log(`
-=== Back-office (${BASE_URL}) ===`)
+=== Back-office (${SALON_URL}) ===`)
     for (const path of ADMIN_PAGES) {
-      const violations = await auditPage(adminPage, `${BASE_URL}${path}`)
+      const violations = await auditPage(adminPage, `${SALON_URL}${path}`)
       printViolations(path, violations)
       totalViolations += violations.length
     }

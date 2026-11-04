@@ -3,6 +3,7 @@ import { frFR } from '@clerk/localizations'
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Cormorant_Garamond, Manrope } from 'next/font/google'
+import { salonUrl } from '@/lib/salon-host'
 import './globals.css'
 
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope' })
@@ -50,7 +51,14 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   // le site public et l'espace client continuent de fonctionner.
   if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) return page
   return (
-    <ClerkProvider localization={frFR} appearance={clerkAppearance}>
+    <ClerkProvider
+      localization={frFR}
+      appearance={clerkAppearance}
+      signInUrl={salonUrl('/connexion')}
+      signUpUrl={salonUrl('/inscription')}
+      signInFallbackRedirectUrl={salonUrl('/planning')}
+      signUpFallbackRedirectUrl={salonUrl('/planning')}
+    >
       {page}
     </ClerkProvider>
   )

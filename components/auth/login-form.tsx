@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { salonUrl } from '@/lib/salon-host'
 
 export function LoginForm() {
   const router = useRouter()
@@ -28,8 +29,8 @@ export function LoginForm() {
         setError('Email ou mot de passe incorrect.')
         return
       }
-      // Cette connexion ne concerne que les clients (le personnel utilise
-      // /espace-equipe, géré par Clerk).
+      // Cette connexion ne concerne que les clients (le personnel utilise le
+      // sous-domaine salon, géré par Clerk).
       const redirect = searchParams.get('redirect')
       router.push(redirect?.startsWith('/compte') ? redirect : '/compte')
       router.refresh()
@@ -75,7 +76,7 @@ export function LoginForm() {
       </div>
       <p className="border-t border-border/60 pt-4 text-[11px] text-muted-foreground">
         Membre de l&apos;équipe ?{' '}
-        <Link href="/espace-equipe" className="text-gold hover:text-foreground">
+        <Link href={salonUrl('/connexion')} className="text-gold hover:text-foreground">
           Accéder à l&apos;espace équipe
         </Link>
       </p>

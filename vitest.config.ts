@@ -12,5 +12,8 @@ export default defineConfig({
   },
   test: {
     environment: 'node',
+    // Les tests d'intégration partagent la même base PostgreSQL locale : en
+    // parallèle ils se perturbent (suppressions, verrous Serializable).
+    fileParallelism: false,
   },
 })

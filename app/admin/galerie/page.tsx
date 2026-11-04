@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function AdminGaleriePage() {
   const session = await auth()
-  if (session?.user.role !== 'ADMIN') redirect('/admin/planning')
+  if (session?.user.role !== 'ADMIN') redirect('/planning')
 
   const photos = await prisma.photoSalon.findMany({
     orderBy: [{ ordre: 'asc' }, { dateCreation: 'asc' }],

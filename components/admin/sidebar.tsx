@@ -5,16 +5,17 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { BarChart3, CalendarOff, CalendarRange, Images, LogOut, Scissors, Users } from 'lucide-react'
 
+import { siteUrl } from '@/lib/salon-host'
 import { cn } from '@/lib/utils'
 import type { Role } from '@prisma/client'
 
 const LINKS = [
-  { href: '/admin/planning', label: 'Planning', icon: CalendarRange, adminOnly: false },
-  { href: '/admin/equipe', label: 'Équipe', icon: Users, adminOnly: true },
-  { href: '/admin/fermetures', label: 'Fermetures', icon: CalendarOff, adminOnly: true },
-  { href: '/admin/services', label: 'Services', icon: Scissors, adminOnly: true },
-  { href: '/admin/galerie', label: 'Galerie', icon: Images, adminOnly: true },
-  { href: '/admin/statistiques', label: 'Statistiques', icon: BarChart3, adminOnly: true },
+  { href: '/planning', label: 'Planning', icon: CalendarRange, adminOnly: false },
+  { href: '/equipe', label: 'Équipe', icon: Users, adminOnly: true },
+  { href: '/fermetures', label: 'Fermetures', icon: CalendarOff, adminOnly: true },
+  { href: '/services', label: 'Services', icon: Scissors, adminOnly: true },
+  { href: '/galerie', label: 'Galerie', icon: Images, adminOnly: true },
+  { href: '/statistiques', label: 'Statistiques', icon: BarChart3, adminOnly: true },
 ]
 
 export function AdminSidebar({ role, nom }: { role: Role; nom: string }) {
@@ -48,14 +49,14 @@ export function AdminSidebar({ role, nom }: { role: Role; nom: string }) {
       </nav>
       <div className="border-t border-border/60 p-3">
         <Link
-          href="/"
+          href={siteUrl('/')}
           className="block px-3 py-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground"
         >
           Retour au site
         </Link>
         <button
           type="button"
-          onClick={() => signOut({ redirectUrl: '/' })}
+          onClick={() => signOut({ redirectUrl: siteUrl('/') })}
           className="flex w-full items-center gap-2.5 px-3 py-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground"
         >
           <LogOut className="size-3.5" /> Déconnexion

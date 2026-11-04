@@ -2,6 +2,7 @@ import { clerkClient } from '@clerk/nextjs/server'
 import type { Role } from '@prisma/client'
 
 import { prisma } from '@/lib/prisma'
+import { SALON_HOST, salonUrl } from '@/lib/salon-host'
 
 /**
  * Le personnel (coiffeurs + administrateurs) s'authentifie avec Clerk ; les
@@ -65,18 +66,17 @@ export type ResultatInvitation = 'envoyee' | 'deja_inscrit' | 'non_configure' | 
 
 /**
  * Invite un nouveau membre à créer son accès Clerk (email envoyé par Clerk,
- * lien vers /espace-equipe/inscription). N'échoue jamais : la fiche en base
+ * lien vers l'inscription du sous-domaine salon). N'échoue jamais : la fiche en base
  * est créée de toute façon et l'invitation peut se refaire depuis Clerk.
  */
 export async function inviterMembre(email: string): Promise<ResultatInvitation> {
-  if (!clerkConfigured()) return 'non_configure'
+  if (!clerkConfigured() || !SALON_HOST) return 'non_configure'
 
-  const site = (process.env.AUTH_URL || 'http://localhost:3000').replace(/\/$/, '')
   try {
     const client = await clerkClient()
     await client.invitations.createInvitation({
       emailAddress: email,
-      redirectUrl: `${site}/espace-equipe/inscription`,
+      redirectUrl: salonUrl('/inscription'),
       ignoreExisting: true,
     })
     return 'envoyee'

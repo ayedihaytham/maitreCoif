@@ -62,9 +62,9 @@ const emptyForm = {
 }
 
 const MESSAGES_INVITATION: Record<string, string> = {
-  envoyee: 'Membre ajouté. Une invitation a été envoyée par email : la personne y crée son accès (mot de passe) pour se connecter à /espace-equipe.',
-  deja_inscrit: 'Membre ajouté. Cette adresse a déjà un accès : elle peut se connecter à /espace-equipe.',
-  non_configure: "Membre ajouté. Clerk n'est pas configuré : l'accès au back-office est indisponible tant que les clés Clerk ne sont pas définies.",
+  envoyee: "Membre ajouté. Une invitation vient d'être envoyée par email : la personne y crée son mot de passe, puis se connecte à l'espace salon.",
+  deja_inscrit: "Membre ajouté. Cette adresse a déjà un accès : elle peut se connecter à l'espace salon.",
+  non_configure: "Membre ajouté, mais aucune invitation n'a été envoyée : Clerk ou le sous-domaine salon (NEXT_PUBLIC_SALON_HOST) n'est pas configuré.",
   echec: "Membre ajouté, mais l'invitation n'a pas pu être envoyée. Invitez cette adresse depuis le tableau de bord Clerk (Users > Invite).",
 }
 
