@@ -1,8 +1,9 @@
 'use client'
 
+import { useClerk } from '@clerk/nextjs'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BarChart3, CalendarRange, Images, LogOut, Scissors, Users } from 'lucide-react'
+import { BarChart3, CalendarOff, CalendarRange, Images, LogOut, Scissors, Users } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import type { Role } from '@prisma/client'
@@ -10,6 +11,7 @@ import type { Role } from '@prisma/client'
 const LINKS = [
   { href: '/admin/planning', label: 'Planning', icon: CalendarRange, adminOnly: false },
   { href: '/admin/equipe', label: 'Équipe', icon: Users, adminOnly: true },
+  { href: '/admin/fermetures', label: 'Fermetures', icon: CalendarOff, adminOnly: true },
   { href: '/admin/services', label: 'Services', icon: Scissors, adminOnly: true },
   { href: '/admin/galerie', label: 'Galerie', icon: Images, adminOnly: true },
   { href: '/admin/statistiques', label: 'Statistiques', icon: BarChart3, adminOnly: true },
@@ -17,6 +19,7 @@ const LINKS = [
 
 export function AdminSidebar({ role, nom }: { role: Role; nom: string }) {
   const pathname = usePathname()
+  const { signOut } = useClerk()
   const isAdmin = role === 'ADMIN'
 
   return (
@@ -52,10 +55,7 @@ export function AdminSidebar({ role, nom }: { role: Role; nom: string }) {
         </Link>
         <button
           type="button"
-          onClick={async () => {
-            const { signOut } = await import('next-auth/react')
-            signOut({ callbackUrl: '/' })
-          }}
+          onClick={() => signOut({ redirectUrl: '/' })}
           className="flex w-full items-center gap-2.5 px-3 py-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground"
         >
           <LogOut className="size-3.5" /> Déconnexion

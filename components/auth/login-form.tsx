@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { signIn, getSession } from 'next-auth/react'
+import { signIn } from 'next-auth/react'
 import { Loader2, LogIn } from 'lucide-react'
 import Link from 'next/link'
 
@@ -28,13 +28,10 @@ export function LoginForm() {
         setError('Email ou mot de passe incorrect.')
         return
       }
-      const session = await getSession()
+      // Cette connexion ne concerne que les clients (le personnel utilise
+      // /espace-equipe, géré par Clerk).
       const redirect = searchParams.get('redirect')
-      if (session?.user.role === 'COIFFEUR' || session?.user.role === 'ADMIN') {
-        router.push(redirect?.startsWith('/admin') ? redirect : '/admin/planning')
-      } else {
-        router.push(redirect?.startsWith('/compte') ? redirect : '/compte')
-      }
+      router.push(redirect?.startsWith('/compte') ? redirect : '/compte')
       router.refresh()
     } catch {
       setError('Impossible de contacter le serveur.')
@@ -76,6 +73,12 @@ export function LoginForm() {
           Créer un compte
         </Link>
       </div>
+      <p className="border-t border-border/60 pt-4 text-[11px] text-muted-foreground">
+        Membre de l&apos;équipe ?{' '}
+        <Link href="/espace-equipe" className="text-gold hover:text-foreground">
+          Accéder à l&apos;espace équipe
+        </Link>
+      </p>
     </form>
   )
 }

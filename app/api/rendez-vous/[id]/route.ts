@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { envoyerAnnulationEmail } from '@/lib/notifications'
 import { rendezVousStatutSchema } from '@/lib/validators'
 
 const TRANSITIONS: Record<string, string[]> = {
@@ -18,7 +19,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   const { id } = await params
-  const rendezVous = await prisma.rendezVous.findUnique({ where: { id } })
+  const rendezVous = await prisma.rendezVous.findUnique({
+    where: { id },
+    include: { coiffeur: { select: { prenom: true, nom: true } }, service: { select: { nom: true } } },
+  })
   if (!rendezVous) return NextResponse.json({ error: 'Rendez-vous introuvable' }, { status: 404 })
 
   if (session.user.role === 'COIFFEUR' && rendezVous.coiffeurId !== session.user.id) {
@@ -37,5 +41,19 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   const updated = await prisma.rendezVous.update({ where: { id }, data: { statut: parsed.data.statut } })
+
+  if (parsed.data.statut === 'ANNULE' && rendezVous.clientEmail) {
+    await envoyerAnnulationEmail({
+      to: rendezVous.clientEmail,
+      clientNom: rendezVous.clientNom,
+      coiffeurNom: `${rendezVous.coiffeur.prenom} ${rendezVous.coiffeur.nom}`,
+      serviceNom: rendezVous.service.nom,
+      date: rendezVous.date.toISOString().slice(0, 10),
+      heureDebut: rendezVous.heureDebut,
+      codeSuivi: rendezVous.codeSuivi,
+      parLeSalon: true,
+    }).catch((e) => console.error("Échec de l'email d'annulation :", e))
+  }
+
   return NextResponse.json(updated)
 }

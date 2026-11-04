@@ -9,7 +9,7 @@ import { forgotPasswordSchema } from '@/lib/validators-auth'
 
 export async function POST(request: Request) {
   const ip = clientIpFrom(request.headers)
-  if (!checkRateLimit(`forgot-password:${ip}`, 6, 15 * 60 * 1000)) {
+  if (!(await checkRateLimit(`forgot-password:${ip}`, 6, 15 * 60 * 1000))) {
     return NextResponse.json({ error: 'Trop de tentatives, veuillez réessayer plus tard.' }, { status: 429 })
   }
 

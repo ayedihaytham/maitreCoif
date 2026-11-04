@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/prisma'
 import { checkRateLimit, clientIpFrom } from '@/lib/rate-limit'
+import { alerterSalon } from '@/lib/alerte-salon'
+import { envoyerAnnulationEmail, formaterDateLongue } from '@/lib/notifications'
+import { heuresAvantRendezVous } from '@/lib/slots'
 
 function serialize(rdv: {
   id: string
@@ -11,6 +14,7 @@ function serialize(rdv: {
   heureDebut: string
   heureFin: string
   notes: string | null
+  demandesModification: { message: string }[]
   coiffeur: { prenom: string; nom: string }
   service: { nom: string; prix: unknown; duree: number }
 }) {
@@ -22,6 +26,7 @@ function serialize(rdv: {
     heureDebut: rdv.heureDebut,
     heureFin: rdv.heureFin,
     notes: rdv.notes,
+    demandeEnCours: rdv.demandesModification[0]?.message ?? null,
     coiffeur: `${rdv.coiffeur.prenom} ${rdv.coiffeur.nom}`,
     service: rdv.service.nom,
     prix: Number(rdv.service.prix),
@@ -31,24 +36,27 @@ function serialize(rdv: {
 
 export async function GET(request: Request) {
   const ip = clientIpFrom(request.headers)
-  if (!checkRateLimit(`suivi:${ip}`, 20, 10 * 60 * 1000)) {
+  if (!(await checkRateLimit(`suivi:${ip}`, 20, 10 * 60 * 1000))) {
     return NextResponse.json({ error: 'Trop de tentatives, veuillez réessayer plus tard.' }, { status: 429 })
   }
 
   const { searchParams } = new URL(request.url)
+  // Le code de suivi est le seul secret qui prouve que l'on est le client :
+  // aucune recherche par téléphone, sinon n'importe qui pourrait lister (et
+  // annuler) les rendez-vous d'un tiers à partir de son numéro.
   const codeSuivi = searchParams.get('codeSuivi')?.trim().toUpperCase()
-  const telephone = searchParams.get('telephone')?.trim()
 
-  if (!codeSuivi && !telephone) {
-    return NextResponse.json({ error: 'Code de suivi ou téléphone requis' }, { status: 400 })
+  if (!codeSuivi) {
+    return NextResponse.json({ error: 'Code de suivi requis' }, { status: 400 })
   }
 
   const rendezVous = await prisma.rendezVous.findMany({
-    where: codeSuivi ? { codeSuivi } : { clientTelephone: telephone },
+    where: { codeSuivi },
     orderBy: { date: 'desc' },
     include: {
       coiffeur: { select: { prenom: true, nom: true } },
       service: { select: { nom: true, prix: true, duree: true } },
+      demandesModification: { where: { traitee: false }, select: { message: true }, take: 1 },
     },
     take: 20,
   })
@@ -62,7 +70,7 @@ const CANCELLATION_DEADLINE_HOURS = Number(process.env.CANCELLATION_DEADLINE_HOU
 
 export async function POST(request: Request) {
   const ip = clientIpFrom(request.headers)
-  if (!checkRateLimit(`suivi-annulation:${ip}`, 10, 10 * 60 * 1000)) {
+  if (!(await checkRateLimit(`suivi-annulation:${ip}`, 10, 10 * 60 * 1000))) {
     return NextResponse.json({ error: 'Trop de tentatives, veuillez réessayer plus tard.' }, { status: 429 })
   }
 
@@ -75,6 +83,7 @@ export async function POST(request: Request) {
 
   const rendezVous = await prisma.rendezVous.findFirst({
     where: { id, codeSuivi: codeSuivi.trim().toUpperCase() },
+    include: { coiffeur: { select: { prenom: true, nom: true } }, service: { select: { nom: true } } },
   })
 
   if (!rendezVous) return NextResponse.json({ error: 'Rendez-vous introuvable' }, { status: 404 })
@@ -83,11 +92,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Ce rendez-vous ne peut plus être annulé.' }, { status: 400 })
   }
 
-  const rdvDateTime = new Date(rendezVous.date)
-  const [h, m] = rendezVous.heureDebut.split(':').map(Number)
-  rdvDateTime.setUTCHours(h, m, 0, 0)
-
-  const heuresRestantes = (rdvDateTime.getTime() - Date.now()) / (1000 * 60 * 60)
+  const heuresRestantes = heuresAvantRendezVous(rendezVous.date.toISOString().slice(0, 10), rendezVous.heureDebut)
   if (heuresRestantes < CANCELLATION_DEADLINE_HOURS) {
     return NextResponse.json(
       { error: `L'annulation n'est plus possible moins de ${CANCELLATION_DEADLINE_HOURS}h avant le rendez-vous.` },
@@ -96,5 +101,24 @@ export async function POST(request: Request) {
   }
 
   const updated = await prisma.rendezVous.update({ where: { id }, data: { statut: 'ANNULE' } })
+
+  await alerterSalon(
+    'Rendez-vous annulé par le client',
+    `${rendezVous.clientNom} (${rendezVous.clientTelephone}) a annulé son rendez-vous du ${formaterDateLongue(rendezVous.date.toISOString().slice(0, 10))} à ${rendezVous.heureDebut} avec ${rendezVous.coiffeur.prenom} ${rendezVous.coiffeur.nom} (${rendezVous.service.nom}). Le créneau est de nouveau libre.`,
+  )
+
+  if (rendezVous.clientEmail) {
+    await envoyerAnnulationEmail({
+      to: rendezVous.clientEmail,
+      clientNom: rendezVous.clientNom,
+      coiffeurNom: `${rendezVous.coiffeur.prenom} ${rendezVous.coiffeur.nom}`,
+      serviceNom: rendezVous.service.nom,
+      date: rendezVous.date.toISOString().slice(0, 10),
+      heureDebut: rendezVous.heureDebut,
+      codeSuivi: rendezVous.codeSuivi,
+      parLeSalon: false,
+    }).catch((e) => console.error("Échec de l'email d'annulation :", e))
+  }
+
   return NextResponse.json({ statut: updated.statut })
 }

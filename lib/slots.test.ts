@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { estDatePassee, minutesToTime, timeToMinutes } from './slots'
+import { estDatePassee, heuresAvantRendezVous, maintenantSalon, minutesToTime, timeToMinutes } from './slots'
 
 describe('timeToMinutes', () => {
   it('convertit une heure en minutes depuis minuit', () => {
@@ -26,20 +26,45 @@ describe('minutesToTime', () => {
   })
 })
 
-describe('estDatePassee', () => {
-  it("détecte une date d'hier comme passée", () => {
-    const hier = new Date()
-    hier.setUTCDate(hier.getUTCDate() - 1)
-    expect(estDatePassee(hier.toISOString().slice(0, 10))).toBe(true)
+describe('maintenantSalon (fuseau Africa/Tunis, UTC+1)', () => {
+  it('passe au jour suivant dès 23h UTC', () => {
+    // 23:30 UTC le 10 = 00:30 le 11 à Tunis
+    expect(maintenantSalon(new Date('2026-11-10T23:30:00Z'))).toEqual({ dateISO: '2026-11-11', minutes: 30 })
   })
 
-  it("ne détecte pas aujourd'hui comme passé", () => {
-    expect(estDatePassee(new Date().toISOString().slice(0, 10))).toBe(false)
+  it("décale l'heure d'une heure par rapport à UTC", () => {
+    expect(maintenantSalon(new Date('2026-11-10T09:15:00Z'))).toEqual({ dateISO: '2026-11-10', minutes: 10 * 60 + 15 })
+  })
+})
+
+describe('estDatePassee', () => {
+  const now = new Date('2026-11-10T23:30:00Z') // 11 novembre 00:30 à Tunis
+
+  it("considère le 10 novembre comme passé alors qu'il est déjà le 11 à Tunis", () => {
+    expect(estDatePassee('2026-11-10', now)).toBe(true)
+  })
+
+  it("ne considère pas le jour courant à Tunis comme passé", () => {
+    expect(estDatePassee('2026-11-11', now)).toBe(false)
   })
 
   it('ne détecte pas une date future comme passée', () => {
-    const demain = new Date()
-    demain.setUTCDate(demain.getUTCDate() + 1)
-    expect(estDatePassee(demain.toISOString().slice(0, 10))).toBe(false)
+    expect(estDatePassee('2026-11-12', now)).toBe(false)
+  })
+})
+
+describe('heuresAvantRendezVous', () => {
+  const now = new Date('2026-11-10T08:00:00Z') // 09:00 à Tunis
+
+  it('mesure en heure locale du salon, pas en UTC', () => {
+    expect(heuresAvantRendezVous('2026-11-10', '11:00', now)).toBe(2)
+  })
+
+  it('est négatif pour un rendez-vous passé', () => {
+    expect(heuresAvantRendezVous('2026-11-10', '08:00', now)).toBe(-1)
+  })
+
+  it('gère le passage au jour suivant', () => {
+    expect(heuresAvantRendezVous('2026-11-11', '09:00', now)).toBe(24)
   })
 })

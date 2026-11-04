@@ -9,9 +9,11 @@ import { changePasswordSchema } from '@/lib/validators'
 export async function POST(request: Request) {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Non authentifié' }, { status: 401 })
+  // Le mot de passe du personnel est géré par Clerk.
+  if (session.user.role !== 'CLIENT') return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
 
   const ip = clientIpFrom(request.headers)
-  if (!checkRateLimit(`account-password:${session.user.id}:${ip}`, 5, 15 * 60 * 1000)) {
+  if (!(await checkRateLimit(`account-password:${session.user.id}:${ip}`, 5, 15 * 60 * 1000))) {
     return NextResponse.json({ error: 'Trop de tentatives, veuillez réessayer plus tard.' }, { status: 429 })
   }
 

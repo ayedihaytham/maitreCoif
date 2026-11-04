@@ -139,9 +139,9 @@ async function main() {
   })
 
   console.log('Seed terminé.')
-  console.log('  Admin/gérant : gerant@maitrecoif.fr / Gerant123!')
-  console.log('  Coiffeur     : julien@maitrecoif.fr / Coiffeur123!')
   console.log('  Client       : client@example.com / Client123!')
+  console.log('  Équipe (gerant@, julien@, lucas@ maitrecoif.fr) : connexion via Clerk, sans mot de passe en base.')
+  console.log('  Pour tester le back-office, créez dans Clerk un utilisateur avec l’email du gérant.')
 }
 
 main()

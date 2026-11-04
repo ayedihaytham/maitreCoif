@@ -49,6 +49,7 @@ model User {
   rendezVousCoiffeur  RendezVous[]      @relation("RendezVousCoiffeur")
   rendezVousClient    RendezVous[]      @relation("RendezVousClient")
   resetTokens         PasswordResetToken[]
+  fermetures          Fermeture[]
 
   @@index([role])
 }
@@ -96,8 +97,11 @@ model RendezVous {
   statut      StatutRendezVous @default(EN_ATTENTE)
   notes       String?
   dateCreation DateTime        @default(now())
+  // Rappel J-1 déjà envoyé (cf. /api/cron/rappels)
+  rappelEnvoye Boolean         @default(false)
 
   avis Avis?
+  demandesModification DemandeModification[]
 
   @@index([coiffeurId, date])
   @@index([clientUserId])
@@ -133,4 +137,43 @@ model PasswordResetToken {
   usedAt    DateTime?
 
   @@index([userId])
+}
+
+// Compteur de tentatives partagé entre toutes les instances serverless
+// (rate limiting des routes publiques et de la connexion).
+model RateLimitHit {
+  id        String   @id @default(uuid())
+  key       String
+  createdAt DateTime @default(now())
+
+  @@index([key, createdAt])
+}
+
+// Congés, jours fériés et fermetures exceptionnelles. coiffeurId null =
+// fermeture de tout le salon ; sinon absence d'un seul coiffeur. Bornes
+// incluses (jour civil, 00:00 UTC comme RendezVous.date).
+model Fermeture {
+  id           String   @id @default(uuid())
+  coiffeurId   String?
+  coiffeur     User?    @relation(fields: [coiffeurId], references: [id], onDelete: Cascade)
+  dateDebut    DateTime
+  dateFin      DateTime
+  motif        String?
+  dateCreation DateTime @default(now())
+
+  @@index([dateDebut, dateFin])
+  @@index([coiffeurId])
+}
+
+// Demande de modification faite par un client depuis /suivi. Le rendez-vous
+// reste confirmé (et son créneau bloqué) jusqu'à ce que le salon le déplace.
+model DemandeModification {
+  id           String     @id @default(uuid())
+  rendezVousId String
+  rendezVous   RendezVous @relation(fields: [rendezVousId], references: [id], onDelete: Cascade)
+  message      String
+  traitee      Boolean    @default(false)
+  dateCreation DateTime   @default(now())
+
+  @@index([rendezVousId, traitee])
 }

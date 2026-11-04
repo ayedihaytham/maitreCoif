@@ -1,17 +1,17 @@
 import { NextResponse } from 'next/server'
 
 import { auth } from '@/lib/auth'
+import { creerRendezVousConfirme, notifierConfirmation } from '@/lib/booking'
 import { prisma } from '@/lib/prisma'
 import { genererCodeSuiviUnique } from '@/lib/code-suivi'
-import { envoyerConfirmationEmail } from '@/lib/notifications'
-import { envoyerConfirmationWhatsapp } from '@/lib/whatsapp'
 import { checkRateLimit, clientIpFrom } from '@/lib/rate-limit'
-import { creneauEstLibre, estDatePassee, minutesToTime, timeToMinutes } from '@/lib/slots'
+import { creneauEstProposable, estDatePassee } from '@/lib/slots'
+import { verifierTurnstile } from '@/lib/turnstile'
 import { guestBookingSchema } from '@/lib/validators'
 
 export async function POST(request: Request) {
   const ip = clientIpFrom(request.headers)
-  if (!checkRateLimit(`reservation:${ip}`, 8, 10 * 60 * 1000)) {
+  if (!(await checkRateLimit(`reservation:${ip}`, 8, 10 * 60 * 1000))) {
     return NextResponse.json({ error: 'Trop de tentatives, veuillez réessayer plus tard.' }, { status: 429 })
   }
 
@@ -23,6 +23,9 @@ export async function POST(request: Request) {
   if (parsed.data.website) {
     // Honeypot rempli : soumission automatisée, on répond succès factice sans rien créer.
     return NextResponse.json({ codeSuivi: 'MC-0000000' }, { status: 201 })
+  }
+  if (!(await verifierTurnstile(parsed.data.turnstileToken, ip))) {
+    return NextResponse.json({ error: 'Vérification anti-robot échouée, merci de réessayer.' }, { status: 400 })
   }
 
   const { coiffeurId, serviceId, date, heureDebut, clientNom, clientTelephone, clientEmail, notes } = parsed.data
@@ -40,67 +43,35 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Impossible de réserver une date déjà passée.' }, { status: 400 })
   }
 
-  const heureFin = minutesToTime(timeToMinutes(heureDebut) + service.duree)
-
-  const libre = await creneauEstLibre(coiffeurId, date, heureDebut, heureFin)
-  if (!libre) {
-    return NextResponse.json({ error: 'Ce créneau vient d\'être réservé, merci d\'en choisir un autre.' }, { status: 409 })
+  // Le créneau doit faire partie de ceux réellement proposés (horaires du
+  // coiffeur, fermetures, créneau pas déjà passé) : l'API ne doit pas
+  // accepter un horaire que l'interface n'aurait jamais affiché.
+  if (!(await creneauEstProposable(coiffeurId, serviceId, date, heureDebut))) {
+    return NextResponse.json({ error: "Ce créneau n'est pas disponible, merci d'en choisir un autre." }, { status: 409 })
   }
 
   const session = await auth()
-  const codeSuivi = await genererCodeSuiviUnique()
-
-  const rendezVous = await prisma.rendezVous.create({
-    data: {
-      codeSuivi,
-      coiffeurId,
-      serviceId,
-      clientUserId: session?.user.role === 'CLIENT' ? session.user.id : null,
-      clientNom,
-      clientTelephone,
-      clientEmail: clientEmail || null,
-      date: new Date(`${date}T00:00:00Z`),
-      heureDebut,
-      heureFin,
-      notes: notes || null,
-      // Confirmation automatique : le créneau était libre à l'instant de la
-      // réservation, aucune validation manuelle du gérant n'est nécessaire.
-      statut: 'CONFIRME',
-    },
+  const rendezVous = await creerRendezVousConfirme({
+    codeSuivi: await genererCodeSuiviUnique(),
+    coiffeurId,
+    serviceId,
+    dureeService: service.duree,
+    clientUserId: session?.user.role === 'CLIENT' ? session.user.id : null,
+    clientNom,
+    clientTelephone,
+    clientEmail: clientEmail || null,
+    date,
+    heureDebut,
+    notes: notes || null,
   })
 
-  // Le rendez-vous est déjà enregistré à ce stade : un échec d'envoi
-  // (Twilio/Resend indisponible, numéro invalide...) ne doit jamais faire
-  // échouer la réservation elle-même côté client.
-  const notifications: Promise<unknown>[] = [
-    envoyerConfirmationWhatsapp({
-      to: clientTelephone,
-      coiffeurNom: `${coiffeur.prenom} ${coiffeur.nom}`,
-      serviceNom: service.nom,
-      date,
-      heureDebut,
-      codeSuivi,
-    }),
-  ]
-  if (clientEmail) {
-    notifications.push(
-      envoyerConfirmationEmail({
-        to: clientEmail,
-        clientNom,
-        coiffeurNom: `${coiffeur.prenom} ${coiffeur.nom}`,
-        serviceNom: service.nom,
-        date,
-        heureDebut,
-        codeSuivi,
-      }),
-    )
-  }
-  const results = await Promise.allSettled(notifications)
-  for (const result of results) {
-    if (result.status === 'rejected') console.error('Échec de notification de confirmation :', result.reason)
+  if (!rendezVous) {
+    return NextResponse.json({ error: "Ce créneau vient d'être réservé, merci d'en choisir un autre." }, { status: 409 })
   }
 
-  return NextResponse.json({ id: rendezVous.id, codeSuivi }, { status: 201 })
+  await notifierConfirmation(rendezVous, { coiffeurNom: `${coiffeur.prenom} ${coiffeur.nom}`, serviceNom: service.nom })
+
+  return NextResponse.json({ id: rendezVous.id, codeSuivi: rendezVous.codeSuivi }, { status: 201 })
 }
 
 export async function GET(request: Request) {
@@ -135,6 +106,7 @@ export async function GET(request: Request) {
     include: {
       coiffeur: { select: { id: true, nom: true, prenom: true } },
       service: { select: { id: true, nom: true, duree: true, prix: true } },
+      demandesModification: { where: { traitee: false }, select: { id: true, message: true } },
     },
   })
 

@@ -1,8 +1,10 @@
 import bcrypt from 'bcryptjs'
+import { randomBytes } from 'node:crypto'
 import { NextResponse } from 'next/server'
 
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { inviterMembre } from '@/lib/staff'
 import { coiffeurSchema } from '@/lib/validators'
 
 async function requireAdmin() {
@@ -39,12 +41,13 @@ export async function POST(request: Request) {
   const body = await request.json()
   const parsed = coiffeurSchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
-  if (!parsed.data.password) return NextResponse.json({ error: 'Mot de passe requis' }, { status: 400 })
 
   const existing = await prisma.user.findUnique({ where: { email: parsed.data.email } })
   if (existing) return NextResponse.json({ error: 'Un compte existe déjà avec cet email.' }, { status: 409 })
 
-  const motDePasseHash = await bcrypt.hash(parsed.data.password, 12)
+  // Le personnel se connecte via Clerk : on stocke un hash aléatoire inutilisable
+  // (la colonne est obligatoire et Auth.js refuse de toute façon le personnel).
+  const motDePasseHash = await bcrypt.hash(randomBytes(32).toString('hex'), 12)
   const coiffeur = await prisma.user.create({
     data: {
       nom: parsed.data.nom,
@@ -59,5 +62,7 @@ export async function POST(request: Request) {
     },
   })
 
-  return NextResponse.json(coiffeur, { status: 201 })
+  const invitation = await inviterMembre(coiffeur.email)
+  const { motDePasseHash: _hash, ...membre } = coiffeur
+  return NextResponse.json({ ...membre, invitation }, { status: 201 })
 }

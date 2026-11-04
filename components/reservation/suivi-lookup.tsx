@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { cn, formatPrix } from '@/lib/utils'
+import { formatPrix } from '@/lib/utils'
 
 interface RendezVousSuivi {
   id: string
@@ -18,6 +18,7 @@ interface RendezVousSuivi {
   heureDebut: string
   heureFin: string
   notes: string | null
+  demandeEnCours: string | null
   coiffeur: string
   service: string
   prix: number
@@ -39,9 +40,7 @@ const STATUT_STYLE: Record<RendezVousSuivi['statut'], string> = {
 }
 
 export function SuiviLookup() {
-  const [mode, setMode] = useState<'code' | 'telephone'>('code')
   const [codeSuivi, setCodeSuivi] = useState('')
-  const [telephone, setTelephone] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [results, setResults] = useState<RendezVousSuivi[] | null>(null)
@@ -49,7 +48,6 @@ export function SuiviLookup() {
   const [modifyingId, setModifyingId] = useState<string | null>(null)
   const [modifyMessage, setModifyMessage] = useState('')
   const [submittingModifyId, setSubmittingModifyId] = useState<string | null>(null)
-  const [modifySentIds, setModifySentIds] = useState<string[]>([])
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault()
@@ -57,7 +55,7 @@ export function SuiviLookup() {
     setResults(null)
     setLoading(true)
     try {
-      const params = new URLSearchParams(mode === 'code' ? { codeSuivi } : { telephone })
+      const params = new URLSearchParams({ codeSuivi })
       const res = await fetch(`/api/rendez-vous/suivi?${params}`)
       const data = await res.json()
       if (!res.ok) {
@@ -113,8 +111,7 @@ export function SuiviLookup() {
         setError(data.error ?? "Impossible d'envoyer cette demande.")
         return
       }
-      setResults((prev) => prev?.map((r) => (r.id === rdv.id ? { ...r, statut: 'EN_ATTENTE' } : r)) ?? null)
-      setModifySentIds((prev) => [...prev, rdv.id])
+      setResults((prev) => prev?.map((r) => (r.id === rdv.id ? { ...r, demandeEnCours: modifyMessage.trim() } : r)) ?? null)
       setModifyingId(null)
       setModifyMessage('')
     } catch {
@@ -127,52 +124,17 @@ export function SuiviLookup() {
   return (
     <div>
       <form onSubmit={handleSearch} className="border border-border/70 bg-anthracite p-6">
-        <div className="mb-5 flex gap-2">
-          <button
-            type="button"
-            onClick={() => setMode('code')}
-            className={cn(
-              'flex-1 border px-3 py-2 text-[10px] uppercase tracking-[0.14em] transition-colors',
-              mode === 'code' ? 'border-gold bg-gold text-background' : 'border-border/70 text-muted-foreground',
-            )}
-          >
-            Code de suivi
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('telephone')}
-            className={cn(
-              'flex-1 border px-3 py-2 text-[10px] uppercase tracking-[0.14em] transition-colors',
-              mode === 'telephone' ? 'border-gold bg-gold text-background' : 'border-border/70 text-muted-foreground',
-            )}
-          >
-            Numéro de téléphone
-          </button>
+        <div>
+          <Label htmlFor="codeSuivi">Code de suivi</Label>
+          <Input
+            id="codeSuivi"
+            placeholder="MC-XXXXXXX"
+            value={codeSuivi}
+            onChange={(e) => setCodeSuivi(e.target.value)}
+            className="mt-1.5"
+            required
+          />
         </div>
-
-        {mode === 'code' ? (
-          <div>
-            <Label htmlFor="codeSuivi">Code de suivi</Label>
-            <Input
-              id="codeSuivi"
-              placeholder="MC-XXXXXXX"
-              value={codeSuivi}
-              onChange={(e) => setCodeSuivi(e.target.value)}
-              className="mt-1.5"
-            />
-          </div>
-        ) : (
-          <div>
-            <Label htmlFor="telephone">Numéro de téléphone</Label>
-            <Input
-              id="telephone"
-              type="tel"
-              value={telephone}
-              onChange={(e) => setTelephone(e.target.value)}
-              className="mt-1.5"
-            />
-          </div>
-        )}
 
         <Button type="submit" className="mt-5 w-full" disabled={loading}>
           {loading ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
@@ -219,7 +181,7 @@ export function SuiviLookup() {
                       {cancellingId === rdv.id ? <Loader2 className="size-3.5 animate-spin" /> : <X className="size-3.5" />}
                       Annuler ce rendez-vous
                     </Button>
-                    {!modifySentIds.includes(rdv.id) && (
+                    {!rdv.demandeEnCours && (
                       <Button
                         type="button"
                         variant="outline"
@@ -235,9 +197,13 @@ export function SuiviLookup() {
                     )}
                   </div>
 
-                  {modifySentIds.includes(rdv.id) && (
-                    <p className="mt-3 flex items-center gap-2 text-xs text-gold">
-                      <Check className="size-3.5" /> Votre demande a été transmise au salon.
+                  {rdv.demandeEnCours && (
+                    <p className="mt-3 flex items-start gap-2 text-xs text-gold">
+                      <Check className="mt-0.5 size-3.5 shrink-0" />
+                      <span>
+                        Votre demande de modification est transmise au salon, qui reviendra vers vous. En attendant,
+                        votre rendez-vous reste confirmé à l&apos;horaire initial : &quot;{rdv.demandeEnCours}&quot;
+                      </span>
                     </p>
                   )}
 

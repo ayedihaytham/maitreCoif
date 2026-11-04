@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { ArrowRight } from 'lucide-react'
 
 import { auth } from '@/lib/auth'
@@ -32,7 +33,11 @@ const STATUT_STYLE: Record<string, string> = {
 
 export default async function ComptePage() {
   const session = await auth()
-  if (!session?.user) return null
+  // /compte est l'espace client (Auth.js) ; la protection est faite ici car le
+  // proxy ne partage pas de session avec Auth.js.
+  if (!session?.user) redirect('/connexion?redirect=/compte')
+  // Le personnel n'a pas d'espace client : son compte se gère dans Clerk.
+  if (session.user.role !== 'CLIENT') redirect('/admin/planning')
 
   const [user, rendezVous] = await Promise.all([
     prisma.user.findUnique({ where: { id: session.user.id } }),

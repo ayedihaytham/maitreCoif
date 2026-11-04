@@ -1,4 +1,42 @@
+import type { Prisma } from '@prisma/client'
+
 import { prisma } from '@/lib/prisma'
+
+// Fuseau du salon : les dates/heures des rendez-vous sont des heures murales
+// locales (ex. "10:00" = 10h à Tunis), pas de l'UTC.
+const SALON_TIMEZONE = process.env.SALON_TIMEZONE || 'Africa/Tunis'
+
+type DbClient = Prisma.TransactionClient | typeof prisma
+
+/** Date et heure actuelles dans le fuseau du salon. */
+export function maintenantSalon(now: Date = new Date()) {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-CA', {
+      timeZone: SALON_TIMEZONE,
+      hourCycle: 'h23',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+      .formatToParts(now)
+      .map((p) => [p.type, p.value]),
+  )
+  const dateISO = `${parts.year}-${parts.month}-${parts.day}`
+  const minutes = Number(parts.hour) * 60 + Number(parts.minute)
+  return { dateISO, minutes }
+}
+
+/**
+ * Nombre d'heures entre maintenant et un rendez-vous (date civile + heure
+ * murale du salon). Négatif si le rendez-vous est passé.
+ */
+export function heuresAvantRendezVous(dateISO: string, heureDebut: string, now: Date = new Date()): number {
+  const { dateISO: aujourdhui, minutes } = maintenantSalon(now)
+  const jours = (Date.parse(`${dateISO}T00:00:00Z`) - Date.parse(`${aujourdhui}T00:00:00Z`)) / 86_400_000
+  return (jours * 1440 + timeToMinutes(heureDebut) - minutes) / 60
+}
 
 const SLOT_STEP_MINUTES = 30
 
@@ -19,14 +57,22 @@ function rangesOverlap(aStart: number, aEnd: number, bStart: number, bEnd: numbe
   return aStart < bEnd && bStart < aEnd
 }
 
-function todayUTC(): Date {
-  const now = new Date()
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+/** Une date (jour civil, sans l'heure) déjà entièrement passée, dans le fuseau du salon. */
+export function estDatePassee(dateISO: string, now: Date = new Date()): boolean {
+  return dateISO < maintenantSalon(now).dateISO
 }
 
-/** Une date (jour civil, sans l'heure) déjà entièrement passée. */
-export function estDatePassee(dateISO: string): boolean {
-  return new Date(`${dateISO}T00:00:00Z`) < todayUTC()
+/** Le salon entier, ou ce coiffeur, est-il fermé (congé, jour férié...) ce jour-là ? */
+export async function estFerme(coiffeurId: string, dateISO: string, db: DbClient = prisma): Promise<boolean> {
+  const date = new Date(`${dateISO}T00:00:00Z`)
+  const count = await db.fermeture.count({
+    where: {
+      dateDebut: { lte: date },
+      dateFin: { gte: date },
+      OR: [{ coiffeurId: null }, { coiffeurId }],
+    },
+  })
+  return count > 0
 }
 
 /**
@@ -41,6 +87,7 @@ export async function getCreneauxDisponibles(coiffeurId: string, serviceId: stri
 
   const service = await prisma.service.findUnique({ where: { id: serviceId } })
   if (!service || !service.actif) return []
+  if (await estFerme(coiffeurId, dateISO)) return []
 
   const date = new Date(`${dateISO}T00:00:00Z`)
   const jourSemaine = date.getUTCDay()
@@ -54,9 +101,8 @@ export async function getCreneauxDisponibles(coiffeurId: string, serviceId: stri
   ])
 
   const duree = service.duree
-  const now = new Date()
-  const isToday = date.getTime() === todayUTC().getTime()
-  const nowMinutes = now.getUTCHours() * 60 + now.getUTCMinutes()
+  const { dateISO: aujourdhui, minutes: nowMinutes } = maintenantSalon()
+  const isToday = dateISO === aujourdhui
 
   const creneaux: string[] = []
 
@@ -89,11 +135,13 @@ export async function creneauEstLibre(
   heureDebut: string,
   heureFin: string,
   excludeRendezVousId?: string,
+  db: DbClient = prisma,
 ) {
   if (estDatePassee(dateISO)) return false
+  if (await estFerme(coiffeurId, dateISO, db)) return false
 
   const date = new Date(`${dateISO}T00:00:00Z`)
-  const rendezVousExistants = await prisma.rendezVous.findMany({
+  const rendezVousExistants = await db.rendezVous.findMany({
     where: {
       coiffeurId,
       date,
@@ -109,4 +157,12 @@ export async function creneauEstLibre(
   return !rendezVousExistants.some((rdv) =>
     rangesOverlap(start, end, timeToMinutes(rdv.heureDebut), timeToMinutes(rdv.heureFin)),
   )
+}
+
+/**
+ * Le créneau demandé fait-il partie de ceux proposés au public ? Empêche de
+ * réserver hors des horaires du coiffeur en appelant l'API directement.
+ */
+export async function creneauEstProposable(coiffeurId: string, serviceId: string, dateISO: string, heureDebut: string) {
+  return (await getCreneauxDisponibles(coiffeurId, serviceId, dateISO)).includes(heureDebut)
 }

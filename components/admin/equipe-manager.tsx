@@ -58,8 +58,14 @@ const emptyForm = {
   bio: '',
   specialites: '',
   role: 'COIFFEUR' as Role,
-  password: '',
   photo: '',
+}
+
+const MESSAGES_INVITATION: Record<string, string> = {
+  envoyee: 'Membre ajouté. Une invitation a été envoyée par email : la personne y crée son accès (mot de passe) pour se connecter à /espace-equipe.',
+  deja_inscrit: 'Membre ajouté. Cette adresse a déjà un accès : elle peut se connecter à /espace-equipe.',
+  non_configure: "Membre ajouté. Clerk n'est pas configuré : l'accès au back-office est indisponible tant que les clés Clerk ne sont pas définies.",
+  echec: "Membre ajouté, mais l'invitation n'a pas pu être envoyée. Invitez cette adresse depuis le tableau de bord Clerk (Users > Invite).",
 }
 
 export function EquipeManager({ initial }: { initial: Coiffeur[] }) {
@@ -73,11 +79,13 @@ export function EquipeManager({ initial }: { initial: Coiffeur[] }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [photoUploading, setPhotoUploading] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   function openCreate() {
     setEditing(null)
     setForm(emptyForm)
+    setNotice(null)
     setDispos(Object.fromEntries(JOURS.map((j) => [j.value, { active: false, heureDebut: '10:00', heureFin: '19:30' }])))
     setError(null)
     setOpen(true)
@@ -93,7 +101,6 @@ export function EquipeManager({ initial }: { initial: Coiffeur[] }) {
       bio: c.bio ?? '',
       specialites: c.specialites.join(', '),
       role: c.role,
-      password: '',
       photo: c.photo ?? '',
     })
     setError(null)
@@ -146,7 +153,6 @@ export function EquipeManager({ initial }: { initial: Coiffeur[] }) {
           .filter(Boolean),
         role: form.role,
         photo: form.photo,
-        ...(form.password ? { password: form.password } : {}),
       }
 
       const res = await fetch(editing ? `/api/admin/equipe/${editing.id}` : '/api/admin/equipe', {
@@ -171,6 +177,8 @@ export function EquipeManager({ initial }: { initial: Coiffeur[] }) {
         }),
       })
 
+      if (!editing) setNotice(MESSAGES_INVITATION[data.invitation as string] ?? null)
+
       const refreshed = await fetch('/api/admin/equipe').then((r) => r.json())
       setEquipe(refreshed)
       setOpen(false)
@@ -194,6 +202,12 @@ export function EquipeManager({ initial }: { initial: Coiffeur[] }) {
           <Plus className="size-4" /> Ajouter un coiffeur
         </Button>
       </div>
+
+      {notice && (
+        <p role="status" className="mb-4 border border-gold/40 bg-anthracite p-3 text-xs leading-5 text-muted-foreground">
+          {notice}
+        </p>
+      )}
 
       <div className="space-y-3">
         {equipe.map((c) => (
@@ -322,18 +336,11 @@ export function EquipeManager({ initial }: { initial: Coiffeur[] }) {
                 </SelectContent>
               </Select>
             </div>
-            <div>
-              <Label htmlFor="password">{editing ? 'Nouveau mot de passe (laisser vide pour ne pas changer)' : 'Mot de passe'}</Label>
-              <Input
-                id="password"
-                type="password"
-                required={!editing}
-                minLength={8}
-                value={form.password}
-                onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                className="mt-1.5"
-              />
-            </div>
+            <p className="text-[11px] leading-5 text-muted-foreground">
+              {editing
+                ? "L'adresse email sert d'identifiant de connexion (Clerk) : la modifier ici sans la changer aussi dans Clerk coupe l'accès de la personne."
+                : "Aucun mot de passe à définir : la personne reçoit une invitation par email pour créer son accès."}
+            </p>
 
             <div>
               <Label>Disponibilités hebdomadaires</Label>

@@ -48,14 +48,12 @@ pnpm db:migrate   # applique le schéma Prisma
 pnpm db:seed      # crée un gérant, deux coiffeurs, des services et des rendez-vous d'exemple
 ```
 
-Comptes créés par le seed :
+Compte créé par le seed (espace client, Auth.js) : `client@example.com` / `Client123!`.
 
-| Rôle | Email | Mot de passe |
-|---|---|---|
-| Administrateur (gérant) | `gerant@maitrecoif.fr` | `Gerant123!` |
-| Coiffeur | `julien@maitrecoif.fr` | `Coiffeur123!` |
-| Coiffeur | `lucas@maitrecoif.fr` | `Coiffeur123!` |
-| Client (compte) | `client@example.com` | `Client123!` |
+Le **personnel** (gérant et coiffeurs) se connecte avec [Clerk](https://clerk.com), pas avec un mot de passe stocké
+en base : le seed crée leurs fiches (`gerant@maitrecoif.fr`, `julien@maitrecoif.fr`, `lucas@maitrecoif.fr`), mais il
+faut un utilisateur Clerk ayant **le même email vérifié** pour entrer dans `/admin` (cf. « Authentification du
+personnel » plus bas).
 
 ### 5. Lancer le serveur de développement
 
@@ -81,7 +79,7 @@ proxy.ts           Middleware de contrôle d'accès (RBAC) — convention Next.j
 
 ## Modèle d'accès (RBAC)
 
-- **Visiteur / Client invité** : accueil, services, équipe, réservation, suivi — sans compte.
+- **Visiteur / Client invité** : accueil, services, équipe, réservation, suivi (par code de suivi uniquement) — sans compte.
 - **Client** : + historique de ses rendez-vous, avis, modification du profil (`/compte`).
 - **Coiffeur** : + son propre planning et ses rendez-vous (`/admin/planning`).
 - **Administrateur** (le gérant, qui est aussi un coiffeur) : + gestion de l'équipe, des services et des
@@ -92,9 +90,28 @@ Le contrôle d'accès est appliqué à la fois côté `proxy.ts` (redirection) e
 
 ## Notifications
 
-Par défaut, les emails de confirmation et de réinitialisation de mot de passe sont simplement affichés
-dans les logs du serveur (`[email:stub] ...`). Pour activer l'envoi réel, renseignez `RESEND_API_KEY` et
-`RESEND_FROM` dans `.env`. Le SMS (Twilio) suit le même principe et reste optionnel.
+Aucun service payant n'est requis.
+
+- **Clients** : email de confirmation, de rappel J-1, de déplacement et d'annulation, via
+  [Resend](https://resend.com) (offre gratuite). Sans `RESEND_API_KEY`, les emails sont seulement affichés dans les
+  logs du serveur (`[email:stub]`). Pour écrire à n'importe quel client il faut un domaine vérifié chez Resend
+  (enregistrements DNS SPF/DKIM) et `RESEND_FROM` sur ce domaine. Un client qui n'a pas renseigné d'email ne reçoit
+  rien : son code de suivi s'affiche à l'écran après la réservation.
+- **Équipe du salon** : alertes gratuites lors d'une demande de modification ou d'une annulation client, par
+  Telegram (`TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`) et/ou par email (`SALON_NOTIFY_EMAIL`).
+- **WhatsApp et SMS (Twilio)** : le code existe mais reste désactivé tant que les clés sont vides (WhatsApp Business
+  est payant). Il n'est pas nécessaire au fonctionnement.
+
+## Anti-bot (Cloudflare Turnstile)
+
+Optionnel : renseignez `NEXT_PUBLIC_TURNSTILE_SITE_KEY` et `TURNSTILE_SECRET_KEY` pour afficher le widget sur le
+formulaire de réservation et vérifier le jeton côté serveur. Sans ces clés, seuls le honeypot et le rate limiting
+(partagé en base) restent actifs.
+
+## Rappels automatiques
+
+`vercel.json` déclenche chaque jour `/api/cron/rappels` (rappel J-1 par email, et par WhatsApp si activé). Définissez
+`CRON_SECRET` dans Vercel (le modèle WhatsApp `rappel_rdv` n'est utile que si vous activez WhatsApp).
 
 ## Tests et audit d'accessibilité
 
@@ -115,16 +132,24 @@ en argument (`pnpm a11y http://localhost:3000`, `http://localhost:3001` par déf
    (`DATABASE_URL`, `AUTH_SECRET`, `AUTH_URL` = URL de production, et éventuellement les clés Resend/Twilio).
 4. Exécutez les migrations sur la base de production : `DATABASE_URL=... pnpm prisma migrate deploy`.
 5. (Optionnel) Lancez `pnpm db:seed` une première fois pour créer le compte administrateur initial, puis
-   changez son mot de passe depuis `/connexion` → back-office → gestion de l'équipe.
+   mettez l'email réel du gérant sur sa fiche (SQL ou Prisma Studio) pour qu'il corresponde à son compte Clerk.
 
 ## Guide rapide du back-office (pour le gérant et son équipe)
 
-- **Connexion** : `/connexion` avec l'email et le mot de passe du compte coiffeur/administrateur.
+- **Connexion** : `/espace-equipe` (Clerk) avec l'adresse email de la fiche équipe. Les clients utilisent `/connexion`.
 - **Planning** (`/admin/planning`) : naviguez par jour, terminez ou annulez un rendez-vous. Les réservations
   sont **confirmées automatiquement** dès qu'un créneau est réservé (pas de validation manuelle) ; le statut
   "en attente" ne réapparaît que si un client demande une modification depuis la page de suivi, pour que la
   demande soit relue avant d'être re-confirmée. Le gérant peut basculer entre « Toute l'équipe » (une colonne
   par coiffeur) et « Mon planning ».
+- **Nouveau rendez-vous / Déplacer** : depuis le planning, le salon peut saisir une réservation pour un client
+  (appel, passage au salon) ou déplacer un rendez-vous existant vers un autre créneau ou coiffeur, y compris hors
+  des horaires habituels (case « hors créneaux proposés »). Le client est prévenu par email s'il en a donné un. Une demande de modification faite par le client
+  depuis `/suivi` apparaît sur la carte du rendez-vous (le créneau reste bloqué) et est marquée traitée dès que le
+  rendez-vous est déplacé.
+- **Fermetures** (`/admin/fermetures`, gérant uniquement) : jours fériés, fermetures exceptionnelles de tout le
+  salon, congés ou absences d'un coiffeur. Les créneaux de la période disparaissent de la réservation en ligne ;
+  les rendez-vous déjà pris ne sont pas annulés automatiquement (un avertissement indique combien sont concernés).
 - **Équipe** (`/admin/equipe`, gérant uniquement) : ajoutez un coiffeur, modifiez ses informations et ses
   disponibilités hebdomadaires, ou désactivez son compte (l'historique de ses rendez-vous est conservé).
 - **Services** (`/admin/services`, gérant uniquement) : créez, modifiez, activez ou désactivez une
@@ -142,3 +167,17 @@ pnpm db:migrate   # applique une nouvelle migration Prisma
 pnpm db:studio    # interface graphique pour explorer la base de données
 pnpm db:seed      # réinitialise les données de démonstration
 ```
+
+## Authentification du personnel (Clerk)
+
+- **Deux systèmes, une règle** : les clients restent sur Auth.js (`/connexion`, `/compte`) ; le personnel utilise Clerk
+  (`/espace-equipe`). `auth()` de `lib/auth.ts` renvoie la session du personnel (Clerk) en priorité, sinon celle du
+  client : le reste du code n'a pas changé.
+- **Les rôles restent en base** : un compte Clerk n'a accès à `/admin` que si son **email vérifié** correspond à un
+  membre actif (`COIFFEUR` ou `ADMIN`) de la table `User` (`lib/staff.ts`). Un compte Clerk inconnu est renvoyé sur
+  `/espace-equipe/acces-refuse`.
+- **Ajouter un membre** : `/admin/equipe` crée la fiche et envoie une invitation Clerk par email ; la personne crée
+  son mot de passe via le lien. Aucun mot de passe n'est stocké pour le personnel (Auth.js le refuse).
+- **Sans clés Clerk** (preview, tests) : le site public et l'espace client fonctionnent, `/admin` est fermé.
+- Configuration du tableau de bord Clerk : voir `.env.example` pour les variables, et les étapes de mise en service
+  (instance de production, DNS, claim `email`, inscriptions restreintes).

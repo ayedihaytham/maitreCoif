@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { LayoutDashboard, LogOut, Menu, User, X } from 'lucide-react'
 
+import { StaffSignOutButton } from '@/components/auth/staff-sign-out'
 import { Button } from '@/components/ui/button'
 import type { Role } from '@prisma/client'
 
@@ -92,18 +93,22 @@ function AccountLink({ user, onNavigate }: { user: { name?: string | null; role:
         {isStaff ? <LayoutDashboard className="size-3.5" /> : <User className="size-3.5" />}
         {isStaff ? 'Back-office' : 'Mon compte'}
       </Link>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon-sm"
-        aria-label="Se déconnecter"
-        onClick={async () => {
-          const { signOut } = await import('next-auth/react')
-          signOut({ callbackUrl: '/' })
-        }}
-      >
-        <LogOut className="size-3.5" />
-      </Button>
+      {isStaff ? (
+        <StaffSignOutButton />
+      ) : (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Se déconnecter"
+          onClick={async () => {
+            const { signOut } = await import('next-auth/react')
+            signOut({ callbackUrl: '/' })
+          }}
+        >
+          <LogOut className="size-3.5" />
+        </Button>
+      )}
     </div>
   )
 }

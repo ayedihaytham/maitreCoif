@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import { TurnstileWidget } from '@/components/reservation/turnstile'
 import { cn, formatPrix } from '@/lib/utils'
 
 interface Coiffeur {
@@ -66,6 +67,8 @@ export function ReservationWizard({
   const [clientEmail, setClientEmail] = useState('')
   const [notes, setNotes] = useState('')
   const [website, setWebsite] = useState('') // honeypot
+  const [turnstileToken, setTurnstileToken] = useState('')
+  const [turnstileKey, setTurnstileKey] = useState(0) // un jeton Turnstile est à usage unique
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
@@ -133,11 +136,14 @@ export function ReservationWizard({
           clientEmail: clientEmail.trim() || undefined,
           notes: notes.trim() || undefined,
           website,
+          turnstileToken,
         }),
       })
       const data = await res.json()
       if (!res.ok) {
         setSubmitError(data.error ?? "Une erreur est survenue, merci de réessayer.")
+        setTurnstileToken('')
+        setTurnstileKey((k) => k + 1)
         return
       }
       setConfirmation({ codeSuivi: data.codeSuivi })
@@ -361,6 +367,8 @@ export function ReservationWizard({
               onChange={(e) => setWebsite(e.target.value)}
             />
           </div>
+
+          <TurnstileWidget key={turnstileKey} onToken={setTurnstileToken} />
 
           {submitError && <p className="text-xs text-destructive">{submitError}</p>}
         </div>

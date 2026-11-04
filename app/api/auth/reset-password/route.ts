@@ -7,7 +7,7 @@ import { resetPasswordSchema } from '@/lib/validators-auth'
 
 export async function POST(request: Request) {
   const ip = clientIpFrom(request.headers)
-  if (!checkRateLimit(`reset-password:${ip}`, 10, 15 * 60 * 1000)) {
+  if (!(await checkRateLimit(`reset-password:${ip}`, 10, 15 * 60 * 1000))) {
     return NextResponse.json({ error: 'Trop de tentatives, veuillez réessayer plus tard.' }, { status: 429 })
   }
 

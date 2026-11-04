@@ -6,6 +6,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { prisma } from '@/lib/prisma'
 import { creneauEstLibre, getCreneauxDisponibles } from '@/lib/slots'
+import { assertLocalDatabase } from './assert-local-db'
+
+assertLocalDatabase()
 
 const DATE = '2099-06-16' // un mardi, loin dans le futur pour ne jamais collisionner avec de vraies données
 
@@ -51,7 +54,7 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
-  await prisma.rendezVous.delete({ where: { id: rendezVousId } }).catch(() => {})
+  await prisma.rendezVous.deleteMany({ where: { coiffeurId } })
   await prisma.disponibilite.deleteMany({ where: { coiffeurId } })
   await prisma.service.delete({ where: { id: serviceId } })
   await prisma.user.delete({ where: { id: coiffeurId } })
@@ -80,5 +83,40 @@ describe('getCreneauxDisponibles', () => {
     expect(creneaux).not.toContain('10:15') // chevaucherait le RDV de 10:00-10:30
     expect(creneaux).toContain('09:00')
     expect(creneaux).toContain('10:30')
+  })
+})
+
+describe('réservations concurrentes (transaction Serializable)', () => {
+  it('ne crée jamais deux rendez-vous qui se chevauchent', async () => {
+    const { Prisma } = await import('@prisma/client')
+    const tentative = (suffixe: string) =>
+      prisma
+        .$transaction(
+          async (tx) => {
+            if (!(await creneauEstLibre(coiffeurId, DATE, '14:00', '14:30', undefined, tx))) return false
+            await tx.rendezVous.create({
+              data: {
+                codeSuivi: `MC-RACE${suffixe}${Date.now()}`,
+                coiffeurId,
+                serviceId,
+                clientNom: 'Race',
+                clientTelephone: '20000001',
+                date: new Date(`${DATE}T00:00:00Z`),
+                heureDebut: '14:00',
+                heureFin: '14:30',
+                statut: 'CONFIRME',
+              },
+            })
+            return true
+          },
+          { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+        )
+        .catch(() => false)
+
+    const resultats = await Promise.all([tentative('A'), tentative('B'), tentative('C')])
+    expect(resultats.filter(Boolean)).toHaveLength(1)
+
+    const count = await prisma.rendezVous.count({ where: { coiffeurId, heureDebut: '14:00' } })
+    expect(count).toBe(1)
   })
 })

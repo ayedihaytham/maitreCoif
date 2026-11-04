@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server'
 
+import { alerterSalon } from '@/lib/alerte-salon'
+import { formaterDateLongue } from '@/lib/notifications'
 import { prisma } from '@/lib/prisma'
 import { checkRateLimit, clientIpFrom } from '@/lib/rate-limit'
 import { demandeModificationSchema } from '@/lib/validators'
 
 export async function POST(request: Request) {
   const ip = clientIpFrom(request.headers)
-  if (!checkRateLimit(`demande-modification:${ip}`, 10, 15 * 60 * 1000)) {
+  if (!(await checkRateLimit(`demande-modification:${ip}`, 10, 15 * 60 * 1000))) {
     return NextResponse.json({ error: 'Trop de tentatives, veuillez réessayer plus tard.' }, { status: 429 })
   }
 
@@ -18,6 +20,7 @@ export async function POST(request: Request) {
 
   const rendezVous = await prisma.rendezVous.findFirst({
     where: { id, codeSuivi: codeSuivi.trim().toUpperCase() },
+    include: { coiffeur: { select: { prenom: true, nom: true } } },
   })
 
   if (!rendezVous) return NextResponse.json({ error: 'Rendez-vous introuvable' }, { status: 404 })
@@ -26,15 +29,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Une modification ne peut plus être demandée pour ce rendez-vous.' }, { status: 400 })
   }
 
-  const noteAjoutee = `[Demande de modification du client] ${message.trim()}`
-  const notes = rendezVous.notes ? `${rendezVous.notes}\n${noteAjoutee}` : noteAjoutee
+  const dejaEnCours = await prisma.demandeModification.findFirst({ where: { rendezVousId: id, traitee: false } })
+  if (dejaEnCours) {
+    return NextResponse.json({ error: 'Une demande est déjà en cours de traitement pour ce rendez-vous.' }, { status: 409 })
+  }
 
-  const updated = await prisma.rendezVous.update({
-    where: { id },
-    // Repasse en attente pour que la demande remonte à l'équipe, même si le
-    // rendez-vous était déjà confirmé.
-    data: { notes, statut: 'EN_ATTENTE' },
-  })
+  // Le rendez-vous reste confirmé (et son créneau bloqué) tant que le salon
+  // n'a pas répondu : la demande est tracée à part, plus dans les notes.
+  await prisma.demandeModification.create({ data: { rendezVousId: id, message: message.trim() } })
 
-  return NextResponse.json({ statut: updated.statut })
+  await alerterSalon(
+    'Demande de modification de rendez-vous',
+    `${rendezVous.clientNom} (${rendezVous.clientTelephone}) souhaite modifier son rendez-vous du ${formaterDateLongue(rendezVous.date.toISOString().slice(0, 10))} à ${rendezVous.heureDebut} avec ${rendezVous.coiffeur.prenom} ${rendezVous.coiffeur.nom}.\n\nMessage : ${message.trim()}\n\nÀ traiter depuis le planning (bouton Déplacer).`,
+  )
+
+  return NextResponse.json({ statut: rendezVous.statut, demandeEnCours: true })
 }

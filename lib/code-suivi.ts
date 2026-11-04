@@ -1,3 +1,5 @@
+import { randomInt } from 'node:crypto'
+
 import { prisma } from '@/lib/prisma'
 
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // sans caractères ambigus (0/O, 1/I)
@@ -5,7 +7,7 @@ const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // sans caractères ambigus 
 function randomCode(length = 7): string {
   let code = ''
   for (let i = 0; i < length; i++) {
-    code += ALPHABET[Math.floor(Math.random() * ALPHABET.length)]
+    code += ALPHABET[randomInt(ALPHABET.length)]
   }
   return `MC-${code}`
 }

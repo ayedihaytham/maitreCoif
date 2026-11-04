@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { normaliserTelephoneTunisien } from './notifications'
+import { formaterDateLongue, normaliserTelephoneTunisien } from './notifications'
 
 describe('normaliserTelephoneTunisien', () => {
   it('ajoute l\'indicatif +216 à un numéro local à 8 chiffres', () => {
@@ -22,5 +22,11 @@ describe('normaliserTelephoneTunisien', () => {
 
   it('retire un zéro de tête accidentel', () => {
     expect(normaliserTelephoneTunisien('020130289')).toBe('+21620130289')
+  })
+})
+
+describe('formaterDateLongue', () => {
+  it('formate un jour civil en français sans décalage de fuseau', () => {
+    expect(formaterDateLongue('2026-11-10')).toBe('mardi 10 novembre 2026')
   })
 })

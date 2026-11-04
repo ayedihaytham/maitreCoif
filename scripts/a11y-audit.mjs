@@ -1,5 +1,11 @@
 // Audit d'accessibilité automatisé (axe-core / WCAG 2.1 AA) sur les pages
 // clés du site, en local. Usage : node scripts/a11y-audit.mjs [baseUrl]
+//
+// Le back-office est protégé par Clerk (pas de formulaire de mot de passe à
+// automatiser). Pour l'auditer, ouvrez une session avec Playwright puis
+// enregistrez-la :  npx playwright codegen --save-storage=.a11y-admin.json <url>/espace-equipe
+// et lancez :  A11Y_STORAGE_STATE=.a11y-admin.json node scripts/a11y-audit.mjs
+// Sans cette variable, seules les pages publiques sont auditées.
 import { chromium } from 'playwright'
 import AxeBuilder from '@axe-core/playwright'
 
@@ -7,8 +13,8 @@ const BASE_URL = process.argv[2] || 'http://localhost:3001'
 
 const PUBLIC_PAGES = ['/', '/equipe', '/services', '/reservation', '/suivi', '/connexion', '/inscription', '/mot-de-passe-oublie']
 
-const ADMIN_CREDENTIALS = { email: 'gerant@maitrecoif.fr', password: 'Gerant123!' }
-const ADMIN_PAGES = ['/admin/planning', '/admin/equipe', '/admin/services', '/admin/galerie', '/admin/statistiques']
+const ADMIN_STORAGE_STATE = process.env.A11Y_STORAGE_STATE
+const ADMIN_PAGES = ['/admin/planning', '/admin/equipe', '/admin/services', '/admin/galerie', '/admin/fermetures', '/admin/statistiques']
 
 async function auditPage(page, url) {
   await page.goto(url, { waitUntil: 'networkidle' })
@@ -44,18 +50,19 @@ async function main() {
     totalViolations += violations.length
   }
 
-  console.log('\n=== Connexion admin ===')
-  await page.goto(`${BASE_URL}/connexion`, { waitUntil: 'networkidle' })
-  await page.getByLabel('Email').fill(ADMIN_CREDENTIALS.email)
-  await page.getByLabel('Mot de passe').fill(ADMIN_CREDENTIALS.password)
-  await page.getByRole('button', { name: /se connecter/i }).click()
-  await page.waitForURL(/\/admin\//, { timeout: 10000 }).catch(() => {})
-
-  console.log(`\n=== Back-office (${BASE_URL}) ===`)
-  for (const path of ADMIN_PAGES) {
-    const violations = await auditPage(page, `${BASE_URL}${path}`)
-    printViolations(path, violations)
-    totalViolations += violations.length
+  if (ADMIN_STORAGE_STATE) {
+    const adminContext = await browser.newContext({ storageState: ADMIN_STORAGE_STATE })
+    const adminPage = await adminContext.newPage()
+    console.log(`
+=== Back-office (${BASE_URL}) ===`)
+    for (const path of ADMIN_PAGES) {
+      const violations = await auditPage(adminPage, `${BASE_URL}${path}`)
+      printViolations(path, violations)
+      totalViolations += violations.length
+    }
+  } else {
+    console.log('
+(Back-office ignoré : définir A11Y_STORAGE_STATE pour l’auditer, cf. en-tête du script.)')
   }
 
   await browser.close()

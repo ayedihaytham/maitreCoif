@@ -1,10 +1,11 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { CalendarClock, ChevronLeft, ChevronRight, Loader2, Plus } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { RdvDialog, type RdvADeplacer } from '@/components/admin/rdv-dialog'
 import { cn } from '@/lib/utils'
 import type { Role } from '@prisma/client'
 
@@ -23,7 +24,8 @@ interface RendezVous {
   heureFin: string
   statut: 'EN_ATTENTE' | 'CONFIRME' | 'TERMINE' | 'ANNULE'
   notes: string | null
-  service: { nom: string; duree: number; prix: number | string }
+  service: { id: string; nom: string; duree: number; prix: number | string }
+  demandesModification: { id: string; message: string }[]
 }
 
 const STATUT_LABEL: Record<RendezVous['statut'], string> = {
@@ -40,8 +42,9 @@ const STATUT_STYLE: Record<RendezVous['statut'], string> = {
   ANNULE: 'bg-destructive/10 text-destructive',
 }
 
+// Jour courant dans le fuseau du salon (et non en UTC).
 function todayISO() {
-  return new Date().toISOString().slice(0, 10)
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Tunis' }).format(new Date())
 }
 
 export function PlanningBoard({ role, currentUserId, coiffeurs }: { role: Role; currentUserId: string; coiffeurs: Coiffeur[] }) {
@@ -50,6 +53,9 @@ export function PlanningBoard({ role, currentUserId, coiffeurs }: { role: Role; 
   const [rendezVous, setRendezVous] = useState<RendezVous[]>([])
   const [loading, setLoading] = useState(true)
   const [actingId, setActingId] = useState<string | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [deplacement, setDeplacement] = useState<RdvADeplacer | null>(null)
+  const [colonneCible, setColonneCible] = useState('')
 
   const columns = scope === 'moi' ? coiffeurs.filter((c) => c.id === currentUserId) : coiffeurs
 
@@ -87,6 +93,18 @@ export function PlanningBoard({ role, currentUserId, coiffeurs }: { role: Role; 
     }
   }
 
+  function ouvrirCreation(coiffeurId: string) {
+    setDeplacement(null)
+    setColonneCible(coiffeurId)
+    setDialogOpen(true)
+  }
+
+  function ouvrirDeplacement(rdv: RendezVous) {
+    setDeplacement({ id: rdv.id, coiffeurId: rdv.coiffeurId, clientNom: rdv.clientNom, service: rdv.service })
+    setColonneCible(rdv.coiffeurId)
+    setDialogOpen(true)
+  }
+
   function shiftDate(days: number) {
     const d = new Date(`${date}T00:00:00Z`)
     d.setUTCDate(d.getUTCDate() + days)
@@ -114,6 +132,10 @@ export function PlanningBoard({ role, currentUserId, coiffeurs }: { role: Role; 
             Aujourd&apos;hui
           </Button>
         </div>
+
+        <Button type="button" size="sm" onClick={() => ouvrirCreation(columns[0]?.id ?? currentUserId)}>
+          <Plus className="size-4" /> Nouveau rendez-vous
+        </Button>
 
         {role === 'ADMIN' && (
           <div className="flex gap-2">
@@ -179,6 +201,11 @@ export function PlanningBoard({ role, currentUserId, coiffeurs }: { role: Role; 
                         <p className="mt-1 text-[11px] text-muted-foreground">
                           {rdv.clientNom} · {rdv.clientTelephone}
                         </p>
+                        {rdv.demandesModification.map((d) => (
+                          <p key={d.id} className="mt-2 border-l-2 border-gold bg-anthracite px-2 py-1.5 text-[11px] text-gold">
+                            Demande du client : &quot;{d.message}&quot;
+                          </p>
+                        ))}
                         {rdv.notes && (
                           <p className="mt-1 whitespace-pre-line text-[11px] italic text-muted-foreground">&quot;{rdv.notes}&quot;</p>
                         )}
@@ -209,6 +236,15 @@ export function PlanningBoard({ role, currentUserId, coiffeurs }: { role: Role; 
                             <Button
                               type="button"
                               size="sm"
+                              variant="outline"
+                              disabled={actingId === rdv.id}
+                              onClick={() => ouvrirDeplacement(rdv)}
+                            >
+                              <CalendarClock className="size-3.5" /> Déplacer
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
                               variant="destructive"
                               disabled={actingId === rdv.id}
                               onClick={() => changeStatut(rdv.id, 'ANNULE')}
@@ -226,6 +262,17 @@ export function PlanningBoard({ role, currentUserId, coiffeurs }: { role: Role; 
           </div>
         </div>
       )}
+
+      <RdvDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        coiffeurs={role === 'ADMIN' ? coiffeurs : coiffeurs.filter((c) => c.id === currentUserId)}
+        defaultCoiffeurId={colonneCible || currentUserId}
+        defaultDate={date}
+        coiffeurFige={role !== 'ADMIN'}
+        deplacement={deplacement}
+        onDone={load}
+      />
     </div>
   )
 }
