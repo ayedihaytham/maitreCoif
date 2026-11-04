@@ -64,13 +64,25 @@ export async function staffDepuisClerk(userId: string | null | undefined, claims
 
 export type ResultatInvitation = 'envoyee' | 'deja_inscrit' | 'non_configure' | 'echec'
 
+/** Message lisible d'une erreur de l'API Clerk (montré à l'administrateur). */
+function detailClerk(error: unknown): string {
+  const erreurs = (error as { errors?: { code?: string; longMessage?: string; message?: string }[] }).errors
+  const premiere = erreurs?.[0]
+  if (premiere) return [premiere.code, premiere.longMessage ?? premiere.message].filter(Boolean).join(' : ')
+  return error instanceof Error ? error.message : 'erreur inconnue'
+}
+
 /**
- * Invite un nouveau membre à créer son accès Clerk (email envoyé par Clerk,
- * lien vers l'inscription du sous-domaine salon). N'échoue jamais : la fiche en base
- * est créée de toute façon et l'invitation peut se refaire depuis Clerk.
+ * Invite un membre à créer son accès Clerk : Clerk lui envoie un email avec un
+ * lien vers l'inscription du sous-domaine salon, où il choisit son mot de
+ * passe (le compte Clerk est créé à ce moment-là). N'échoue jamais : la fiche
+ * en base existe de toute façon et l'invitation peut être renvoyée.
  */
-export async function inviterMembre(email: string): Promise<ResultatInvitation> {
-  if (!clerkConfigured() || !SALON_HOST) return 'non_configure'
+export async function inviterMembre(email: string): Promise<{ statut: ResultatInvitation; detail?: string }> {
+  if (!clerkConfigured()) {
+    return { statut: 'non_configure', detail: 'clés Clerk absentes (CLERK_SECRET_KEY, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)' }
+  }
+  if (!SALON_HOST) return { statut: 'non_configure', detail: 'NEXT_PUBLIC_SALON_HOST non défini' }
 
   try {
     const client = await clerkClient()
@@ -79,11 +91,11 @@ export async function inviterMembre(email: string): Promise<ResultatInvitation> 
       redirectUrl: salonUrl('/inscription'),
       ignoreExisting: true,
     })
-    return 'envoyee'
+    return { statut: 'envoyee' }
   } catch (error) {
     const codes = (error as { errors?: { code?: string }[] }).errors?.map((e) => e.code) ?? []
-    if (codes.includes('form_identifier_exists')) return 'deja_inscrit'
+    if (codes.includes('form_identifier_exists')) return { statut: 'deja_inscrit' }
     console.error('[staff] Invitation Clerk impossible', error)
-    return 'echec'
+    return { statut: 'echec', detail: detailClerk(error) }
   }
 }

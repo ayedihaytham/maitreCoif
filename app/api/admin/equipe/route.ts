@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     },
   })
 
-  const invitation = await inviterMembre(coiffeur.email)
+  const { statut, detail } = await inviterMembre(coiffeur.email)
   const { motDePasseHash: _hash, ...membre } = coiffeur
-  return NextResponse.json({ ...membre, invitation }, { status: 201 })
+  return NextResponse.json({ ...membre, invitation: statut, invitationDetail: detail }, { status: 201 })
 }

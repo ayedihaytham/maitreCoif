@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Camera, Loader2, Pencil, Plus, Star, User, UserX, X } from 'lucide-react'
+import { Camera, Loader2, Mail, Pencil, Plus, Star, User, UserX, X } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -62,10 +62,17 @@ const emptyForm = {
 }
 
 const MESSAGES_INVITATION: Record<string, string> = {
-  envoyee: "Membre ajouté. Une invitation vient d'être envoyée par email : la personne y crée son mot de passe, puis se connecte à l'espace salon.",
-  deja_inscrit: "Membre ajouté. Cette adresse a déjà un accès : elle peut se connecter à l'espace salon.",
-  non_configure: "Membre ajouté, mais aucune invitation n'a été envoyée : Clerk ou le sous-domaine salon (NEXT_PUBLIC_SALON_HOST) n'est pas configuré.",
-  echec: "Membre ajouté, mais l'invitation n'a pas pu être envoyée. Invitez cette adresse depuis le tableau de bord Clerk (Users > Invite).",
+  envoyee:
+    "Invitation envoyée par email. Le compte Clerk est créé quand la personne ouvre le lien et choisit son mot de passe ; d'ici là, elle apparaît dans Clerk (Users, Invitations).",
+  deja_inscrit: "Cette adresse a déjà un compte Clerk : elle peut se connecter à l'espace salon (« Mot de passe oublié » si besoin).",
+  non_configure: "Aucune invitation envoyée : la configuration de Clerk ou du sous-domaine salon est incomplète.",
+  echec: "Clerk a refusé l'invitation. Corrigez la cause, puis utilisez le bouton « Inviter » de ce membre.",
+}
+
+function messageInvitation(statut: unknown, detail: unknown) {
+  const base = MESSAGES_INVITATION[statut as string]
+  if (!base) return null
+  return typeof detail === 'string' && detail ? `${base} Détail : ${detail}` : base
 }
 
 export function EquipeManager({ initial }: { initial: Coiffeur[] }) {
@@ -80,6 +87,7 @@ export function EquipeManager({ initial }: { initial: Coiffeur[] }) {
   const [error, setError] = useState<string | null>(null)
   const [photoUploading, setPhotoUploading] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
+  const [invitingId, setInvitingId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   function openCreate() {
@@ -177,13 +185,27 @@ export function EquipeManager({ initial }: { initial: Coiffeur[] }) {
         }),
       })
 
-      if (!editing) setNotice(MESSAGES_INVITATION[data.invitation as string] ?? null)
+      if (!editing) setNotice(messageInvitation(data.invitation, data.invitationDetail))
 
       const refreshed = await fetch('/api/admin/equipe').then((r) => r.json())
       setEquipe(refreshed)
       setOpen(false)
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleInvite(c: Coiffeur) {
+    setNotice(null)
+    setInvitingId(c.id)
+    try {
+      const res = await fetch(`/api/admin/equipe/${c.id}/invitation`, { method: 'POST' })
+      const data = await res.json()
+      setNotice(res.ok ? messageInvitation(data.invitation, data.invitationDetail) : (data.error ?? 'Une erreur est survenue.'))
+    } catch {
+      setNotice('Impossible de contacter le serveur.')
+    } finally {
+      setInvitingId(null)
     }
   }
 
@@ -244,6 +266,11 @@ export function EquipeManager({ initial }: { initial: Coiffeur[] }) {
               <Button type="button" variant="outline" size="sm" onClick={() => openEdit(c)}>
                 <Pencil className="size-3.5" /> Modifier
               </Button>
+              {c.actif && (
+                <Button type="button" variant="outline" size="sm" disabled={invitingId === c.id} onClick={() => handleInvite(c)}>
+                  {invitingId === c.id ? <Loader2 className="size-3.5 animate-spin" /> : <Mail className="size-3.5" />} Inviter
+                </Button>
+              )}
               {c.actif && (
                 <Button type="button" variant="destructive" size="sm" onClick={() => handleDeactivate(c)}>
                   <UserX className="size-3.5" /> Désactiver

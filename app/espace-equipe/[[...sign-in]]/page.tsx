@@ -23,7 +23,12 @@ export default function EspaceEquipePage() {
         </p>
         <div className="mt-10">
           {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? (
-            <SignIn path="/connexion" signUpUrl="/inscription" fallbackRedirectUrl="/planning" />
+            // Pas de lien « S'inscrire » : l'accès se fait uniquement sur invitation.
+            <SignIn
+              path="/connexion"
+              fallbackRedirectUrl="/planning"
+              appearance={{ elements: { footerAction: { display: 'none' } } }}
+            />
           ) : (
             <p className="text-sm text-muted-foreground">
               L&apos;authentification de l&apos;équipe n&apos;est pas configurée sur ce déploiement (clés Clerk manquantes).
