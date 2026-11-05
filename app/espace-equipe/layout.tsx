@@ -4,6 +4,7 @@ import '../cinema-fixes.css'
 import './espace.css'
 
 import type { Metadata } from 'next'
+import { ClerkSalonProvider } from '@/components/auth/clerk-salon-provider'
 import { ThemeLogo } from '@/components/theme-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
 
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
 // Même langage visuel que le site : un plateau sombre, un cône de lumière, un cadre de viseur.
 export default function EspaceSalonLayout({ children }: { children: React.ReactNode }) {
   return (
+    <ClerkSalonProvider>
     <div className="mc es">
       <div className="es-light" aria-hidden="true" />
       <div className="es-vf tl" aria-hidden="true" />
@@ -30,5 +32,6 @@ export default function EspaceSalonLayout({ children }: { children: React.ReactN
       {children}
       <div className="h-grain" aria-hidden="true" />
     </div>
+    </ClerkSalonProvider>
   )
 }

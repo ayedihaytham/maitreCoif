@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 
 import { auth } from '@/lib/auth'
 import { AdminSidebarClerk } from '@/components/admin/sidebar'
+import { ClerkSalonProvider } from '@/components/auth/clerk-salon-provider'
 import { resumeSalon } from '@/lib/prochain-rdv'
 
 export const metadata: Metadata = {
@@ -20,9 +21,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const { prochain, aujourdhui } = await resumeSalon({ id: session.user.id, role: session.user.role })
 
   return (
+    <ClerkSalonProvider>
     <div className="ad">
       <AdminSidebarClerk role={session.user.role} nom={session.user.name ?? ''} prochain={prochain} aujourdhui={aujourdhui} />
       <div className="ad-main">{children}</div>
     </div>
+    </ClerkSalonProvider>
   )
 }

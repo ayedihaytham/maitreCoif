@@ -8,7 +8,6 @@ import { LayoutDashboard, LogOut, Menu, User, X } from 'lucide-react'
 
 import { ThemeLogo } from '@/components/theme-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
-import { StaffSignOutButton } from '@/components/auth/staff-sign-out'
 import { salonUrl } from '@/lib/salon-host'
 import { cn } from '@/lib/utils'
 import type { Role } from '@prisma/client'
@@ -128,9 +127,7 @@ export function SiteNav() {
                 <CompteIcone className="size-3.5" aria-hidden="true" />
                 <span>{compteLabel}</span>
               </a>
-              {estEquipe ? (
-                <StaffSignOutButton />
-              ) : (
+              {!estEquipe && (
                 <button type="button" className="icon-btn" aria-label="Se déconnecter" onClick={deconnecterClient}>
                   <LogOut className="size-3.5" aria-hidden="true" />
                 </button>
