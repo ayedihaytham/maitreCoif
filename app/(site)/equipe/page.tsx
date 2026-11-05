@@ -49,17 +49,16 @@ export default async function EquipePage() {
 
   return (
     <main>
-      <Cinema hud={false} />
+      <Cinema />
       <PageHero
         etiquette="L'équipe"
-        scene="SC. 03 · PRISE 1 · LE CASTING"
         image="/maitre-coif-team.png"
         lignes={[{ t: 'Des gestes précis.' }, { t: 'Des styles singuliers.', or: true }]}
         texte="Une équipe de passionnés, réunie autour d'une même exigence : révéler votre style avec justesse, dans un cadre où chaque détail compte. Choisissez votre coiffeur et trouvez le créneau qui vous ressemble."
       />
       <section className="h-cast page" data-track aria-label="Les coiffeurs">
         <div className="h-cast-word" aria-hidden="true">
-          CASTING
+          ÉQUIPE
         </div>
         <div className="wrap">
           {equipe.length === 0 ? (
@@ -69,7 +68,7 @@ export default async function EquipePage() {
               {equipe.map((m, i) => (
                 <Reveal as="article" key={m.id} className="h-cs" delay={i % 3}>
                   <div className="tag">
-                    <b>Essai {String(i + 1).padStart(2, '0')}</b> · {m.role}
+                    <b>{m.role}</b>
                   </div>
                   <PortraitRond portrait={m.portrait} nom={m.nom} />
                   <h2 style={{ position: 'relative', margin: '30px 0 0', font: '400 clamp(28px,3.2vw,40px)/1.05 var(--mc-serif)' }}>{m.nom}</h2>

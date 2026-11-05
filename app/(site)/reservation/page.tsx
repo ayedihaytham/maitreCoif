@@ -39,7 +39,7 @@ export default async function ReservationPage({
       <div className="wrap page-head sec">
         <div className="lbl">Prendre rendez-vous</div>
         <h1 className="page-h1">
-          Réservez <em>votre séance.</em>
+          Réservez <em>votre rendez-vous.</em>
         </h1>
         <p className="lead">
           Choisissez votre coiffeur, votre prestation, puis le créneau qui vous convient. Aucun compte n&apos;est requis :

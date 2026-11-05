@@ -82,7 +82,7 @@ export default async function AccueilPage() {
       <Intro />
       <Cinema />
 
-      {/* ═════════ PLAN 1 · OUVERTURE — plan large : la lumière suit le regard ═════════ */}
+      {/* Ouverture */}
       <section className="h-hero" data-scene="0" data-track="out" aria-label="Ouverture">
         <div className="h-media">
           <Image
@@ -93,18 +93,7 @@ export default async function AccueilPage() {
             sizes="100vw"
           />
         </div>
-        <div className="h-dark" />
-        <div className="h-light" />
-        <div className="h-streak" />
         <div className="h-shade" />
-        <span className="h-vf tl" />
-        <span className="h-vf tr" />
-        <span className="h-vf bl" />
-        <span className="h-vf br" />
-        <div className="h-slate" aria-hidden="true">
-          <b>SC. 01</b> · PRISE 1<br />
-          EXT. SALON — SOIR
-        </div>
 
         <div className="h-copy">
           <div className="lbl" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -158,13 +147,13 @@ export default async function AccueilPage() {
         </div>
       )}
 
-      {/* ═════════ PLAN 2 · PRESTATIONS — la pellicule défile, seule la vignette au centre est nette ═════════ */}
+      {/* Prestations */}
       {services.length > 0 && (
         <section className="h-reel" data-scene="1" data-pin style={{ '--n': services.length } as CSSProperties} aria-labelledby="t-serv">
           <div className="h-stage">
             <div className="h-reel-head">
               <div>
-                <div className="lbl">Scène 02 / 05 · Nos prestations</div>
+                <div className="lbl">Nos prestations</div>
                 <h2 className="h2" id="t-serv">
                   Cinq gestes, <em>une signature.</em>
                 </h2>
@@ -202,7 +191,7 @@ export default async function AccueilPage() {
         </section>
       )}
 
-      {/* ═════════ PLAN 3 · L'UNIVERS — plan d'insertion plein cadre, texte en sous-titres ═════════ */}
+      {/* L'univers */}
       <section className="h-uni" data-scene="2" data-track aria-labelledby="t-uni">
         <div className="h-uni-media">
           <Image
@@ -217,7 +206,7 @@ export default async function AccueilPage() {
         </div>
         <div className="h-pip">
           <span>
-            <i className="rec" /> Enseigne · direct
+            Notre enseigne
           </span>
           <Image
             src={photoSecondaire?.url ?? '/maitre-coif-facade.jpg'}
@@ -229,7 +218,7 @@ export default async function AccueilPage() {
 
         <div className="h-uni-copy">
           <Reveal>
-            <div className="lbl">Scène 03 / 05 · L&apos;univers du salon</div>
+            <div className="lbl">Le salon</div>
           </Reveal>
           <Reveal as="h2" delay={1} className="h2" id="t-uni">
             Un cadre pensé dans les <em>moindres détails.</em>
@@ -257,16 +246,16 @@ export default async function AccueilPage() {
         </div>
       </section>
 
-      {/* ═════════ PLAN 4 · LE CASTING — essais caméra, un projecteur par personne ═════════ */}
+      {/* Le casting */}
       {equipe.length > 0 && (
         <section className="h-cast" data-scene="3" data-track aria-labelledby="t-cast">
           <div className="h-cast-word" aria-hidden="true">
-            CASTING
+            ÉQUIPE
           </div>
           <div className="wrap">
             <Reveal className="head-row">
               <div>
-                <div className="lbl">Scène 04 / 05 · L&apos;équipe</div>
+                <div className="lbl">L&apos;équipe</div>
                 <h2 className="h2" id="t-cast">
                   Rencontrez <em>nos coiffeurs.</em>
                 </h2>
@@ -280,7 +269,7 @@ export default async function AccueilPage() {
               {equipe.map((c, i) => (
                 <Reveal as="article" key={c.id} className="h-cs" delay={i}>
                   <div className="tag">
-                    <b>Essai {String(i + 1).padStart(2, '0')}</b> · {c.role === 'ADMIN' ? 'Gérant · Fondateur' : 'Coiffeur'}
+                    <b>{c.role === 'ADMIN' ? 'Gérant · Fondateur' : 'Coiffeur'}</b>
                   </div>
                   <PortraitRond portrait={c.portrait} nom={`${c.prenom} ${c.nom}`} />
                   <h3>
@@ -306,7 +295,7 @@ export default async function AccueilPage() {
         </section>
       )}
 
-      {/* ═════════ PLAN 5 · LA CRITIQUE — la parole d'un client, en sous-titres ═════════ */}
+      {/* La critique */}
       {avisAffiches.length > 0 && (
         <section className="h-crit" data-scene="4" data-track aria-labelledby="t-crit">
           <div className="qmark" aria-hidden="true">
@@ -315,7 +304,7 @@ export default async function AccueilPage() {
           <div className="wrap" style={{ position: 'relative' }}>
             <Reveal>
               <div className="lbl" id="t-crit">
-                Scène 05 / 05 · Ils nous font confiance
+                Ils nous font confiance
               </div>
             </Reveal>
             <Reveal delay={1}>
@@ -332,34 +321,14 @@ export default async function AccueilPage() {
         </section>
       )}
 
-      {/* ═════════ PLAN 6 · FIN — le clap : la prochaine prise est la vôtre ═════════ */}
+      {/* Fin */}
       <section className="h-end" data-scene="5" aria-labelledby="t-cta">
         <div className="wrap">
           <Reveal>
-            <div className="h-clap" role="img" aria-label="Clap de cinéma : prochaine prise disponible">
-              <div className="h-clap-arm" />
-              <div className="h-clap-base" />
-              <div className="h-clap-board">
-                <div className="wide">
-                  <small>Production</small>
-                  <strong>Maitre Coif</strong>
-                </div>
-                <div>
-                  <small>Scène</small>
-                  <strong>Votre style</strong>
-                </div>
-                <div>
-                  <small>Prise</small>
-                  <strong className="gold">N° 1</strong>
-                </div>
-                <div className="wide">
-                  <small>{prochaine ? 'Prochaine disponibilité' : 'Disponibilité'}</small>
-                  <strong className="gold">
-                    {prochaine ? `${libelleJour(prochaine.dateISO, prochaine.joursAvant)}, ${prochaine.heure}` : 'Sur rendez-vous'}
-                  </strong>
-                  {prochaine && <small style={{ marginTop: 6 }}>avec {prochaine.coiffeur}</small>}
-                </div>
-              </div>
+            <div className="h-next">
+              <small>{prochaine ? 'Prochaine disponibilité' : 'Disponibilité'}</small>
+              <strong>{prochaine ? `${libelleJour(prochaine.dateISO, prochaine.joursAvant)}, ${prochaine.heure}` : 'Sur rendez-vous'}</strong>
+              {prochaine && <span>avec {prochaine.coiffeur}</span>}
             </div>
           </Reveal>
 
@@ -368,7 +337,7 @@ export default async function AccueilPage() {
           </Reveal>
           <Reveal delay={2} className="cta-final">
             <Link className="btn btn-gold" href="/reservation" style={{ height: 62, padding: '0 44px', fontSize: 13 }}>
-              Réserver ma séance <ArrowRight className="size-4" aria-hidden="true" />
+              Réserver mon rendez-vous <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
           </Reveal>
           <Reveal delay={3}>

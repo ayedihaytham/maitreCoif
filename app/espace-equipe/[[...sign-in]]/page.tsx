@@ -13,9 +13,9 @@ export const dynamic = 'force-dynamic'
 export default function EspaceEquipePage() {
   return (
     <main className="es-main">
-      <div className="lbl">Régie · Accès équipe</div>
+      <div className="lbl">Espace salon · Accès équipe</div>
       <h1>
-        Prêt pour la <em>prise&nbsp;?</em>
+        Bienvenue dans <em>l&apos;espace salon.</em>
       </h1>
       <p className="es-lead">Réservé aux coiffeurs et à l&apos;administrateur du salon. L&apos;accès se fait sur invitation.</p>
       <div className="es-card">

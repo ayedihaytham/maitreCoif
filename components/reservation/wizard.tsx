@@ -35,7 +35,7 @@ interface CreneauGrille {
 type EtatJour = 'libre' | 'complet' | 'ferme'
 
 const MAX_PRESTATIONS = 5 // aligné sur lib/prestations.ts
-const STEPS = ['Coiffeur', 'Service', 'Créneau', 'Coordonnées'] as const
+const STEPS = ['Coiffeur', 'Prestations', 'Créneau', 'Coordonnées'] as const
 const JOURS_PROPOSES = 21
 const JOURS_PAR_PAGE = 7
 const JOURS_COURTS = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM']
@@ -255,12 +255,12 @@ export function ReservationWizard({
     }
   }
 
-  // ───────────── Confirmation : billet horizontal avec le code de suivi ─────────────
+  // ───────────── Confirmation : récapitulatif horizontal avec le code de suivi ─────────────
   if (confirmation && coiffeur && service) {
     return (
       <div>
         <div className="done-h">
-          <div className="lbl">Fin de séance</div>
+          <div className="lbl">Rendez-vous confirmé</div>
           <h2 className="page-h1">
             C&apos;est <em>confirmé.</em>
           </h2>
@@ -669,11 +669,11 @@ export function ReservationWizard({
           )}
         </div>
 
-        {/* ───────── Billet récapitulatif ───────── */}
-        <aside aria-label="Récapitulatif de votre séance">
+        {/* ───────── Récapitulatif ───────── */}
+        <aside aria-label="Récapitulatif de votre rendez-vous">
           <div className="tk">
             <div className="tk-p">
-              <div className="lbl">Billet · Votre séance</div>
+              <div className="lbl">Votre rendez-vous</div>
               {coiffeur ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 22 }}>
                   <PortraitRond portrait={coiffeur.portrait} nom={`${coiffeur.prenom} ${coiffeur.nom}`} taille={60} />
@@ -688,11 +688,11 @@ export function ReservationWizard({
                 </div>
               ) : (
                 <p className="mut" style={{ margin: '22px 0 0', fontSize: 14, lineHeight: 1.6 }}>
-                  Choisissez un coiffeur pour commencer votre billet.
+                  Choisissez un coiffeur pour commencer votre réservation.
                 </p>
               )}
               <div style={{ marginTop: 20, fontSize: 14.5, color: 'var(--mc-soft)' }}>
-                {service ? `${service.nom} · ${service.duree} min` : <span className="mut">Service à choisir</span>}
+                {service ? `${service.nom} · ${service.duree} min` : <span className="mut">Prestation à choisir</span>}
               </div>
             </div>
             <div className="tk-cut" />
@@ -743,12 +743,12 @@ export function ReservationWizard({
         </aside>
       </div>
 
-      {/* Barre fixe sur mobile : le billet reste visible pendant le défilement */}
+      {/* Barre fixe sur mobile : le récapitulatif reste visible pendant le défilement */}
       {afficherBarre && actionMobile && (
         <div className="mbar">
           <div>
             <div className="lbl dim" style={{ fontSize: 9.5 }}>
-              Billet{date ? ` · ${dateLongue(date)}` : ''}
+              Récapitulatif{date ? ` · ${dateLongue(date)}` : ''}
             </div>
             <div className="t">{heureDebut && heureFin ? `${heureDebut} — ${heureFin}` : '– – : – –'}</div>
             <div className="s">{service ? formatPrix(service.prix) : ''}</div>

@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
 export default function AccesRefusePage() {
   return (
     <main className="es-main">
-      <div className="lbl">Régie · Accès équipe</div>
+      <div className="lbl">Espace salon · Accès équipe</div>
       <h1>
         Accès <em>refusé.</em>
       </h1>

@@ -241,7 +241,7 @@ export function PlanningBoard({ role, currentUserId, coiffeurs }: { role: Role; 
       {!loading && (
         <div className="pl-sum" aria-label="Synthèse du jour">
           <span>
-            <b>{actifs.length}</b> {actifs.length > 1 ? 'plans' : 'plan'}
+            <b>{actifs.length}</b> rendez-vous
           </span>
           {aConfirmer > 0 && (
             <span className="alert">
@@ -281,7 +281,7 @@ export function PlanningBoard({ role, currentUserId, coiffeurs }: { role: Role; 
                           <div className="nm" title={`${c.prenom} ${c.nom}`}>
                             {c.prenom} {c.nom.charAt(0)}.
                           </div>
-                          <div className="ct">{parColonne(c.id).filter((r) => r.statut !== 'ANNULE').length} plans</div>
+                          <div className="ct">{parColonne(c.id).filter((r) => r.statut !== 'ANNULE').length} rdv</div>
                         </div>
                       </div>
                       <button type="button" className="add" onClick={() => ouvrirCreation(c.id)} aria-label={`Nouveau rendez-vous pour ${c.prenom}`}>
@@ -344,7 +344,7 @@ export function PlanningBoard({ role, currentUserId, coiffeurs }: { role: Role; 
                     <section className="pl-col" key={c.id} aria-label={`${c.prenom} ${c.nom}`}>
                       <h3>
                         {c.prenom} {c.nom}
-                        <small>{liste.filter((r) => r.statut !== 'ANNULE').length} plans</small>
+                        <small>{liste.filter((r) => r.statut !== 'ANNULE').length} rdv</small>
                       </h3>
                       {liste.length === 0 && <p className="ad-empty" style={{ border: 0 }}>Aucun rendez-vous</p>}
                       {liste.map((rdv) => (
@@ -372,12 +372,12 @@ export function PlanningBoard({ role, currentUserId, coiffeurs }: { role: Role; 
             )}
           </div>
 
-          {/* ───── Fiche du plan sélectionné ───── */}
+          {/* ───── Détail du rendez-vous ───── */}
           <aside className="pl-panel" ref={panelRef} aria-label="Détail du rendez-vous">
             {selected ? (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                  <span className="lbl">Fiche du plan</span>
+                  <span className="lbl">Détail du rendez-vous</span>
                   <span className={STATUT_TAG[selected.statut]}>{STATUT_LABEL[selected.statut]}</span>
                 </div>
                 <div className="tm">
@@ -466,7 +466,7 @@ export function PlanningBoard({ role, currentUserId, coiffeurs }: { role: Role; 
               </>
             ) : (
               <>
-                <span className="lbl">Fiche du plan</span>
+                <span className="lbl">Détail du rendez-vous</span>
                 <p className="hint" style={{ marginTop: 16 }}>
                   Sélectionnez un rendez-vous sur la chronologie pour voir le client, ses demandes et agir : confirmer, terminer, déplacer ou
                   annuler.

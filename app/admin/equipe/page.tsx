@@ -39,7 +39,7 @@ export default async function AdminEquipePage() {
         section="Équipe"
         titre={
           <>
-            Le <em>casting.</em>
+            L&apos;<em>équipe.</em>
           </>
         }
         description="Ajoutez un membre : il reçoit automatiquement une invitation par email pour créer son accès au back-office."

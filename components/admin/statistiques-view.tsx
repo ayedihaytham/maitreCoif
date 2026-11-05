@@ -49,7 +49,7 @@ export function StatistiquesView({ stats, periode }: { stats: StatsAffichees; pe
         section="Statistiques"
         titre={
           <>
-            Le <em>box-office.</em>
+            Les <em>statistiques.</em>
           </>
         }
         description="Le chiffre d'affaires ne compte que les prestations terminées ; le taux de remplissage compare les créneaux réservés aux horaires des coiffeurs."

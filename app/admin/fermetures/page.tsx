@@ -37,7 +37,7 @@ export default async function AdminFermeturesPage() {
         section="Fermetures"
         titre={
           <>
-            Jours de <em>relâche.</em>
+            Les <em>fermetures.</em>
           </>
         }
         description="Jours fériés, fermetures du salon et congés d'un coiffeur : aucun créneau n'est proposé en ligne sur ces dates."

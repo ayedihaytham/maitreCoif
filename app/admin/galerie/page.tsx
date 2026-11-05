@@ -27,10 +27,10 @@ export default async function AdminGaleriePage() {
         section="Galerie"
         titre={
           <>
-            Les <em>plans du salon.</em>
+            La <em>galerie.</em>
           </>
         }
-        description="Ces photos sont visibles par les visiteurs sur la page d'accueil du site (scène « L'univers »)."
+        description="Ces photos sont visibles par les visiteurs sur la page d'accueil du site (section « Le salon »)."
       />
       <div className="ad-body">
         <GalerieManager initial={photos} />

@@ -4,15 +4,13 @@ import Image from 'next/image'
 import { cn } from '@/lib/utils'
 
 /**
- * Plan d'ouverture des pages intérieures : image plein cadre étalonnée (facultative),
- * lumière qui dérive, cadre de viseur, titre révélé ligne par ligne. Le parallaxe est
- * piloté par <Cinema hud={false} /> (data-track="out").
+ * Bandeau d'ouverture des pages intérieures : photo plein cadre (facultative) et titre
+ * révélé ligne par ligne. Le parallaxe est piloté par <Cinema /> (data-track="out").
  */
 export function PageHero({
   etiquette,
   lignes,
   texte,
-  scene,
   image,
   courte,
 }: {
@@ -20,8 +18,6 @@ export function PageHero({
   /** Lignes du titre ; `or: true` met la ligne en italique doré. */
   lignes: { t: string; or?: boolean }[]
   texte?: ReactNode
-  /** Mention de plateau, ex. « SC. 02 · PRISE 1 · INT. SALON ». */
-  scene: string
   image?: string
   courte?: boolean
 }) {
@@ -32,17 +28,9 @@ export function PageHero({
           <Image src={image} alt="" fill priority sizes="100vw" />
         </div>
       )}
-      <div className="ph-light" aria-hidden="true" />
       <div className="ph-shade" aria-hidden="true" />
-      <span className="ph-vf tl" aria-hidden="true" />
-      <span className="ph-vf tr" aria-hidden="true" />
-      <span className="ph-vf bl" aria-hidden="true" />
-      <span className="ph-vf br" aria-hidden="true" />
 
       <div className="wrap ph-copy">
-        <div className="ph-slate" aria-hidden="true">
-          {scene}
-        </div>
         <div className="lbl">{etiquette}</div>
         <h1 className="h-title ph-title">
           {lignes.map((l, i) => (

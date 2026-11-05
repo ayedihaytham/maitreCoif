@@ -23,10 +23,9 @@ export default async function ServicesPage() {
 
   return (
     <main>
-      <Cinema hud={false} />
+      <Cinema />
       <PageHero
         etiquette="Nos prestations"
-        scene="SC. 02 · PRISE 1 · INT. SALON"
         image="/maitre-coif-interieur.jpg"
         lignes={[{ t: 'Nos' }, { t: 'services.', or: true }]}
         texte="Des prestations pensées pour chaque style, réalisées avec des produits professionnels et un savoir-faire exigeant. Tarifs en dinars tunisiens (DT), à régler au salon."

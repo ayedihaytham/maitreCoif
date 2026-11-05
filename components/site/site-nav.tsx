@@ -19,15 +19,6 @@ const NAV_LINKS = [
   { href: '/suivi', label: 'Suivi de réservation' },
 ]
 
-// Numéro de scène de chaque page : la barre du haut indique « où l'on est dans le film ».
-const SCENE_PAR_PAGE: Record<string, string> = {
-  '/': '01',
-  '/services': '02',
-  '/equipe': '03',
-  '/reservation': '04',
-  '/suivi': '05',
-}
-
 // Pages qui s'ouvrent sur un plan plein cadre : la barre y est transparente au départ.
 const PLATEAUX = ['/', '/services', '/equipe', '/suivi']
 
@@ -43,7 +34,6 @@ async function deconnecterClient() {
 export function SiteNav({ user }: SiteNavProps) {
   const pathname = usePathname()
   const plateau = PLATEAUX.includes(pathname)
-  const scene = SCENE_PAR_PAGE[pathname]
   const [defile, setDefile] = useState(false)
   const [ouvert, setOuvert] = useState(false)
   const entete = useRef<HTMLElement>(null)
@@ -102,11 +92,6 @@ export function SiteNav({ user }: SiteNavProps) {
           <Link className="logo" href="/" aria-label="Maitre Coif, accueil">
             <Image src="/logo-gold.png" alt="Maitre Coif" width={376} height={310} priority />
           </Link>
-          {scene && (
-            <span className="nav-scene" aria-hidden="true">
-              <i className="rec" /> SC. {scene}
-            </span>
-          )}
         </div>
 
         <nav className="nav-links" aria-label="Navigation principale">
@@ -151,7 +136,7 @@ export function SiteNav({ user }: SiteNavProps) {
         <i className="nav-progress" aria-hidden="true" />
       </header>
 
-      {/* Menu mobile : les pages sont les chapitres du film */}
+      {/* Menu mobile plein écran */}
       <div id="menu-mobile" className={cn('menu', ouvert && 'open')} aria-hidden={!ouvert}>
         <div className="menu-rail" aria-hidden="true" />
         {NAV_LINKS.map((l, i) => (

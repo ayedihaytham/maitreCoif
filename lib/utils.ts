@@ -9,3 +9,8 @@ export function cn(...inputs: ClassValue[]) {
 export function formatPrix(value: number) {
   return `${value.toFixed(3)} DT`
 }
+
+/** Borne une valeur dans [min, max]. */
+export function borner(valeur: number, min = 0, max = 1): number {
+  return Math.min(max, Math.max(min, valeur))
+}

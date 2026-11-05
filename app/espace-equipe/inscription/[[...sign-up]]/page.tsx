@@ -26,7 +26,7 @@ export default async function InscriptionEquipePage({ params, searchParams }: Pr
 
   return (
     <main className="es-main">
-      <div className="lbl">Régie · Invitation</div>
+      <div className="lbl">Espace salon · Invitation</div>
       <h1>
         Créer mon <em>accès.</em>
       </h1>

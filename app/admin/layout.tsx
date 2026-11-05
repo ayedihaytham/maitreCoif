@@ -1,4 +1,5 @@
 import '../cinema-admin.css'
+import '../cinema-pro.css'
 
 import type { Metadata } from 'next'
 

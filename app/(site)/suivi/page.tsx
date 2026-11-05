@@ -14,14 +14,13 @@ export default async function SuiviPage({ searchParams }: { searchParams: Promis
 
   return (
     <main>
-      <Cinema hud={false} />
+      <Cinema />
       <PageHero
         courte
         etiquette="Suivi de réservation"
-        scene="SC. 05 · SALLE DE PROJECTION"
         image="/maitre-coif-facade.jpg"
         lignes={[{ t: 'Retrouvez' }, { t: 'votre rendez-vous.', or: true }]}
-        texte="Entrez le code de suivi reçu lors de la réservation : le statut de votre séance s'affiche aussitôt."
+        texte="Entrez le code de suivi reçu lors de la réservation : le statut de votre rendez-vous s'affiche aussitôt."
       />
       <div className="wrap sec">
         <SuiviLookup initialCode={code?.slice(0, 20) ?? ''} />

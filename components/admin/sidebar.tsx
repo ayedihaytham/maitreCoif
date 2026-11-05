@@ -20,7 +20,7 @@ const LINKS = [
   { href: '/statistiques', label: 'Statistiques', icon: BarChart3, adminOnly: true },
 ]
 
-/** Horloge du salon (fuseau de Tunis), comme le timecode d'un plateau. */
+/** Horloge du salon (fuseau de Tunis). */
 function HorlogeSalon() {
   const [maintenant, setMaintenant] = useState<Date | null>(null)
 
@@ -69,9 +69,7 @@ export function AdminSidebar({ role, nom, onSignOut }: Props) {
       <Link className="ad-brand" href="/planning" aria-label="Maitre Coif, planning">
         <Image src="/logo-gold.png" alt="Maitre Coif" width={376} height={310} priority />
       </Link>
-      <div className="ad-rec">
-        <i aria-hidden="true" /> Régie
-      </div>
+      <div className="ad-rec">Espace salon</div>
 
       <div className="ad-user">
         <div className="nm">{nom || 'Équipe'}</div>

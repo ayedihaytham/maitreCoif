@@ -187,7 +187,7 @@ export function SuiviLookup({ initialCode = '' }: { initialCode?: string }) {
                   {rdv.statut === 'CONFIRME' ? 'Confirmé' : rdv.statut === 'EN_ATTENTE' ? 'En attente' : rdv.statut === 'TERMINE' ? 'Terminé' : 'Annulé'}
                 </div>
                 <h3>
-                  {rdv.prestations && rdv.prestations.length > 1 ? 'Votre séance' : rdv.service} avec {rdv.coiffeur}
+                  {rdv.prestations && rdv.prestations.length > 1 ? 'Votre rendez-vous' : rdv.service} avec {rdv.coiffeur}
                 </h3>
                 {rdv.prestations && rdv.prestations.length > 1 && (
                   <ul className="prestas">

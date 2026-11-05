@@ -27,10 +27,10 @@ export default async function AdminPlanningPage() {
         section="Planning"
         titre={
           <>
-            Plan de <em>tournage.</em>
+            Le <em>planning.</em>
           </>
         }
-        description="Chaque rendez-vous est un plan. La ligne rouge est l'heure du salon : tout ce qui est au-dessus est tourné."
+        description="Les rendez-vous du jour, coiffeur par coiffeur. La ligne rouge indique l'heure actuelle au salon."
       />
       <div className="ad-body">
         <PlanningBoard role={session.user.role} currentUserId={session.user.id} coiffeurs={coiffeurs} />
