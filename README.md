@@ -203,5 +203,41 @@ numérotées, pellicule pour les services, billet pour la réservation, pied de 
 - **Disponibilités** : `GET /api/disponibilites` renvoie aussi `grille` (créneaux libres et occupés) et
   `GET /api/disponibilites/jours` l'état des 21 prochains jours (libre, complet, fermé). L'accueil affiche la
   « prochaine disponibilité » (`lib/prochaine-disponibilite.ts`).
-- **Mouvement** : animations CSS, coupées avec `prefers-reduced-motion`. Pas de vidéo ni d'écran d'introduction qui
-  retarderait l'affichage.
+- **Mise en scène de l'accueil** : chaque section est un plan (`app/cinema-home.css`). Un seul moteur
+  (`components/site/cinema.tsx`) écrit des variables CSS au défilement (`--fp` progression du plan, `--fi` position,
+  `--ad` distance au centre) ; tout le mouvement (parallaxe, pellicule épinglée, profondeur de champ, projecteurs) est
+  décrit en CSS. Le même moteur pilote le lecteur du bas (scène, barre cliquable, timecode 24 images/s : la page est
+  un film de 2 min) et la lumière du premier plan qui suit la souris. Pas de bibliothèque d'animation.
+- **Rideau d'ouverture** : une fois par session (`components/site/intro.tsx`), jamais en navigation interne.
+- **Mouvement réduit / sans JavaScript** : tout est statique et lisible (pellicule en défilement horizontal natif,
+  pas de rideau ni de grain). Pas de vidéo en lecture automatique.
+- **Piège connu** : `overflow-x: hidden` sur `html`/`body` casse `position: sticky` (pellicule épinglée) ; le projet
+  utilise `overflow-x: clip`.
+
+## Back-office « Régie »
+
+Le back-office reprend la direction « Séance » du site public, pensée pour travailler (`app/cinema-admin.css`, limité au
+conteneur `.ad` de `app/admin/layout.tsx`) :
+
+- **Planning = plan de tournage** (`components/admin/planning-board.tsx`) : une colonne par coiffeur, chaque rendez-vous
+  positionné et dimensionné selon son heure et sa durée, **ligne rouge à l'heure du salon** (fuseau Africa/Tunis,
+  rafraîchie toutes les 30 s), fiche du rendez-vous à droite (client, téléphone, demande de modification, actions :
+  confirmer, terminer, déplacer, annuler avec confirmation). Vue « Liste » en alternative (par défaut sur mobile).
+- **Statistiques = box-office** (`components/admin/statistiques-view.tsx`, présentation seule) : chiffre d'affaires,
+  jauge de remplissage, répartition par statut, classement de l'équipe.
+- **Équipe, services, fermetures, galerie** : listes restylées ; les composants partagés (boutons, champs, fenêtres)
+  suivent le même langage via `[data-slot=…]`.
+- **Barre latérale** : `AdminSidebar` ne dépend pas de Clerk (la déconnexion est injectée par `AdminSidebarClerk`), ce
+  qui permet de la prévisualiser sans compte.
+
+### Accéder au back-office en local
+
+Le back-office n'est servi que sur le sous-domaine du salon et seulement si Clerk est configuré. En local :
+
+1. Créez une application Clerk de **développement** (dashboard.clerk.com) et copiez ses deux clés dans `.env` :
+   `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_…"` et `CLERK_SECRET_KEY="sk_test_…"`.
+2. Dans `.env`, mettez `NEXT_PUBLIC_SALON_HOST="salon.localhost:3001"` (les navigateurs résolvent `*.localhost` vers votre machine, rien à configurer).
+3. Dans Clerk (Users), créez un utilisateur avec **la même adresse email** qu'un membre `ADMIN` ou `COIFFEUR` actif de votre base locale (ex. celle du seed).
+4. `npm run dev -- -p 3001`, puis ouvrez **http://salon.localhost:3001/connexion**, connectez-vous : vous arrivez sur `/planning`.
+
+Le site public reste sur `http://localhost:3001`. Sans clés Clerk, `salon.localhost` ne sert rien : c'est voulu.

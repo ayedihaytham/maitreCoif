@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { Loader2, Pencil, Plus, Power } from 'lucide-react'
 
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -107,36 +106,41 @@ export function ServicesManager({ initial }: { initial: Service[] }) {
 
   return (
     <div>
-      <div className="mb-6 flex justify-end">
-        <Button type="button" onClick={openCreate}>
-          <Plus className="size-4" /> Ajouter un service
-        </Button>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 22 }}>
+        <button type="button" className="ad-btn gold" onClick={openCreate}>
+          <Plus aria-hidden="true" /> Ajouter un service
+        </button>
       </div>
 
-      <div className="space-y-3">
-        {services.map((s) => (
-          <article key={s.id} className="flex flex-wrap items-center justify-between gap-4 border border-border/70 bg-anthracite p-5">
-            <div>
-              <div className="flex items-center gap-2">
-                <p className="text-sm">{s.nom}</p>
-                {!s.actif && <Badge variant="outline">Désactivé</Badge>}
-                {s.categorie && <Badge variant="secondary">{s.categorie}</Badge>}
+      <div className="ad-list">
+        {services.map((s, i) => (
+          <article key={s.id} className={`ad-card ad-item${s.actif ? '' : ' off'}`}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 20, minWidth: 0 }}>
+              <div className="ad-no" aria-hidden="true">
+                {String(i + 1).padStart(2, '0')}
               </div>
-              {s.description && <p className="mt-1 text-xs text-muted-foreground">{s.description}</p>}
-              <p className="mt-1 text-[11px] text-muted-foreground">
-                {s.duree} min · {formatPrix(Number(s.prix))}
-              </p>
+              <div style={{ minWidth: 0 }}>
+                <div className="nm">{s.nom}</div>
+                {s.description && <div className="sub">{s.description}</div>}
+                <div className="meta">
+                  <span className="ad-price">{formatPrix(Number(s.prix))}</span>
+                  <span className="ad-tag mut">{s.duree} min</span>
+                  {s.categorie && <span className="ad-tag mut">{s.categorie}</span>}
+                  {!s.actif && <span className="ad-tag red">Désactivé</span>}
+                </div>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => openEdit(s)}>
-                <Pencil className="size-3.5" /> Modifier
-              </Button>
-              <Button type="button" variant={s.actif ? 'destructive' : 'outline'} size="sm" onClick={() => toggleActif(s)}>
-                <Power className="size-3.5" /> {s.actif ? 'Désactiver' : 'Activer'}
-              </Button>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              <button type="button" className="ad-btn line sm" onClick={() => openEdit(s)}>
+                <Pencil aria-hidden="true" /> Modifier
+              </button>
+              <button type="button" className={`ad-btn sm ${s.actif ? 'danger' : 'line'}`} onClick={() => toggleActif(s)}>
+                <Power aria-hidden="true" /> {s.actif ? 'Désactiver' : 'Activer'}
+              </button>
             </div>
           </article>
         ))}
+        {services.length === 0 && <p className="ad-empty">Aucun service pour le moment.</p>}
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>

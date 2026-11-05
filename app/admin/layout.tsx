@@ -1,7 +1,9 @@
+import '../cinema-admin.css'
+
 import type { Metadata } from 'next'
 
 import { auth } from '@/lib/auth'
-import { AdminSidebar } from '@/components/admin/sidebar'
+import { AdminSidebarClerk } from '@/components/admin/sidebar'
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -14,9 +16,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!session?.user) return null
 
   return (
-    <div className="flex min-h-screen flex-col bg-background text-foreground sm:flex-row">
-      <AdminSidebar role={session.user.role} nom={session.user.name ?? ''} />
-      <div className="flex-1 overflow-x-hidden">{children}</div>
+    <div className="ad">
+      <AdminSidebarClerk role={session.user.role} nom={session.user.name ?? ''} />
+      <div className="ad-main">{children}</div>
     </div>
   )
 }

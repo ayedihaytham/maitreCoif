@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
 import { auth } from '@/lib/auth'
+import { AdminPageHead } from '@/components/admin/page-head'
 import { prisma } from '@/lib/prisma'
 import { EquipeManager } from '@/components/admin/equipe-manager'
 
@@ -34,10 +35,16 @@ export default async function AdminEquipePage() {
 
   return (
     <div>
-      <div className="border-b border-border/60 px-5 py-5 sm:px-8">
-        <h1 className="text-lg font-light uppercase tracking-[0.14em]">Équipe</h1>
-      </div>
-      <div className="p-5 sm:p-8">
+      <AdminPageHead
+        section="Équipe"
+        titre={
+          <>
+            Le <em>casting.</em>
+          </>
+        }
+        description="Ajoutez un membre : il reçoit automatiquement une invitation par email pour créer son accès au back-office."
+      />
+      <div className="ad-body">
         <EquipeManager initial={equipe} />
       </div>
     </div>

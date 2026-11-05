@@ -62,9 +62,9 @@ export function GalerieManager({ initial }: { initial: Photo[] }) {
 
   return (
     <div>
-      <div className="mb-8 flex flex-wrap items-end gap-4 border border-border/70 bg-anthracite p-5">
+      <div className="ad-card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 16, padding: 22, marginBottom: 28 }}>
         <div className="flex-1">
-          <label htmlFor="legende" className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+          <label htmlFor="legende" className="lbl dim">
             Légende (optionnel)
           </label>
           <Input
@@ -76,36 +76,26 @@ export function GalerieManager({ initial }: { initial: Photo[] }) {
           />
         </div>
         <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-        <Button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
-          {uploading ? <Loader2 className="size-4 animate-spin" /> : <ImagePlus className="size-4" />}
+        <button type="button" className="ad-btn gold" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+          {uploading ? <Loader2 className="animate-spin" aria-hidden="true" /> : <ImagePlus aria-hidden="true" />}
           Ajouter une photo
-        </Button>
+        </button>
       </div>
 
-      {error && <p className="mb-4 text-xs text-destructive">{error}</p>}
+      {error && <p role="alert" style={{ marginBottom: 16, fontSize: 13, color: 'var(--a-red)' }}>{error}</p>}
 
       {photos.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
+        <p className="ad-empty">
           Aucune photo pour le moment. Les photos ajoutées ici apparaissent sur la page d&apos;accueil du site.
         </p>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="ad-gal">
           {photos.map((p) => (
-            <div key={p.id} className="group relative overflow-hidden border border-border/70">
-              <img src={p.url} alt={p.legende ?? ''} className="aspect-[4/3] w-full object-cover" />
-              {p.legende && (
-                <p className="absolute inset-x-0 bottom-0 bg-background/80 px-3 py-2 text-xs text-muted-foreground">
-                  {p.legende}
-                </p>
-              )}
-              <button
-                type="button"
-                onClick={() => handleDelete(p.id)}
-                disabled={deletingId === p.id}
-                aria-label="Supprimer cette photo"
-                className="absolute right-2 top-2 flex size-8 items-center justify-center bg-background/90 text-destructive opacity-0 transition-opacity group-hover:opacity-100"
-              >
-                {deletingId === p.id ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+            <div key={p.id} className="ad-photo">
+              <img src={p.url} alt={p.legende ?? ''} />
+              {p.legende && <p className="cap">{p.legende}</p>}
+              <button type="button" className="del" onClick={() => handleDelete(p.id)} disabled={deletingId === p.id} aria-label="Supprimer cette photo">
+                {deletingId === p.id ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : <Trash2 className="size-3.5" aria-hidden="true" />}
               </button>
             </div>
           ))}

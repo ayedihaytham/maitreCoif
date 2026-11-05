@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { AdminPageHead } from '@/components/admin/page-head'
 import { PlanningBoard } from '@/components/admin/planning-board'
 
 export const metadata: Metadata = {
@@ -22,10 +23,18 @@ export default async function AdminPlanningPage() {
 
   return (
     <div>
-      <div className="border-b border-border/60 px-5 py-5 sm:px-8">
-        <h1 className="text-lg font-light uppercase tracking-[0.14em]">Planning</h1>
+      <AdminPageHead
+        section="Planning"
+        titre={
+          <>
+            Plan de <em>tournage.</em>
+          </>
+        }
+        description="Chaque rendez-vous est un plan. La ligne rouge est l'heure du salon : tout ce qui est au-dessus est tourné."
+      />
+      <div className="ad-body">
+        <PlanningBoard role={session.user.role} currentUserId={session.user.id} coiffeurs={coiffeurs} />
       </div>
-      <PlanningBoard role={session.user.role} currentUserId={session.user.id} coiffeurs={coiffeurs} />
     </div>
   )
 }

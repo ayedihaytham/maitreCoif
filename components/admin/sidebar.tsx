@@ -1,9 +1,11 @@
 'use client'
 
-import { useClerk } from '@clerk/nextjs'
+import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { BarChart3, CalendarOff, CalendarRange, Images, LogOut, Scissors, Users } from 'lucide-react'
+import { useClerk } from '@clerk/nextjs'
+import { ArrowUpRight, BarChart3, CalendarOff, CalendarRange, Images, LogOut, Scissors, Users } from 'lucide-react'
 
 import { siteUrl } from '@/lib/salon-host'
 import { cn } from '@/lib/utils'
@@ -18,50 +20,97 @@ const LINKS = [
   { href: '/statistiques', label: 'Statistiques', icon: BarChart3, adminOnly: true },
 ]
 
-export function AdminSidebar({ role, nom }: { role: Role; nom: string }) {
+/** Horloge du salon (fuseau de Tunis), comme le timecode d'un plateau. */
+function HorlogeSalon() {
+  const [maintenant, setMaintenant] = useState<Date | null>(null)
+
+  // Rendu initial neutre : l'heure n'existe que côté navigateur (pas de décalage d'hydratation).
+  useEffect(() => {
+    setMaintenant(new Date())
+    const t = window.setInterval(() => setMaintenant(new Date()), 1000)
+    return () => window.clearInterval(t)
+  }, [])
+
+  const fuseau = 'Africa/Tunis'
+  const heure = maintenant
+    ? maintenant.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: fuseau })
+    : '--:--:--'
+  const jour = maintenant
+    ? maintenant.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: fuseau })
+    : ' '
+
+  return (
+    <div className="ad-clock" aria-label="Heure du salon">
+      <span className="lbl dim">Heure du salon</span>
+      <span className="tc" suppressHydrationWarning>
+        {heure}
+      </span>
+      <span className="dt" suppressHydrationWarning>
+        {jour}
+      </span>
+    </div>
+  )
+}
+
+interface Props {
+  role: Role
+  nom: string
+  /** Fournie par le conteneur connecté à Clerk ; absente = bouton de déconnexion masqué. */
+  onSignOut?: () => void
+}
+
+// Présentation seule (aucune dépendance à Clerk) : testable et prévisualisable sans compte.
+export function AdminSidebar({ role, nom, onSignOut }: Props) {
   const pathname = usePathname()
-  const { signOut } = useClerk()
   const isAdmin = role === 'ADMIN'
 
   return (
-    <aside className="flex w-full shrink-0 flex-col border-b border-border/60 bg-anthracite sm:w-56 sm:border-b-0 sm:border-r">
-      <div className="border-b border-border/60 px-5 py-5">
-        <p className="text-[10px] uppercase tracking-[0.3em] text-gold">Maitre Coif</p>
-        <p className="mt-1 text-xs text-muted-foreground">{nom}</p>
+    <aside className="ad-side" aria-label="Navigation du back-office">
+      <Link className="ad-brand" href="/planning" aria-label="Maitre Coif, planning">
+        <Image src="/logo-gold.png" alt="Maitre Coif" width={376} height={310} priority />
+      </Link>
+      <div className="ad-rec">
+        <i aria-hidden="true" /> Régie
       </div>
-      <nav className="flex flex-1 flex-row gap-1 overflow-x-auto p-3 sm:flex-col sm:overflow-visible">
+
+      <div className="ad-user">
+        <div className="nm">{nom || 'Équipe'}</div>
+        <span className="rl">{isAdmin ? 'Gérant' : 'Coiffeur'}</span>
+      </div>
+
+      <nav className="ad-nav" aria-label="Sections">
         {LINKS.filter((l) => !l.adminOnly || isAdmin).map((link) => {
           const Icon = link.icon
-          const active = pathname.startsWith(link.href)
+          const actif = pathname.startsWith(link.href)
           return (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                'flex shrink-0 items-center gap-2.5 rounded-sm px-3 py-2 text-xs uppercase tracking-[0.1em] transition-colors',
-                active ? 'bg-gold text-background' : 'text-muted-foreground hover:bg-background hover:text-foreground',
-              )}
-            >
-              <Icon className="size-4" /> {link.label}
+            <Link key={link.href} href={link.href} className={cn(actif && 'on')} aria-current={actif ? 'page' : undefined}>
+              <Icon aria-hidden="true" />
+              <span>{link.label}</span>
             </Link>
           )
         })}
       </nav>
-      <div className="border-t border-border/60 p-3">
-        <Link
-          href={siteUrl('/')}
-          className="block px-3 py-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground"
-        >
-          Retour au site
-        </Link>
-        <button
-          type="button"
-          onClick={() => signOut({ redirectUrl: siteUrl('/') })}
-          className="flex w-full items-center gap-2.5 px-3 py-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground"
-        >
-          <LogOut className="size-3.5" /> Déconnexion
-        </button>
+
+      <HorlogeSalon />
+
+      <div className="ad-foot">
+        <a href={siteUrl('/')}>
+          <ArrowUpRight aria-hidden="true" />
+          <span>Retour au site</span>
+        </a>
+        {onSignOut && (
+          <button type="button" onClick={onSignOut}>
+            <LogOut aria-hidden="true" />
+            <span>Déconnexion</span>
+          </button>
+        )}
       </div>
     </aside>
   )
+}
+
+/** Version connectée : la déconnexion passe par Clerk. */
+export function AdminSidebarClerk(props: Omit<Props, 'onSignOut'>) {
+  const { signOut } = useClerk()
+  return <AdminSidebar {...props} onSignOut={() => signOut({ redirectUrl: siteUrl('/') })} />
 }

@@ -3,7 +3,6 @@
 import { useRef, useState } from 'react'
 import { Camera, Loader2, Mail, Pencil, Plus, Star, User, UserX, X } from 'lucide-react'
 
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -19,6 +18,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { resizeImageToDataUrl } from '@/lib/image-client'
+import { attribuerPortraits } from '@/lib/portraits'
+import { PortraitRond } from '@/components/site/portrait'
 import type { Role } from '@prisma/client'
 
 interface Coiffeur {
@@ -77,6 +78,7 @@ function messageInvitation(statut: unknown, detail: unknown) {
 
 export function EquipeManager({ initial }: { initial: Coiffeur[] }) {
   const [equipe, setEquipe] = useState(initial)
+  const portraits = attribuerPortraits(equipe)
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<Coiffeur | null>(null)
   const [form, setForm] = useState(emptyForm)
@@ -219,62 +221,59 @@ export function EquipeManager({ initial }: { initial: Coiffeur[] }) {
 
   return (
     <div>
-      <div className="mb-6 flex justify-end">
-        <Button type="button" onClick={openCreate}>
-          <Plus className="size-4" /> Ajouter un coiffeur
-        </Button>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 22 }}>
+        <button type="button" className="ad-btn gold" onClick={openCreate}>
+          <Plus aria-hidden="true" /> Ajouter un coiffeur
+        </button>
       </div>
 
       {notice && (
-        <p role="status" className="mb-4 border border-gold/40 bg-anthracite p-3 text-xs leading-5 text-muted-foreground">
+        <p role="status" className="ad-note">
           {notice}
         </p>
       )}
 
-      <div className="space-y-3">
-        {equipe.map((c) => (
-          <article key={c.id} className="flex flex-wrap items-center justify-between gap-4 border border-border/70 bg-anthracite p-5">
-            <div className="flex items-center gap-4">
-              <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-gold/30 bg-background">
-                {c.photo ? (
-                  <img src={c.photo} alt="" className="size-full object-cover" />
-                ) : (
-                  <User className="size-5 text-muted-foreground" />
-                )}
-              </div>
-              <div>
-              <div className="flex items-center gap-2">
-                <p className="text-sm">
+      <div className="ad-list">
+        {portraits.map((c) => (
+          <article key={c.id} className={`ad-card ad-item${c.actif ? '' : ' off'}`}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 18, minWidth: 0 }}>
+              <PortraitRond portrait={c.portrait} nom={`${c.prenom} ${c.nom}`} taille={64} />
+              <div style={{ minWidth: 0 }}>
+                <div className="nm">
                   {c.prenom} {c.nom}
-                </p>
-                {c.role === 'ADMIN' && (
-                  <Badge>
-                    <Star className="size-3" /> Gérant
-                  </Badge>
-                )}
-                {!c.actif && <Badge variant="outline">Désactivé</Badge>}
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                {c.email} {c.telephone ? `· ${c.telephone}` : ''}
-              </p>
-              {c.specialites.length > 0 && (
-                <p className="mt-1 text-[11px] text-muted-foreground">{c.specialites.join(', ')}</p>
-              )}
+                </div>
+                <div className="sub" style={{ overflowWrap: 'anywhere' }}>
+                  {c.email}
+                  {c.telephone ? ` · ${c.telephone}` : ''}
+                </div>
+                <div className="meta">
+                  {c.role === 'ADMIN' && (
+                    <span className="ad-tag">
+                      <Star className="size-3" aria-hidden="true" /> Gérant
+                    </span>
+                  )}
+                  {!c.actif && <span className="ad-tag mut">Désactivé</span>}
+                  {c.specialites.map((sp) => (
+                    <span className="ad-tag mut" key={sp}>
+                      {sp}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => openEdit(c)}>
-                <Pencil className="size-3.5" /> Modifier
-              </Button>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              <button type="button" className="ad-btn line sm" onClick={() => openEdit(c)}>
+                <Pencil aria-hidden="true" /> Modifier
+              </button>
               {c.actif && (
-                <Button type="button" variant="outline" size="sm" disabled={invitingId === c.id} onClick={() => handleInvite(c)}>
-                  {invitingId === c.id ? <Loader2 className="size-3.5 animate-spin" /> : <Mail className="size-3.5" />} Inviter
-                </Button>
+                <button type="button" className="ad-btn line sm" disabled={invitingId === c.id} onClick={() => handleInvite(c)}>
+                  {invitingId === c.id ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Mail aria-hidden="true" />} Inviter
+                </button>
               )}
               {c.actif && (
-                <Button type="button" variant="destructive" size="sm" onClick={() => handleDeactivate(c)}>
-                  <UserX className="size-3.5" /> Désactiver
-                </Button>
+                <button type="button" className="ad-btn danger sm" onClick={() => handleDeactivate(c)}>
+                  <UserX aria-hidden="true" /> Désactiver
+                </button>
               )}
             </div>
           </article>

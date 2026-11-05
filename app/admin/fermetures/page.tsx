@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 
 import { auth } from '@/lib/auth'
+import { AdminPageHead } from '@/components/admin/page-head'
 import { prisma } from '@/lib/prisma'
 import { maintenantSalon } from '@/lib/slots'
 import { FermeturesManager } from '@/components/admin/fermetures-manager'
@@ -32,10 +33,16 @@ export default async function AdminFermeturesPage() {
 
   return (
     <div>
-      <div className="border-b border-border/60 px-5 py-5 sm:px-8">
-        <h1 className="text-lg font-light uppercase tracking-[0.14em]">Fermetures et congés</h1>
-      </div>
-      <div className="p-5 sm:p-8">
+      <AdminPageHead
+        section="Fermetures"
+        titre={
+          <>
+            Jours de <em>relâche.</em>
+          </>
+        }
+        description="Jours fériés, fermetures du salon et congés d'un coiffeur : aucun créneau n'est proposé en ligne sur ces dates."
+      />
+      <div className="ad-body">
         <FermeturesManager
           initial={fermetures.map((f) => ({
             ...f,

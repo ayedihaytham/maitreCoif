@@ -88,14 +88,14 @@ export function FermeturesManager({ initial, coiffeurs }: { initial: Fermeture[]
 
   return (
     <div className="space-y-8">
-      <form onSubmit={handleSubmit} className="grid gap-4 border border-border/70 bg-anthracite p-6 sm:grid-cols-2">
+      <form onSubmit={handleSubmit} className="ad-card" style={{ display: 'grid', gap: 18, padding: 26, gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))' }}>
         <div>
           <Label htmlFor="fermeture-portee">Concerne</Label>
           <select
             id="fermeture-portee"
             value={coiffeurId}
             onChange={(e) => setCoiffeurId(e.target.value)}
-            className="mt-1.5 h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm"
+            className="mt-1.5 w-full px-3 text-sm"
           >
             <option value="">Tout le salon (jour férié, fermeture)</option>
             {coiffeurs.map((c) => (
@@ -117,43 +117,48 @@ export function FermeturesManager({ initial, coiffeurs }: { initial: Fermeture[]
           <Label htmlFor="fermeture-fin">Au (inclus, vide = un seul jour)</Label>
           <Input id="fermeture-fin" type="date" min={dateDebut} value={dateFin} onChange={(e) => setDateFin(e.target.value)} className="mt-1.5" />
         </div>
-        <div className="sm:col-span-2">
-          <Button type="submit" disabled={loading || !dateDebut}>
-            {loading ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+        <div style={{ gridColumn: '1 / -1' }}>
+          <button type="submit" className="ad-btn gold" disabled={loading || !dateDebut}>
+            {loading ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Plus aria-hidden="true" />}
             Ajouter la fermeture
-          </Button>
-          {error && <p className="mt-3 text-xs text-destructive">{error}</p>}
-          {avertissement && <p className="mt-3 text-xs text-gold">{avertissement}</p>}
+          </button>
+          {error && <p role="alert" style={{ marginTop: 14, fontSize: 13, color: 'var(--a-red)' }}>{error}</p>}
+          {avertissement && <p className="ad-note" style={{ marginTop: 14, marginBottom: 0 }}>{avertissement}</p>}
         </div>
       </form>
 
       <div>
-        <h2 className="mb-3 text-xs uppercase tracking-[0.16em] text-muted-foreground">Fermetures en cours et à venir</h2>
+        <h2 className="lbl dim" style={{ marginBottom: 14 }}>
+          Fermetures en cours et à venir
+        </h2>
         {fermetures.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Aucune fermeture planifiée.</p>
+          <p className="ad-empty">Aucune fermeture planifiée.</p>
         ) : (
-          <ul className="space-y-2">
+          <ul className="ad-list" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
             {fermetures.map((f) => (
-              <li key={f.id} className="flex items-center justify-between gap-4 border border-border/70 bg-background p-4">
-                <div className="text-sm">
-                  <p>
-                    {f.dateDebut === f.dateFin ? formatJour(f.dateDebut) : `${formatJour(f.dateDebut)} → ${formatJour(f.dateFin)}`}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {f.coiffeur ? `${f.coiffeur.prenom} ${f.coiffeur.nom}` : 'Tout le salon'}
-                    {f.motif ? ` · ${f.motif}` : ''}
-                  </p>
+              <li key={f.id} className="ad-card ad-item ad-ticket">
+                <div className="when">
+                  <span className="lbl">{f.dateDebut === f.dateFin ? 'Un jour' : 'À partir du'}</span>
+                  <span className="d">{formatJour(f.dateDebut)}</span>
+                  {f.dateDebut !== f.dateFin && <span className="sub" style={{ margin: 0 }}>jusqu&apos;au {formatJour(f.dateFin)}</span>}
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={deletingId === f.id}
-                  onClick={() => handleDelete(f.id)}
-                  aria-label="Supprimer cette fermeture"
-                >
-                  {deletingId === f.id ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
-                </Button>
+                <div className="what">
+                  <div>
+                    <div className="nm" style={{ fontSize: 22 }}>
+                      {f.coiffeur ? `${f.coiffeur.prenom} ${f.coiffeur.nom}` : 'Tout le salon'}
+                    </div>
+                    <div className="sub">{f.motif || (f.coiffeur ? 'Congé / absence' : 'Fermeture du salon')}</div>
+                  </div>
+                  <button
+                    type="button"
+                    className="ad-btn line sm"
+                    disabled={deletingId === f.id}
+                    onClick={() => handleDelete(f.id)}
+                    aria-label="Supprimer cette fermeture"
+                  >
+                    {deletingId === f.id ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Trash2 aria-hidden="true" />}
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
