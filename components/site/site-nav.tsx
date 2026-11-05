@@ -23,17 +23,34 @@ const NAV_LINKS = [
 // Pages qui s'ouvrent sur un plan plein cadre : la barre y est transparente au départ.
 const PLATEAUX = ['/', '/services', '/equipe', '/suivi']
 
-interface SiteNavProps {
-  user: { name?: string | null; role: Role } | null
-}
+type Utilisateur = { name?: string | null; role: Role } | null
 
 async function deconnecterClient() {
   const { signOut } = await import('next-auth/react')
   signOut({ callbackUrl: '/' })
 }
 
-export function SiteNav({ user }: SiteNavProps) {
+export function SiteNav() {
   const pathname = usePathname()
+  const [user, setUser] = useState<Utilisateur>(null)
+
+  // La session est demandée au navigateur (pas au rendu serveur) : les pages publiques
+  // restent statiques. Relue quand l'onglet redevient visible (connexion dans un autre onglet).
+  useEffect(() => {
+    let annule = false
+    const lire = () =>
+      fetch('/api/session', { cache: 'no-store' })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => !annule && setUser(d?.user ?? null))
+        .catch(() => {})
+    lire()
+    const surVisible = () => document.visibilityState === 'visible' && lire()
+    document.addEventListener('visibilitychange', surVisible)
+    return () => {
+      annule = true
+      document.removeEventListener('visibilitychange', surVisible)
+    }
+  }, [])
   const plateau = PLATEAUX.includes(pathname)
   const [defile, setDefile] = useState(false)
   const [ouvert, setOuvert] = useState(false)

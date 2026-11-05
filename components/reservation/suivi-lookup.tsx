@@ -183,9 +183,6 @@ export function SuiviLookup({ initialCode = '' }: { initialCode?: string }) {
                   <span className="lbl">Code {rdv.codeSuivi}</span>
                   <span className={cn('badge', STATUT_CLASSE[rdv.statut])}>{STATUT_LABEL[rdv.statut]}</span>
                 </div>
-                <div className={cn('stamp', STATUT_CLASSE[rdv.statut])} aria-hidden="true">
-                  {rdv.statut === 'CONFIRME' ? 'Confirmé' : rdv.statut === 'EN_ATTENTE' ? 'En attente' : rdv.statut === 'TERMINE' ? 'Terminé' : 'Annulé'}
-                </div>
                 <h3>
                   {rdv.prestations && rdv.prestations.length > 1 ? 'Votre rendez-vous' : rdv.service} avec {rdv.coiffeur}
                 </h3>
@@ -210,7 +207,7 @@ export function SuiviLookup({ initialCode = '' }: { initialCode?: string }) {
                     <div className="lbl dim" style={{ fontSize: 10.5 }}>
                       Heure
                     </div>
-                    <p style={{ color: 'var(--mc-gold)' }}>
+                    <p style={{ color: 'var(--mc-gold-ink)' }}>
                       {rdv.heureDebut} — {rdv.heureFin}
                     </p>
                   </div>

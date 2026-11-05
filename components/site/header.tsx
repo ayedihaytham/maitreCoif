@@ -1,8 +1,7 @@
-import { auth } from '@/lib/auth'
 import { SiteNav } from '@/components/site/site-nav'
 
-export async function Header() {
-  const session = await auth()
-
-  return <SiteNav user={session?.user ? { name: session.user.name, role: session.user.role } : null} />
+// Volontairement sans lecture de session côté serveur : lire les cookies rendrait chaque page
+// publique dynamique (aucun cache). La barre de navigation demande la session au navigateur.
+export function Header() {
+  return <SiteNav />
 }

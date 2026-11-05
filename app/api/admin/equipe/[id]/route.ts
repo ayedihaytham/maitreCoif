@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { oublierPersonnel } from '@/lib/staff'
 import { coiffeurSchema } from '@/lib/validators'
 
 async function getAdminSession() {
@@ -35,6 +36,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: 'Il doit rester au moins un administrateur actif.' }, { status: 400 })
   }
 
+  // Désactiver : jamais soi-même, jamais le dernier administrateur actif.
+  if (rest.actif === false) {
+    if (id === session.user.id) return NextResponse.json({ error: 'Vous ne pouvez pas désactiver votre propre compte.' }, { status: 400 })
+    if (cible.role === 'ADMIN' && (await autresAdminsActifs(id)) === 0) {
+      return NextResponse.json({ error: 'Il doit rester au moins un administrateur actif.' }, { status: 400 })
+    }
+  }
+
   try {
     const coiffeur = await prisma.user.update({
       where: { id },
@@ -46,6 +55,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       },
     })
     const { motDePasseHash: _hash, ...membre } = coiffeur
+    oublierPersonnel() // la désactivation / réactivation prend effet tout de suite sur cette instance
     return NextResponse.json(membre)
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
@@ -55,13 +65,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 }
 
+/** Suppression définitive. Impossible tant que le membre a des rendez-vous : on le désactive alors. */
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getAdminSession()
   if (!session) return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
 
   const { id } = await params
   if (id === session.user.id) {
-    return NextResponse.json({ error: 'Vous ne pouvez pas désactiver votre propre compte.' }, { status: 400 })
+    return NextResponse.json({ error: 'Vous ne pouvez pas supprimer votre propre compte.' }, { status: 400 })
   }
 
   const cible = await prisma.user.findFirst({ where: { id, role: { in: ['COIFFEUR', 'ADMIN'] } } })
@@ -71,7 +82,16 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     return NextResponse.json({ error: 'Il doit rester au moins un administrateur actif.' }, { status: 400 })
   }
 
-  const coiffeur = await prisma.user.update({ where: { id }, data: { actif: false } })
-  const { motDePasseHash: _hash, ...membre } = coiffeur
-  return NextResponse.json(membre)
+  const rendezVous = await prisma.rendezVous.count({ where: { coiffeurId: id } })
+  if (rendezVous > 0) {
+    return NextResponse.json(
+      { error: `Suppression impossible : ${rendezVous} rendez-vous sont à son nom (historique). Désactivez-le plutôt, vous pourrez le réactiver.` },
+      { status: 409 },
+    )
+  }
+
+  // Horaires, fermetures personnelles et jetons de mot de passe partent avec le membre (suppression en cascade).
+  await prisma.user.delete({ where: { id } })
+  oublierPersonnel()
+  return NextResponse.json({ supprime: true })
 }

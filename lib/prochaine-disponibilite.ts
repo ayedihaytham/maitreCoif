@@ -30,18 +30,19 @@ export async function prochaineDisponibilite(horizonJours = 14): Promise<Prochai
   const { dateISO: aujourdhui } = maintenantSalon()
   let meilleur: { dateISO: string; heure: string; coiffeur: string } | null = null
 
-  for (const c of coiffeurs) {
-    const jours = await getJoursDisponibles(c.id, service.id, aujourdhui, horizonJours)
-    const premier = jours.find((j) => j.etat === 'libre')
-    if (!premier) continue
-    if (meilleur && premier.date > meilleur.dateISO) continue
-
-    const libre = (await getGrilleJour(c.id, service.id, premier.date)).find((g) => g.libre)
-    if (!libre) continue
-
-    const plusTot =
-      !meilleur || premier.date < meilleur.dateISO || (premier.date === meilleur.dateISO && libre.heure < meilleur.heure)
-    if (plusTot) meilleur = { dateISO: premier.date, heure: libre.heure, coiffeur: `${c.prenom} ${c.nom}` }
+  // Chaque coiffeur est étudié en parallèle (avant : l'un après l'autre, donc N fois plus de temps d'attente).
+  const candidats = await Promise.all(
+    coiffeurs.map(async (c) => {
+      const jours = await getJoursDisponibles(c.id, service.id, aujourdhui, horizonJours)
+      const premier = jours.find((j) => j.etat === 'libre')
+      if (!premier) return null
+      const libre = (await getGrilleJour(c.id, service.id, premier.date)).find((g) => g.libre)
+      return libre ? { dateISO: premier.date, heure: libre.heure, coiffeur: `${c.prenom} ${c.nom}` } : null
+    }),
+  )
+  for (const c of candidats) {
+    if (!c) continue
+    if (!meilleur || c.dateISO < meilleur.dateISO || (c.dateISO === meilleur.dateISO && c.heure < meilleur.heure)) meilleur = c
   }
 
   if (!meilleur) return null

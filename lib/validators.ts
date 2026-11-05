@@ -56,6 +56,8 @@ export const coiffeurSchema = z.object({
   role: z.enum(['COIFFEUR', 'ADMIN']).optional(),
   // data URI (image redimensionnée côté client), ~quelques centaines de Ko max
   photo: z.string().max(3_000_000).optional().or(z.literal('')),
+  // désactiver / réactiver un membre
+  actif: z.boolean().optional(),
 })
 
 export const photoSalonSchema = z.object({

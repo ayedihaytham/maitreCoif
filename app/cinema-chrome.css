@@ -93,15 +93,8 @@
 .mc .res::before,.mc .res::after{content:"";position:absolute;top:50%;width:26px;height:26px;margin-top:-13px;border-radius:50%;background:var(--mc-ink)}
 .mc .res::before{left:-14px}
 .mc .res::after{right:-14px}
-.mc .stamp{position:absolute;right:34px;top:30px;transform:rotate(-8deg);padding:8px 14px;border:2px solid currentColor;border-radius:3px;font:700 12px/1 var(--mc-sans);letter-spacing:.3em;text-transform:uppercase;color:var(--mc-gold-ink);opacity:.92;animation:mc-stamp .55s cubic-bezier(.3,1.6,.5,1) .35s both}
-.mc .stamp.ann{color:var(--a-red)}
-.mc .stamp.ter{color:var(--mc-muted)}
-.mc .stamp.att{color:var(--mc-soft)}
-@keyframes mc-stamp{from{opacity:0;transform:rotate(-8deg) scale(1.9)}to{opacity:.92;transform:rotate(-8deg) scale(1)}}
-@media (max-width:640px){.mc .stamp{position:static;display:inline-block;margin-bottom:14px}}
-
 @media (prefers-reduced-motion:reduce){
-  .mc .btn::before,.mc .btn-shine::before,.mc .ph-light,.mc .stamp,.mc .scanner.busy .scan-line{animation:none!important}
+  .mc .btn::before,.mc .btn-shine::before,.mc .ph-light,.mc .scanner.busy .scan-line{animation:none!important}
   .mc [data-magnetic]{translate:none}
   .mc .menu a.big,.mc .menu .btn{opacity:1;transform:none;transition:none}
   .mc .ph-media,.mc .ph-copy{transform:none!important;opacity:1}

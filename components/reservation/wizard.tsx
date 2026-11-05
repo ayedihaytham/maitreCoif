@@ -294,7 +294,7 @@ export function ReservationWizard({
                 <div className="lbl dim" style={{ fontSize: 10.5 }}>
                   Heure
                 </div>
-                <p style={{ color: 'var(--mc-gold)' }}>
+                <p style={{ color: 'var(--mc-gold-ink)' }}>
                   {heureDebut} — {heureFin}
                 </p>
               </div>
@@ -382,7 +382,7 @@ export function ReservationWizard({
                         {c.specialites.length > 0 && ` · ${c.specialites.join(', ')}`}
                       </div>
                     </span>
-                    <ChevronRight className="size-5" style={{ color: 'var(--mc-gold)' }} aria-hidden="true" />
+                    <ChevronRight className="size-5" style={{ color: 'var(--mc-gold-ink)' }} aria-hidden="true" />
                   </button>
                 ))}
               </div>
@@ -712,7 +712,7 @@ export function ReservationWizard({
                 <span className="lbl dim" style={{ fontSize: 10.5 }}>
                   Total à régler au salon
                 </span>
-                <span style={{ font: '600 20px/1 var(--mc-sans)', color: 'var(--mc-gold)', fontVariantNumeric: 'tabular-nums' }}>
+                <span style={{ font: '600 20px/1 var(--mc-sans)', color: 'var(--mc-gold-ink)', fontVariantNumeric: 'tabular-nums' }}>
                   {service ? formatPrix(service.prix) : '—'}
                 </span>
               </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Loader2, Pencil, Plus, Power } from 'lucide-react'
+import { Loader2, Pencil, Plus, Power, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -91,17 +91,32 @@ export function ServicesManager({ initial }: { initial: Service[] }) {
     }
   }
 
+  const [message, setMessage] = useState<string | null>(null)
+
   async function toggleActif(s: Service) {
-    if (s.actif) {
-      await fetch(`/api/services/${s.id}`, { method: 'DELETE' })
-    } else {
-      await fetch(`/api/services/${s.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ actif: true }),
-      })
+    setMessage(null)
+    const res = await fetch(`/api/services/${s.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ actif: !s.actif }),
+    })
+    if (!res.ok) {
+      setMessage("Impossible de modifier ce service pour l'instant.")
+      return
     }
     setServices((prev) => prev.map((p) => (p.id === s.id ? { ...p, actif: !p.actif } : p)))
+  }
+
+  async function supprimer(s: Service) {
+    setMessage(null)
+    if (!confirm(`Supprimer définitivement « ${s.nom} » ? Cette action est irréversible.`)) return
+    const res = await fetch(`/api/services/${s.id}`, { method: 'DELETE' })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      setMessage(data.error ?? 'Suppression impossible.')
+      return
+    }
+    setServices((prev) => prev.filter((p) => p.id !== s.id))
   }
 
   return (
@@ -111,6 +126,12 @@ export function ServicesManager({ initial }: { initial: Service[] }) {
           <Plus aria-hidden="true" /> Ajouter un service
         </button>
       </div>
+
+      {message && (
+        <p role="status" className="ad-note">
+          {message}
+        </p>
+      )}
 
       <div className="ad-list">
         {services.map((s, i) => (
@@ -136,6 +157,9 @@ export function ServicesManager({ initial }: { initial: Service[] }) {
               </button>
               <button type="button" className={`ad-btn sm ${s.actif ? 'danger' : 'line'}`} onClick={() => toggleActif(s)}>
                 <Power aria-hidden="true" /> {s.actif ? 'Désactiver' : 'Activer'}
+              </button>
+              <button type="button" className="ad-btn sm danger" onClick={() => supprimer(s)}>
+                <Trash2 aria-hidden="true" /> Supprimer
               </button>
             </div>
           </article>

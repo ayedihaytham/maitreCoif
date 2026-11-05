@@ -41,9 +41,31 @@ async function emailVerifie(userId: string, claims: Claims): Promise<string | nu
   return principal?.verification?.status === 'verified' ? principal.emailAddress : null
 }
 
+// Chaque navigation du back-office résout l'identité plusieurs fois (proxy, layout, page) et,
+// sans claim `email` dans le jeton, appelle l'API Clerk à chaque fois. On garde le résultat
+// 30 s par utilisateur. Un membre désactivé perd donc son accès au plus 30 s plus tard ;
+// `oublierPersonnel()` vide la mémoire dès qu'on modifie l'équipe depuis cette instance.
+const DUREE_MEMOIRE_MS = 30_000
+const memoire = new Map<string, { jusqua: number; staff: StaffUser | null }>()
+
+export function oublierPersonnel() {
+  memoire.clear()
+}
+
 export async function staffDepuisClerk(userId: string | null | undefined, claims: Claims): Promise<StaffUser | null> {
   if (!userId) return null
 
+  const connu = memoire.get(userId)
+  if (connu && connu.jusqua > Date.now()) return connu.staff
+
+  const staff = await resoudrePersonnel(userId, claims)
+  // Un échec technique (null) n'est pas mémorisé trop longtemps : on réessaie vite.
+  memoire.set(userId, { jusqua: Date.now() + (staff ? DUREE_MEMOIRE_MS : 5_000), staff })
+  if (memoire.size > 200) memoire.delete(memoire.keys().next().value as string)
+  return staff
+}
+
+async function resoudrePersonnel(userId: string, claims: Claims): Promise<StaffUser | null> {
   try {
     const email = await emailVerifie(userId, claims)
     if (!email) return null

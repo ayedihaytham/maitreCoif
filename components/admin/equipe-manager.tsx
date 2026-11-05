@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Camera, Loader2, Mail, Pencil, Plus, Star, User, UserX, X } from 'lucide-react'
+import { Camera, Loader2, Mail, Pencil, Plus, Star, User, UserX, X, Trash2, UserCheck } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -211,12 +211,34 @@ export function EquipeManager({ initial }: { initial: Coiffeur[] }) {
     }
   }
 
-  async function handleDeactivate(c: Coiffeur) {
-    if (!confirm(`Désactiver ${c.prenom} ${c.nom} ? L'historique de ses rendez-vous sera conservé.`)) return
-    const res = await fetch(`/api/admin/equipe/${c.id}`, { method: 'DELETE' })
-    if (res.ok) {
-      setEquipe((prev) => prev.map((e) => (e.id === c.id ? { ...e, actif: false } : e)))
+  async function changerActif(c: Coiffeur, actif: boolean) {
+    setNotice(null)
+    if (!actif && !confirm(`Désactiver ${c.prenom} ${c.nom} ? Il n'apparaîtra plus à la réservation et perdra l'accès au back-office. L'historique de ses rendez-vous est conservé et vous pourrez le réactiver.`)) return
+    const res = await fetch(`/api/admin/equipe/${c.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ actif }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      setNotice(typeof data.error === 'string' ? data.error : 'Impossible de modifier ce membre.')
+      return
     }
+    setEquipe((prev) => prev.map((e) => (e.id === c.id ? { ...e, actif } : e)))
+    setNotice(actif ? `${c.prenom} ${c.nom} est de nouveau actif.` : `${c.prenom} ${c.nom} est désactivé.`)
+  }
+
+  async function supprimer(c: Coiffeur) {
+    setNotice(null)
+    if (!confirm(`Supprimer définitivement ${c.prenom} ${c.nom} ? Ses horaires seront effacés. Cette action est irréversible.`)) return
+    const res = await fetch(`/api/admin/equipe/${c.id}`, { method: 'DELETE' })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      setNotice(data.error ?? 'Suppression impossible.')
+      return
+    }
+    setEquipe((prev) => prev.filter((e) => e.id !== c.id))
+    setNotice(`${c.prenom} ${c.nom} a été supprimé.`)
   }
 
   return (
@@ -270,11 +292,18 @@ export function EquipeManager({ initial }: { initial: Coiffeur[] }) {
                   {invitingId === c.id ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Mail aria-hidden="true" />} Inviter
                 </button>
               )}
-              {c.actif && (
-                <button type="button" className="ad-btn danger sm" onClick={() => handleDeactivate(c)}>
+              {c.actif ? (
+                <button type="button" className="ad-btn danger sm" onClick={() => changerActif(c, false)}>
                   <UserX aria-hidden="true" /> Désactiver
                 </button>
+              ) : (
+                <button type="button" className="ad-btn line sm" onClick={() => changerActif(c, true)}>
+                  <UserCheck aria-hidden="true" /> Activer
+                </button>
               )}
+              <button type="button" className="ad-btn danger sm" onClick={() => supprimer(c)}>
+                <Trash2 aria-hidden="true" /> Supprimer
+              </button>
             </div>
           </article>
         ))}
