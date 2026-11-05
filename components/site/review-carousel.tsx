@@ -1,5 +1,6 @@
 'use client'
 
+import type { CSSProperties } from 'react'
 import { useState } from 'react'
 import { Star } from 'lucide-react'
 
@@ -13,16 +14,26 @@ export interface AvisAffiche {
   meta: string
 }
 
-// Citation en grand ; plusieurs avis => points pour passer de l'un à l'autre.
+// Citation en grand, mot après mot comme des sous-titres ; plusieurs avis =>
+// points pour passer de l'un à l'autre.
 export function ReviewCarousel({ avis }: { avis: AvisAffiche[] }) {
   const [index, setIndex] = useState(0)
   const a = avis[index] ?? avis[0]
   if (!a) return null
 
+  const mots = `« ${a.texte} »`.split(/\s+/)
+
   return (
     <div aria-live="polite">
       <blockquote style={{ margin: 0 }}>
-        <p className="quote">« {a.texte} »</p>
+        {/* key : un nouvel avis rejoue l'apparition des mots */}
+        <p className="h-quote" key={a.id}>
+          {mots.map((mot, i) => (
+            <span key={i} className="w" style={{ '--w': i } as CSSProperties}>
+              {mot}
+            </span>
+          ))}
+        </p>
         <div className="stars" role="img" aria-label={`${a.note} étoiles sur 5`}>
           {Array.from({ length: a.note }).map((_, i) => (
             <Star key={i} className="size-5" fill="currentColor" aria-hidden="true" />

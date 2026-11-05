@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 
+import { Cinema } from '@/components/site/cinema'
+import { PageHero } from '@/components/site/page-hero'
 import { SuiviLookup } from '@/components/reservation/suivi-lookup'
 
 export const metadata: Metadata = {
@@ -12,15 +14,16 @@ export default async function SuiviPage({ searchParams }: { searchParams: Promis
 
   return (
     <main>
-      <div className="wrap page-head sec">
-        <div className="lbl">Suivi de réservation</div>
-        <h1 className="page-h1">
-          Retrouvez <em>votre rendez-vous.</em>
-        </h1>
-        <p className="lead">
-          Retrouvez le statut de votre rendez-vous à l&apos;aide de votre code de suivi (reçu lors de la réservation).
-        </p>
-
+      <Cinema hud={false} />
+      <PageHero
+        courte
+        etiquette="Suivi de réservation"
+        scene="SC. 05 · SALLE DE PROJECTION"
+        image="/maitre-coif-facade.jpg"
+        lignes={[{ t: 'Retrouvez' }, { t: 'votre rendez-vous.', or: true }]}
+        texte="Entrez le code de suivi reçu lors de la réservation : le statut de votre séance s'affiche aussitôt."
+      />
+      <div className="wrap sec">
         <SuiviLookup initialCode={code?.slice(0, 20) ?? ''} />
       </div>
     </main>

@@ -146,7 +146,8 @@ export function SuiviLookup({ initialCode = '' }: { initialCode?: string }) {
 
   return (
     <div>
-      <form onSubmit={handleSearch} className="suivi-form" noValidate>
+      <form onSubmit={handleSearch} className={cn('suivi-form scanner', loading && 'busy')} noValidate>
+        <i className="scan-line" aria-hidden="true" />
         <label className="fld">
           <span>Code de suivi</span>
           <div className="suivi-row">
@@ -180,6 +181,9 @@ export function SuiviLookup({ initialCode = '' }: { initialCode?: string }) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
                   <span className="lbl">Code {rdv.codeSuivi}</span>
                   <span className={cn('badge', STATUT_CLASSE[rdv.statut])}>{STATUT_LABEL[rdv.statut]}</span>
+                </div>
+                <div className={cn('stamp', STATUT_CLASSE[rdv.statut])} aria-hidden="true">
+                  {rdv.statut === 'CONFIRME' ? 'Confirmé' : rdv.statut === 'EN_ATTENTE' ? 'En attente' : rdv.statut === 'TERMINE' ? 'Terminé' : 'Annulé'}
                 </div>
                 <h3>
                   {rdv.service} avec {rdv.coiffeur}

@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowRight, Star } from 'lucide-react'
 
+import { Cinema } from '@/components/site/cinema'
+import { PageHero } from '@/components/site/page-hero'
 import { PortraitRond } from '@/components/site/portrait'
 import { Reveal } from '@/components/site/reveal'
 import { attribuerPortraits } from '@/lib/portraits'
@@ -47,54 +49,55 @@ export default async function EquipePage() {
 
   return (
     <main>
-      <div className="wrap page-head sec">
-        <div className="lbl">L&apos;équipe</div>
-        <h1 className="page-h1">
-          Des gestes précis. <em>Des styles singuliers.</em>
-        </h1>
-        <p className="lead">
-          Une équipe de passionnés, réunie autour d&apos;une même exigence : révéler votre style avec justesse, dans un
-          cadre où chaque détail compte. Choisissez votre coiffeur et trouvez le créneau qui vous ressemble.
-        </p>
-
-        {equipe.length === 0 ? (
-          <p className="empty-state" style={{ marginTop: 56 }}>
-            L&apos;équipe sera bientôt annoncée.
-          </p>
-        ) : (
-          <div className="t-grid">
-            {equipe.map((m, i) => (
-              <Reveal as="article" key={m.id} className="cc" delay={i % 3}>
-                <div className="spot" />
-                <PortraitRond portrait={m.portrait} nom={m.nom} />
-                <h2 style={{ position: 'relative', margin: '30px 0 0', font: '400 38px/1.05 var(--mc-serif)' }}>{m.nom}</h2>
-                <div className="lbl" style={{ position: 'relative', marginTop: 12, fontSize: 10.5 }}>
-                  {m.role}
-                </div>
-                {m.note && (
-                  <div style={{ position: 'relative', marginTop: 12, display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--mc-gold)' }}>
-                    <Star className="size-3.5" fill="currentColor" aria-hidden="true" />
-                    <span>{m.note} / 5</span>
+      <Cinema hud={false} />
+      <PageHero
+        etiquette="L'équipe"
+        scene="SC. 03 · PRISE 1 · LE CASTING"
+        image="/maitre-coif-team.png"
+        lignes={[{ t: 'Des gestes précis.' }, { t: 'Des styles singuliers.', or: true }]}
+        texte="Une équipe de passionnés, réunie autour d'une même exigence : révéler votre style avec justesse, dans un cadre où chaque détail compte. Choisissez votre coiffeur et trouvez le créneau qui vous ressemble."
+      />
+      <section className="h-cast page" data-track aria-label="Les coiffeurs">
+        <div className="h-cast-word" aria-hidden="true">
+          CASTING
+        </div>
+        <div className="wrap">
+          {equipe.length === 0 ? (
+            <p className="empty-state">L&apos;équipe sera bientôt annoncée.</p>
+          ) : (
+            <div className="h-cast-grid wide">
+              {equipe.map((m, i) => (
+                <Reveal as="article" key={m.id} className="h-cs" delay={i % 3}>
+                  <div className="tag">
+                    <b>Essai {String(i + 1).padStart(2, '0')}</b> · {m.role}
                   </div>
-                )}
-                {m.specialites.length > 0 && (
-                  <div className="chips">
-                    {m.specialites.map((sp) => (
-                      <span className="chip" key={sp}>
-                        {sp}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {m.bio && <p>{m.bio}</p>}
-                <Link className="tlink" href={`/reservation?coiffeurId=${m.id}`}>
-                  Voir ses disponibilités <ArrowRight className="size-3.5" aria-hidden="true" />
-                </Link>
-              </Reveal>
-            ))}
-          </div>
-        )}
-      </div>
+                  <PortraitRond portrait={m.portrait} nom={m.nom} />
+                  <h2 style={{ position: 'relative', margin: '30px 0 0', font: '400 clamp(28px,3.2vw,40px)/1.05 var(--mc-serif)' }}>{m.nom}</h2>
+                  {m.note && (
+                    <div className="rating">
+                      <Star className="size-3.5" fill="currentColor" aria-hidden="true" />
+                      <span>{m.note} / 5</span>
+                    </div>
+                  )}
+                  {m.specialites.length > 0 && (
+                    <div className="chips">
+                      {m.specialites.map((sp) => (
+                        <span className="chip" key={sp}>
+                          {sp}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {m.bio && <p>{m.bio}</p>}
+                  <Link className="tlink" href={`/reservation?coiffeurId=${m.id}`}>
+                    Voir ses disponibilités <ArrowRight className="size-3.5" aria-hidden="true" />
+                  </Link>
+                </Reveal>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
     </main>
   )
 }

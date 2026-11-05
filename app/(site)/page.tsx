@@ -2,9 +2,9 @@ import type { CSSProperties } from 'react'
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight, ChevronDown, Clock } from 'lucide-react'
+import { ArrowRight, Clock } from 'lucide-react'
 
-import { HomeEffects } from '@/components/site/home-effects'
+import { Cinema } from '@/components/site/cinema'
 import { Intro } from '@/components/site/intro'
 import { PortraitRond } from '@/components/site/portrait'
 import { Reveal } from '@/components/site/reveal'
@@ -79,47 +79,53 @@ export default async function AccueilPage() {
   return (
     <main>
       <Intro />
-      <HomeEffects />
+      <Cinema />
 
-      {/* ───────────── Scène 01 · Ouverture ───────────── */}
-      <section className="hero" data-scene="0" aria-label="Ouverture">
-        <div className="hero-media" id="heroMedia">
+      {/* ═════════ PLAN 1 · OUVERTURE — plan large : la lumière suit le regard ═════════ */}
+      <section className="h-hero" data-scene="0" data-track="out" aria-label="Ouverture">
+        <div className="h-media">
           <Image
             src="/maitre-coif-facade.jpg"
             alt="Enseigne lumineuse Maitre Coif, en lettres rétro-éclairées"
             fill
             preload
-            quality={70}
             sizes="100vw"
           />
         </div>
-        <div className="glow" />
-        <svg className="grain" aria-hidden="true">
-          <filter id="grain-accueil">
-            <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" stitchTiles="stitch" />
-            <feColorMatrix type="saturate" values="0" />
-          </filter>
-          <rect width="100%" height="100%" filter="url(#grain-accueil)" />
-        </svg>
-        <span className="vf tl" />
-        <span className="vf tr" />
-        <span className="vf bl" />
-        <span className="vf br" />
+        <div className="h-dark" />
+        <div className="h-light" />
+        <div className="h-streak" />
+        <div className="h-shade" />
+        <span className="h-vf tl" />
+        <span className="h-vf tr" />
+        <span className="h-vf bl" />
+        <span className="h-vf br" />
+        <div className="h-slate" aria-hidden="true">
+          <b>SC. 01</b> · PRISE 1<br />
+          EXT. SALON — SOIR
+        </div>
 
-        <div className="hero-copy">
+        <div className="h-copy">
           <div className="lbl" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             <span style={{ width: 32, height: 1, background: 'var(--mc-gold)' }} />
             Salon de coiffure &amp; barbier
           </div>
-          <h1>
-            L&apos;art de la coupe,
-            <em>révélé avec précision.</em>
+          <h1 className="h-title">
+            <span className="ln" style={{ '--i': 0 } as CSSProperties}>
+              <span>L&apos;art de la coupe,</span>
+            </span>
+            <span className="ln gold" style={{ '--i': 1 } as CSSProperties}>
+              <span>révélé avec</span>
+            </span>
+            <span className="ln gold" style={{ '--i': 2 } as CSSProperties}>
+              <span>précision.</span>
+            </span>
           </h1>
-          <p>
+          <p className="h-sub">
             Chez Maitre Coif, chaque rendez-vous est pensé pour révéler votre style, dans un cadre élégant et attentif au
             détail.
           </p>
-          <div className="cta-row">
+          <div className="h-cta">
             <Link className="btn btn-gold" href="/reservation">
               Réserver un rendez-vous <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
@@ -128,18 +134,9 @@ export default async function AccueilPage() {
             </Link>
           </div>
         </div>
-
-        <div className="hero-bar">
-          <span>
-            <span className="rec" />
-            Scène 01 / 05<span className="hm"> · Ouverture</span>
-          </span>
-          <span className="mid">
-            Défiler <ChevronDown className="size-3.5" style={{ color: 'var(--mc-gold)' }} aria-hidden="true" />
-          </span>
-          <span>
-            Mar — Sam · 10h00 — 20h30<span className="hm"> · Sfax</span>
-          </span>
+        <div className="h-scroll" aria-hidden="true">
+          Défiler
+          <i />
         </div>
       </section>
 
@@ -160,11 +157,11 @@ export default async function AccueilPage() {
         </div>
       )}
 
-      {/* ───────────── Scène 02 · Prestations ───────────── */}
+      {/* ═════════ PLAN 2 · PRESTATIONS — la pellicule défile, seule la vignette au centre est nette ═════════ */}
       {services.length > 0 && (
-        <section className="sec" data-scene="1" aria-labelledby="t-serv">
-          <div className="wrap">
-            <Reveal className="head-row">
+        <section className="h-reel" data-scene="1" data-pin style={{ '--n': services.length } as CSSProperties} aria-labelledby="t-serv">
+          <div className="h-stage">
+            <div className="h-reel-head">
               <div>
                 <div className="lbl">Scène 02 / 05 · Nos prestations</div>
                 <h2 className="h2" id="t-serv">
@@ -174,95 +171,97 @@ export default async function AccueilPage() {
               <Link className="tlink" href="/services">
                 Tous nos services <ArrowRight className="size-3.5" aria-hidden="true" />
               </Link>
-            </Reveal>
+            </div>
 
-            <Reveal className="film" delay={1}>
-              <div className="perf" aria-hidden="true" />
-              <div className="strip" style={{ '--n': services.length } as CSSProperties}>
-                {services.map((s, i) => (
-                  <article key={s.id} className="fr spotlit">
-                    <div className="no" aria-hidden="true">
-                      {String(i + 1).padStart(2, '0')}
-                    </div>
-                    <div>
-                      <h3>{s.nom}</h3>
-                      {s.description && <p>{s.description}</p>}
-                      <Link className="tlink go" href={`/reservation?serviceId=${s.id}`}>
-                        Réserver
-                      </Link>
-                    </div>
+            <div className="h-strip">
+              {services.map((s, i) => (
+                <article key={s.id} className="h-card" data-depth>
+                  <span className="flare" />
+                  <div className="no" aria-hidden="true">
+                    {String(i + 1).padStart(2, '0')}
+                  </div>
+                  <div>
+                    <h3>{s.nom}</h3>
+                    {s.description && <p>{s.description}</p>}
                     <div className="meta">
-                      <span className="dur">
+                      <span className="dur" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                         <Clock className="size-3.5" aria-hidden="true" />
                         {s.duree} min
                       </span>
                       <b>{formatPrix(Number(s.prix))}</b>
                     </div>
-                  </article>
-                ))}
-              </div>
-              <div className="perf" aria-hidden="true" />
-            </Reveal>
+                    <Link className="tlink" href={`/reservation?serviceId=${s.id}`} style={{ marginTop: 18 }}>
+                      Réserver <ArrowRight className="size-3.5" aria-hidden="true" />
+                    </Link>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
       )}
 
-      {/* ───────────── Scène 03 · L'univers ───────────── */}
-      <section className="sec" data-scene="2" style={{ paddingTop: 20 }} aria-labelledby="t-uni">
-        <div className="wrap">
-          <div className="uni">
-            <Reveal className="ph">
-              <Image
-                className="ph-big"
-                src={photoPrincipale?.url ?? '/maitre-coif-interieur.jpg'}
-                alt={photoPrincipale?.legende || 'Mur de cadres du salon, affiche Maitre Coif Since 2005'}
-                width={1400}
-                height={1000}
-                sizes="(min-width: 900px) 55vw, 100vw"
-              />
-              <Image
-                className="ph-small"
-                src={photoSecondaire?.url ?? '/maitre-coif-facade.jpg'}
-                alt={photoSecondaire?.legende || "Détail de l'enseigne lumineuse"}
-                width={680}
-                height={450}
-                sizes="340px"
-              />
-            </Reveal>
-            <div style={{ position: 'relative' }}>
-              <div className="ghost" aria-hidden="true">
-                2005
-              </div>
-              <Reveal delay={1} className="relative">
-                <div className="lbl">Scène 03 / 05 · L&apos;univers du salon</div>
-                <h2 className="h2" id="t-uni" style={{ fontSize: 'clamp(38px,5vw,60px)' }}>
-                  Un cadre pensé dans les <em>moindres détails.</em>
-                </h2>
-                <p className="lead" style={{ marginBottom: 30 }}>
-                  Chez Maitre Coif, l&apos;expérience commence dès l&apos;entrée : une décoration soignée, une ambiance
-                  chaleureuse et une équipe attentive à chaque détail, pour un moment qui vous ressemble.
-                </p>
-                <div className="fact">
-                  <span className="lbl">Depuis 2005</span>
-                  <span>Une adresse installée à Sfax, route Afran.</span>
-                </div>
-                <div className="fact">
-                  <span className="lbl">Sur rendez-vous</span>
-                  <span>Réservé à l&apos;avance, pour prendre le temps qu&apos;il faut.</span>
-                </div>
-                <div className="fact">
-                  <span className="lbl">Salon &amp; barbier</span>
-                  <span>Coupe, barbe, coloration et soins.</span>
-                </div>
-              </Reveal>
+      {/* ═════════ PLAN 3 · L'UNIVERS — plan d'insertion plein cadre, texte en sous-titres ═════════ */}
+      <section className="h-uni" data-scene="2" data-track aria-labelledby="t-uni">
+        <div className="h-uni-media">
+          <Image
+            src={photoPrincipale?.url ?? '/maitre-coif-interieur.jpg'}
+            alt={photoPrincipale?.legende || 'Mur de cadres du salon, affiche Maitre Coif Since 2005'}
+            fill
+            sizes="100vw"
+          />
+        </div>
+        <div className="h-ghost" aria-hidden="true">
+          2005
+        </div>
+        <div className="h-pip">
+          <span>
+            <i className="rec" /> Enseigne · direct
+          </span>
+          <Image
+            src={photoSecondaire?.url ?? '/maitre-coif-facade.jpg'}
+            alt={photoSecondaire?.legende || "Détail de l'enseigne lumineuse"}
+            fill
+            sizes="340px"
+          />
+        </div>
+
+        <div className="h-uni-copy">
+          <Reveal>
+            <div className="lbl">Scène 03 / 05 · L&apos;univers du salon</div>
+          </Reveal>
+          <Reveal as="h2" delay={1} className="h2" id="t-uni">
+            Un cadre pensé dans les <em>moindres détails.</em>
+          </Reveal>
+          <Reveal as="p" delay={2} className="h-subs">
+            <span>
+              Chez Maitre Coif, l&apos;expérience commence dès l&apos;entrée : une décoration soignée, une ambiance chaleureuse
+              et une équipe attentive à chaque détail, pour un moment qui vous ressemble.
+            </span>
+          </Reveal>
+          <Reveal delay={3} className="h-facts">
+            <div>
+              <span className="lbl">Depuis 2005</span>
+              Une adresse installée à Sfax, route Afran.
             </div>
-          </div>
+            <div>
+              <span className="lbl">Sur rendez-vous</span>
+              Réservé à l&apos;avance, pour prendre le temps qu&apos;il faut.
+            </div>
+            <div>
+              <span className="lbl">Salon &amp; barbier</span>
+              Coupe, barbe, coloration et soins.
+            </div>
+          </Reveal>
         </div>
       </section>
 
-      {/* ───────────── Scène 04 · L'équipe ───────────── */}
+      {/* ═════════ PLAN 4 · LE CASTING — essais caméra, un projecteur par personne ═════════ */}
       {equipe.length > 0 && (
-        <section className="sec cast" data-scene="3" aria-labelledby="t-cast">
+        <section className="h-cast" data-scene="3" data-track aria-labelledby="t-cast">
+          <div className="h-cast-word" aria-hidden="true">
+            CASTING
+          </div>
           <div className="wrap">
             <Reveal className="head-row">
               <div>
@@ -276,17 +275,16 @@ export default async function AccueilPage() {
               </Link>
             </Reveal>
 
-            <div className="grid3">
+            <div className="h-cast-grid">
               {equipe.map((c, i) => (
-                <Reveal as="article" key={c.id} className="cc" delay={i}>
-                  <div className="spot" />
+                <Reveal as="article" key={c.id} className="h-cs" delay={i}>
+                  <div className="tag">
+                    <b>Essai {String(i + 1).padStart(2, '0')}</b> · {c.role === 'ADMIN' ? 'Gérant · Fondateur' : 'Coiffeur'}
+                  </div>
                   <PortraitRond portrait={c.portrait} nom={`${c.prenom} ${c.nom}`} />
                   <h3>
                     {c.prenom} {c.nom}
                   </h3>
-                  <div className="lbl" style={{ position: 'relative', marginTop: 12, fontSize: 10.5 }}>
-                    {c.role === 'ADMIN' ? 'Gérant · Fondateur' : 'Coiffeur'}
-                  </div>
                   {c.specialites.length > 0 && (
                     <div className="chips">
                       {c.specialites.slice(0, 3).map((sp) => (
@@ -307,9 +305,9 @@ export default async function AccueilPage() {
         </section>
       )}
 
-      {/* ───────────── Scène 05 · Critique ───────────── */}
+      {/* ═════════ PLAN 5 · LA CRITIQUE — la parole d'un client, en sous-titres ═════════ */}
       {avisAffiches.length > 0 && (
-        <section className="sec crit" data-scene="4" aria-labelledby="t-crit">
+        <section className="h-crit" data-scene="4" data-track aria-labelledby="t-crit">
           <div className="qmark" aria-hidden="true">
             “
           </div>
@@ -333,26 +331,43 @@ export default async function AccueilPage() {
         </section>
       )}
 
-      {/* ───────────── Final · Prise de rendez-vous ───────────── */}
-      <section className="sec cta-sec" aria-labelledby="t-cta" style={{ paddingBlock: 'clamp(70px,9vw,110px)' }}>
+      {/* ═════════ PLAN 6 · FIN — le clap : la prochaine prise est la vôtre ═════════ */}
+      <section className="h-end" data-scene="5" aria-labelledby="t-cta">
         <div className="wrap">
-          {prochaine && (
-            <Reveal>
-              <div className="pill">
-                <span className="pulse" />
-                <span>
-                  Prochaine disponibilité : {libelleJour(prochaine.dateISO, prochaine.joursAvant)}, {prochaine.heure} avec{' '}
-                  {prochaine.coiffeur}
-                </span>
+          <Reveal>
+            <div className="h-clap" role="img" aria-label="Clap de cinéma : prochaine prise disponible">
+              <div className="h-clap-arm" />
+              <div className="h-clap-base" />
+              <div className="h-clap-board">
+                <div className="wide">
+                  <small>Production</small>
+                  <strong>Maitre Coif</strong>
+                </div>
+                <div>
+                  <small>Scène</small>
+                  <strong>Votre style</strong>
+                </div>
+                <div>
+                  <small>Prise</small>
+                  <strong className="gold">N° 1</strong>
+                </div>
+                <div className="wide">
+                  <small>{prochaine ? 'Prochaine disponibilité' : 'Disponibilité'}</small>
+                  <strong className="gold">
+                    {prochaine ? `${libelleJour(prochaine.dateISO, prochaine.joursAvant)}, ${prochaine.heure}` : 'Sur rendez-vous'}
+                  </strong>
+                  {prochaine && <small style={{ marginTop: 6 }}>avec {prochaine.coiffeur}</small>}
+                </div>
               </div>
-            </Reveal>
-          )}
-          <Reveal as="h2" delay={1} className="h2" id="t-cta">
+            </div>
+          </Reveal>
+
+          <Reveal as="h2" delay={1} className="h-title-end" id="t-cta">
             Prêt à révéler <em>votre style ?</em>
           </Reveal>
           <Reveal delay={2} className="cta-final">
             <Link className="btn btn-gold" href="/reservation" style={{ height: 62, padding: '0 44px', fontSize: 13 }}>
-              Réserver maintenant <ArrowRight className="size-4" aria-hidden="true" />
+              Réserver ma séance <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
           </Reveal>
           <Reveal delay={3}>

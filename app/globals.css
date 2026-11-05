@@ -53,8 +53,10 @@
 }
 
 * { @apply border-border outline-ring/50; }
-html { scroll-behavior: smooth; background: #0a0a0a; overflow-x: hidden; }
-body { @apply bg-background text-foreground antialiased; overflow-x: hidden; }
+/* overflow-x: clip (et non hidden) : hidden ferait de body un conteneur de défilement
+   et casserait position: sticky (pellicule épinglée de l'accueil). */
+html { scroll-behavior: smooth; background: #0a0a0a; overflow-x: clip; }
+body { @apply bg-background text-foreground antialiased; overflow-x: clip; }
 ::selection { background: var(--gold); color: var(--background); }
 
 /* Barres de défilement masquées sur tout le site (accueil comme conteneurs
@@ -63,3 +65,15 @@ body { @apply bg-background text-foreground antialiased; overflow-x: hidden; }
 * { scrollbar-width: none; -ms-overflow-style: none; }
 *::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .eyebrow { display: flex; align-items: center; gap: 1rem; color: var(--gold); font-size: 0.625rem; font-weight: 500; letter-spacing: 0.35em; text-transform: uppercase; }
+
+/* Fenêtres de dialogue (partagées par le site et le back-office) : même langage que la direction « Séance ». */
+[data-slot="dialog-overlay"] { background: rgba(0, 0, 0, 0.74); backdrop-filter: blur(3px); }
+[data-slot="dialog-content"] {
+  background: linear-gradient(180deg, #1a1815, #121110);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 6px;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.7), 0 0 80px rgba(212, 175, 55, 0.08);
+  padding: 1.6rem;
+}
+[data-slot="dialog-title"] { font-family: var(--font-cormorant), Georgia, serif; font-weight: 400; font-size: 1.7rem; line-height: 1.1; letter-spacing: 0; }
+[data-slot="dialog-description"] { line-height: 1.6; }

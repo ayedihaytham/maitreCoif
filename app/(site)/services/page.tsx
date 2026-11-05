@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Clock } from 'lucide-react'
 
+import { Cinema } from '@/components/site/cinema'
+import { PageHero } from '@/components/site/page-hero'
 import { Reveal } from '@/components/site/reveal'
 import { prisma } from '@/lib/prisma'
 import { formatPrix } from '@/lib/utils'
@@ -21,16 +23,15 @@ export default async function ServicesPage() {
 
   return (
     <main>
-      <div className="wrap page-head sec">
-        <div className="lbl">Nos prestations</div>
-        <h1 className="page-h1">
-          Nos <em>services.</em>
-        </h1>
-        <p className="lead">
-          Des prestations pensées pour chaque style, réalisées avec des produits professionnels et un savoir-faire
-          exigeant. Tarifs en dinars tunisiens (DT), à régler au salon.
-        </p>
-
+      <Cinema hud={false} />
+      <PageHero
+        etiquette="Nos prestations"
+        scene="SC. 02 · PRISE 1 · INT. SALON"
+        image="/maitre-coif-interieur.jpg"
+        lignes={[{ t: 'Nos' }, { t: 'services.', or: true }]}
+        texte="Des prestations pensées pour chaque style, réalisées avec des produits professionnels et un savoir-faire exigeant. Tarifs en dinars tunisiens (DT), à régler au salon."
+      />
+      <div className="wrap s-page sec">
         {services.length === 0 ? (
           <p className="empty-state" style={{ marginTop: 56 }}>
             Aucun service disponible pour le moment.

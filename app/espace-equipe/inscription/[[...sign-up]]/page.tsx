@@ -25,31 +25,27 @@ export default async function InscriptionEquipePage({ params, searchParams }: Pr
   const configure = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY)
 
   return (
-    <main className="px-5 pb-24 pt-16 sm:px-8 lg:px-12">
-      <div className="mx-auto flex max-w-md flex-col items-center">
-        <div className="eyebrow before:h-px before:w-8 before:bg-gold">Espace équipe</div>
-        <h1 className="mt-6 text-3xl font-light uppercase tracking-[0.1em] sm:text-4xl">
-          <span className="text-gold">Créer mon accès</span>
-        </h1>
-        <div className="mt-10">
-          {!configure ? (
-            <p className="text-sm text-muted-foreground">
-              L&apos;authentification de l&apos;équipe n&apos;est pas configurée sur ce déploiement (clés Clerk manquantes).
+    <main className="es-main">
+      <div className="lbl">Régie · Invitation</div>
+      <h1>
+        Créer mon <em>accès.</em>
+      </h1>
+      <div className="es-card">
+        {!configure ? (
+          <p className="es-lead">L&apos;authentification de l&apos;équipe n&apos;est pas configurée sur ce déploiement (clés Clerk manquantes).</p>
+        ) : estPremiereEtape && !invite ? (
+          <div>
+            <p className="es-lead">
+              L&apos;inscription se fait uniquement sur invitation. Demandez au gérant de vous inviter depuis la page
+              « Équipe » : vous recevrez un email avec un lien personnel.
             </p>
-          ) : estPremiereEtape && !invite ? (
-            <div className="max-w-sm text-center">
-              <p className="text-sm leading-6 text-muted-foreground">
-                L&apos;inscription se fait uniquement sur invitation. Demandez au gérant de vous inviter depuis la page
-                « Équipe » : vous recevrez un email avec un lien personnel.
-              </p>
-              <Link href="/connexion" className="mt-6 inline-block text-[11px] text-gold hover:text-foreground">
-                J&apos;ai déjà un accès : me connecter
-              </Link>
-            </div>
-          ) : (
-            <SignUp path="/inscription" signInUrl="/connexion" fallbackRedirectUrl="/planning" />
-          )}
-        </div>
+            <Link href="/connexion" className="es-back" style={{ display: 'inline-block' }}>
+              J&apos;ai déjà un accès : me connecter
+            </Link>
+          </div>
+        ) : (
+          <SignUp path="/inscription" signInUrl="/connexion" fallbackRedirectUrl="/planning" />
+        )}
       </div>
     </main>
   )

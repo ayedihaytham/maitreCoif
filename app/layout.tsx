@@ -35,6 +35,25 @@ const clerkAppearance = {
     colorInputText: '#f5f3ee',
     colorDanger: '#e5484d',
     borderRadius: '0.125rem',
+    fontFamily: 'var(--font-manrope), system-ui, sans-serif',
+  },
+  // Le formulaire Clerk prend l'allure d'un billet de cinéma : carte sombre, filet doré, titres en Cormorant.
+  elements: {
+    card: {
+      backgroundColor: '#14120f',
+      border: '1px solid rgba(212,175,55,.28)',
+      boxShadow: '0 30px 80px rgba(0,0,0,.6), 0 0 80px rgba(255,243,214,.05)',
+    },
+    headerTitle: { fontFamily: 'var(--font-cormorant), Georgia, serif', fontWeight: 300, fontSize: '1.9rem' },
+    formButtonPrimary: {
+      textTransform: 'uppercase',
+      letterSpacing: '.18em',
+      fontSize: '.72rem',
+      fontWeight: 700,
+      color: '#0a0a0a',
+    },
+    formFieldLabel: { textTransform: 'uppercase', letterSpacing: '.16em', fontSize: '.66rem' },
+    footer: { background: 'transparent' },
   },
 }
 

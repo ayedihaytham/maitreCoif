@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import type { CSSProperties } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -18,6 +19,18 @@ const NAV_LINKS = [
   { href: '/suivi', label: 'Suivi de réservation' },
 ]
 
+// Numéro de scène de chaque page : la barre du haut indique « où l'on est dans le film ».
+const SCENE_PAR_PAGE: Record<string, string> = {
+  '/': '01',
+  '/services': '02',
+  '/equipe': '03',
+  '/reservation': '04',
+  '/suivi': '05',
+}
+
+// Pages qui s'ouvrent sur un plan plein cadre : la barre y est transparente au départ.
+const PLATEAUX = ['/', '/services', '/equipe', '/suivi']
+
 interface SiteNavProps {
   user: { name?: string | null; role: Role } | null
 }
@@ -29,17 +42,34 @@ async function deconnecterClient() {
 
 export function SiteNav({ user }: SiteNavProps) {
   const pathname = usePathname()
-  const accueil = pathname === '/'
+  const plateau = PLATEAUX.includes(pathname)
+  const scene = SCENE_PAR_PAGE[pathname]
   const [defile, setDefile] = useState(false)
   const [ouvert, setOuvert] = useState(false)
+  const entete = useRef<HTMLElement>(null)
 
-  // Transparent sur l'image d'ouverture, plein dès qu'on défile (ou hors accueil).
+  // Transparent sur le plan d'ouverture, plein dès qu'on défile ; la ligne dorée
+  // du bas de la barre indique la progression dans la page.
   useEffect(() => {
-    const onScroll = () => setDefile(window.scrollY > 40)
+    let attente = false
+    const onScroll = () => {
+      setDefile(window.scrollY > 40)
+      if (attente) return
+      attente = true
+      requestAnimationFrame(() => {
+        const course = document.documentElement.scrollHeight - window.innerHeight
+        entete.current?.style.setProperty('--sp', String(course > 0 ? Math.min(1, window.scrollY / course) : 0))
+        attente = false
+      })
+    }
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+    }
+  }, [pathname])
 
   useEffect(() => setOuvert(false), [pathname])
 
@@ -51,6 +81,14 @@ export function SiteNav({ user }: SiteNavProps) {
     }
   }, [ouvert])
 
+  // Échap ferme le menu.
+  useEffect(() => {
+    if (!ouvert) return
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOuvert(false)
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [ouvert])
+
   const estEquipe = user?.role === 'COIFFEUR' || user?.role === 'ADMIN'
   const actif = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href))
   const compteHref = estEquipe ? salonUrl('/planning') : '/compte'
@@ -59,14 +97,22 @@ export function SiteNav({ user }: SiteNavProps) {
 
   return (
     <>
-      <header className={cn('nav', (!accueil || defile || ouvert) && 'solid')}>
-        <Link className="logo" href="/" aria-label="Maitre Coif, accueil">
-          <Image src="/logo-gold.png" alt="Maitre Coif" width={376} height={310} priority />
-        </Link>
+      <header ref={entete} className={cn('nav', (!plateau || defile || ouvert) && 'solid')}>
+        <div className="nav-left">
+          <Link className="logo" href="/" aria-label="Maitre Coif, accueil">
+            <Image src="/logo-gold.png" alt="Maitre Coif" width={376} height={310} priority />
+          </Link>
+          {scene && (
+            <span className="nav-scene" aria-hidden="true">
+              <i className="rec" /> SC. {scene}
+            </span>
+          )}
+        </div>
 
         <nav className="nav-links" aria-label="Navigation principale">
-          {NAV_LINKS.map((l) => (
+          {NAV_LINKS.map((l, i) => (
             <Link key={l.href} href={l.href} className={cn('nl', actif(l.href) && 'on')} aria-current={actif(l.href) ? 'page' : undefined}>
+              <sup aria-hidden="true">{String(i + 1).padStart(2, '0')}</sup>
               {l.label}
             </Link>
           ))}
@@ -88,7 +134,7 @@ export function SiteNav({ user }: SiteNavProps) {
               )}
             </>
           )}
-          <Link className="btn btn-gold btn-sm cta" href="/reservation" style={{ marginLeft: 10 }}>
+          <Link className="btn btn-gold btn-sm cta btn-ticket btn-shine" href="/reservation" data-magnetic style={{ marginLeft: 10 }}>
             Réserver
           </Link>
           <button
@@ -102,15 +148,30 @@ export function SiteNav({ user }: SiteNavProps) {
             {ouvert ? <X className="size-6" aria-hidden="true" /> : <Menu className="size-6" aria-hidden="true" />}
           </button>
         </div>
+        <i className="nav-progress" aria-hidden="true" />
       </header>
 
+      {/* Menu mobile : les pages sont les chapitres du film */}
       <div id="menu-mobile" className={cn('menu', ouvert && 'open')} aria-hidden={!ouvert}>
-        {NAV_LINKS.map((l) => (
-          <Link key={l.href} href={l.href} className={cn('big', actif(l.href) && 'on')} tabIndex={ouvert ? 0 : -1}>
+        <div className="menu-rail" aria-hidden="true" />
+        {NAV_LINKS.map((l, i) => (
+          <Link
+            key={l.href}
+            href={l.href}
+            className={cn('big', actif(l.href) && 'on')}
+            style={{ '--i': i } as CSSProperties}
+            tabIndex={ouvert ? 0 : -1}
+          >
+            <span className="no">{String(i + 1).padStart(2, '0')}</span>
             {l.label}
           </Link>
         ))}
-        <Link className="btn btn-gold" href="/reservation" style={{ marginTop: 28, height: 60 }} tabIndex={ouvert ? 0 : -1}>
+        <Link
+          className="btn btn-gold btn-ticket btn-shine"
+          href="/reservation"
+          style={{ marginTop: 30, height: 60, '--i': NAV_LINKS.length } as CSSProperties}
+          tabIndex={ouvert ? 0 : -1}
+        >
           Réserver un rendez-vous
         </Link>
         {user && (
@@ -125,9 +186,14 @@ export function SiteNav({ user }: SiteNavProps) {
             )}
           </div>
         )}
+        <div className="menu-foot">
+          Route Afran Km 5, Sfax
+          <br />
+          Mardi — Samedi · 10h00 — 20h30 · Sur rendez-vous
+        </div>
       </div>
 
-      {!accueil && <div className="nav-spacer" aria-hidden="true" />}
+      {!plateau && <div className="nav-spacer" aria-hidden="true" />}
     </>
   )
 }
