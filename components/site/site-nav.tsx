@@ -119,7 +119,7 @@ export function SiteNav({ user }: SiteNavProps) {
               )}
             </>
           )}
-          <Link className="btn btn-gold btn-sm cta" href="/reservation" style={{ marginLeft: 10 }}>
+          <Link className="btn btn-gold btn-sm cta btn-ticket" href="/reservation" style={{ marginLeft: 10 }}>
             Réserver
           </Link>
           <button
@@ -152,7 +152,7 @@ export function SiteNav({ user }: SiteNavProps) {
           </Link>
         ))}
         <Link
-          className="btn btn-gold"
+          className="btn btn-gold btn-ticket"
           href="/reservation"
           style={{ marginTop: 30, height: 60, '--i': NAV_LINKS.length } as CSSProperties}
           tabIndex={ouvert ? 0 : -1}
