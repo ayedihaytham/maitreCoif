@@ -4,7 +4,8 @@
    décrit ici en CSS à partir de variables écrites par components/site/cinema.tsx :
      --fp  progression du plan (0 entrée -> 1 sortie), ou de l'épinglage
      --fi  position par rapport au centre (-1 à 1)
-     --ad  distance horizontale au centre (profondeur de champ)
+     (profondeur de champ des cartes : écrite directement par le moteur, cf. components/site/cinema.tsx ; les
+      formules ci-dessous restent la valeur de repos sans JavaScript)
      --mx/--my  position de la lumière sur le premier plan
    Sans JavaScript ou avec prefers-reduced-motion, tout reste lisible et statique.
    ===================================================================== */
@@ -12,7 +13,7 @@
 .mc{--h-ease:cubic-bezier(.16,1,.3,1);--h-pad:clamp(20px,5vw,80px)}
 
 /* ───────────────────────── Grain de pellicule ───────────────────────── */
-.mc .h-grain{position:fixed;inset:-60%;z-index:90;pointer-events:none;opacity:.075;background-size:220px 220px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .7 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");animation:mc-grain .9s steps(6) infinite}
+.mc .h-grain{position:fixed;inset:-12%;will-change:transform;contain:strict;z-index:90;pointer-events:none;opacity:.075;background-size:220px 220px;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .7 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");animation:mc-grain .9s steps(6) infinite}
 @keyframes mc-grain{0%{transform:translate(0,0)}20%{transform:translate(-3%,2%)}40%{transform:translate(2%,-3%)}60%{transform:translate(-2%,-1%)}80%{transform:translate(3%,3%)}100%{transform:translate(0,0)}}
 
 /* ───────────────────────── Lecteur (barre du bas) ───────────────────────── */
@@ -21,7 +22,7 @@
 .mc .h-hud-rec{display:flex;align-items:center;gap:10px;color:var(--mc-ivory)}
 .mc .h-hud-rec .rec{margin:0}
 .mc .h-hud-track{position:relative;height:2px;background:rgb(var(--mc-fg-rgb) / .2)}
-.mc .h-hud-fill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--mc-gold);box-shadow:0 0 12px rgba(212,175,55,.85)}
+.mc .h-hud-fill{position:absolute;left:0;top:0;bottom:0;width:100%;transform:scaleX(0);transform-origin:0 50%;will-change:transform;background:var(--mc-gold);box-shadow:0 0 12px rgba(212,175,55,.85)}
 .mc .h-mark{position:absolute;top:50%;width:26px;height:34px;margin:-17px 0 0 -13px;padding:0;background:none;border:0}
 .mc .h-mark::after{content:"";position:absolute;left:50%;top:50%;width:1px;height:10px;margin-top:-5px;background:rgb(var(--mc-fg-rgb) / .6);transition:height .2s,background .2s}
 .mc .h-mark:hover::after,.mc .h-mark:focus-visible::after{height:18px;margin-top:-9px;background:var(--mc-gold)}

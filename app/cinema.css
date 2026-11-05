@@ -39,9 +39,9 @@
 .mc .btn-ghost:hover{border-color:var(--mc-gold-ink);color:var(--mc-gold-ink)}
 .mc .btn-sm{height:44px;padding:0 22px}
 .mc .nav{position:fixed;top:0;left:0;right:0;z-index:60;height:80px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(18px,4vw,56px);background:linear-gradient(180deg,rgba(0,0,0,.65),rgba(0,0,0,0));border-bottom:1px solid transparent;transition:background .35s,border-color .35s,height .35s}
-.mc .nav.solid{background:rgb(var(--mc-bg-rgb) / .95);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom-color:var(--mc-line-gold);height:72px}
+.mc .nav.solid,.mc:not(:has(.h-hero,.ph-hero)) .nav{background:rgb(var(--mc-bg-rgb) / .97);border-bottom-color:var(--mc-line-gold);height:72px}
 .mc .nav .logo img{height:52px;width:auto;transition:height .35s}
-.mc .nav.solid .logo img{height:44px}
+.mc .nav.solid .logo img,.mc:not(:has(.h-hero,.ph-hero)) .nav .logo img{height:44px}
 .mc .nav-links{display:flex;align-items:center;gap:clamp(20px,3vw,44px)}
 .mc .nl{position:relative;font:600 11px/1 var(--mc-sans);letter-spacing:.2em;text-transform:uppercase;color:var(--mc-soft);padding:8px 0;transition:color .2s}
 .mc .nl::after{content:"";position:absolute;left:0;right:100%;bottom:0;height:1px;background:var(--mc-gold);transition:right .3s}
@@ -329,6 +329,7 @@
 
 /* Barre de navigation : espace réservé sur les pages sans image d'ouverture */
 .mc .nav-spacer{height:72px}
+.mc:has(.h-hero,.ph-hero) .nav-spacer{display:none}
 .mc .nav-user{display:flex;align-items:center;gap:6px}
 .mc .nav-user .nl{display:inline-flex;align-items:center;gap:8px}
 @media (max-width:1100px){.mc .nav-user .nl span{display:none}}

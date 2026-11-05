@@ -12,7 +12,7 @@
 .mc .nl sup{margin-right:7px;font:600 8.5px/1 var(--mc-sans);letter-spacing:.1em;color:var(--mc-gold-ink);vertical-align:.75em;opacity:.85}
 .mc .nl.on sup{opacity:1}
 .mc .nav-progress{position:absolute;left:0;bottom:-1px;height:2px;width:calc(var(--sp,0) * 100%);background:var(--mc-gold);box-shadow:0 0 10px rgba(212,175,55,.85);pointer-events:none;opacity:0;transition:opacity .3s}
-.mc .nav.solid .nav-progress{opacity:1}
+.mc .nav.solid .nav-progress,.mc:not(:has(.h-hero,.ph-hero)) .nav .nav-progress{opacity:1}
 
 /* ───────────────────────── Boutons : lueur qui passe, billet, aimant ───────────────────────── */
 .mc .btn{position:relative;overflow:hidden;isolation:isolate}

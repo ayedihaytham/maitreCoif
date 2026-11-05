@@ -19,9 +19,6 @@ const NAV_LINKS = [
   { href: '/suivi', label: 'Suivi de réservation' },
 ]
 
-// Pages qui s'ouvrent sur un plan plein cadre : la barre y est transparente au départ.
-const PLATEAUX = ['/', '/services', '/equipe', '/suivi']
-
 type Utilisateur = { name?: string | null; role: Role } | null
 
 async function deconnecterClient() {
@@ -50,7 +47,6 @@ export function SiteNav() {
       document.removeEventListener('visibilitychange', surVisible)
     }
   }, [])
-  const plateau = PLATEAUX.includes(pathname)
   const [defile, setDefile] = useState(false)
   const [ouvert, setOuvert] = useState(false)
   const entete = useRef<HTMLElement>(null)
@@ -97,14 +93,19 @@ export function SiteNav() {
   }, [ouvert])
 
   const estEquipe = user?.role === 'COIFFEUR' || user?.role === 'ADMIN'
-  const actif = (href: string) => (href === '/' ? pathname === '/' : pathname.startsWith(href))
+  // Lien actif : calculé après le montage. Sur la page d'accueil prérendue, le serveur ne connaît pas
+  // toujours la même adresse que le navigateur ; le HTML serveur et le premier rendu client doivent
+  // rester identiques, sinon React reconstruit toute la page (erreur d'hydratation #418).
+  const [monte, setMonte] = useState(false)
+  useEffect(() => setMonte(true), [])
+  const actif = (href: string) => monte && (href === '/' ? pathname === '/' : pathname.startsWith(href))
   const compteHref = estEquipe ? salonUrl('/planning') : '/compte'
   const compteLabel = estEquipe ? 'Back-office' : 'Mon compte'
   const CompteIcone = estEquipe ? LayoutDashboard : User
 
   return (
     <>
-      <header ref={entete} className={cn('nav', (!plateau || defile || ouvert) && 'solid')}>
+      <header ref={entete} className={cn('nav', (defile || ouvert) && 'solid')}>
         <div className="nav-left">
           <Link className="logo" href="/" aria-label="Maitre Coif, accueil">
             <ThemeLogo priority />
@@ -195,7 +196,8 @@ export function SiteNav() {
         </div>
       </div>
 
-      {!plateau && <div className="nav-spacer" aria-hidden="true" />}
+      {/* Toujours présent (le HTML serveur et client doit être identique) : le CSS le masque sur les pages à plan d'ouverture. */}
+      <div className="nav-spacer" aria-hidden="true" />
     </>
   )
 }

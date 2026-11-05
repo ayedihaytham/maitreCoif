@@ -54,7 +54,8 @@
 
 /* ───── Zones photographiques : elles restent sombres dans les deux thèmes ─────
    (photo plein cadre + texte clair). On y redéclare les valeurs du thème sombre. */
-:root[data-theme="light"] .mc :is(.h-hero,.hero,.ph-hero,.h-uni,.intro,.h-hud,.nav:not(.solid)){
+:root[data-theme="light"] .mc :is(.h-hero,.hero,.ph-hero,.h-uni,.intro,.h-hud),
+:root[data-theme="light"] .mc:has(.h-hero,.ph-hero) .nav:not(.solid){
   --mc-ink:#0a0a0a;--mc-panel:#161514;--mc-panel2:#0f0e0d;--mc-ivory:#f5f3ee;--mc-soft:#d9d6cf;--mc-muted:#a09d96;--mc-lead:#cfccc4;
   --mc-gold-ink:#d4af37;--mc-gold-soft:#e8cf7a;
   --mc-line:rgba(245,243,238,.12);--mc-line-gold:rgba(212,175,55,.35);
@@ -71,14 +72,14 @@
 .theme-toggle .i-moon{display:none}
 :root[data-theme="light"] .theme-toggle .i-sun{display:none}
 :root[data-theme="light"] .theme-toggle .i-moon{display:block}
-:root[data-theme="light"] .mc .nav:not(.solid) .theme-toggle{color:#d9d6cf;border-color:rgba(245,243,238,.25)}
+:root[data-theme="light"] .mc:has(.h-hero,.ph-hero) .nav:not(.solid) .theme-toggle{color:#d9d6cf;border-color:rgba(245,243,238,.25)}
 
 /* ───── Logo : version dorée sur fond sombre, version noire et or sur fond clair ───── */
 .lg-light{display:none!important}
 :root[data-theme="light"] .lg-light{display:block!important}
 :root[data-theme="light"] .lg-dark{display:none!important}
-:root[data-theme="light"] .mc .nav:not(.solid) .lg-dark{display:block!important}
-:root[data-theme="light"] .mc .nav:not(.solid) .lg-light{display:none!important}
+:root[data-theme="light"] .mc:has(.h-hero,.ph-hero) .nav:not(.solid) .lg-dark{display:block!important}
+:root[data-theme="light"] .mc:has(.h-hero,.ph-hero) .nav:not(.solid) .lg-light{display:none!important}
 :root[data-theme="light"] .mc .intro .lg-dark{display:block!important}
 
 .theme-toggle .tt-label{display:none}
@@ -96,7 +97,7 @@
 :root[data-theme="light"] .ad :is(.pl-panel,.ad-card,.bg-anthracite){box-shadow:0 10px 30px rgba(27,25,21,.1)}
 :root[data-theme="light"] [data-slot="dialog-content"]{box-shadow:0 30px 80px rgba(27,25,21,.28)}
 :root[data-theme="light"] [data-slot="dialog-overlay"]{background:rgba(27,25,21,.5)}
-:root[data-theme="light"] .mc .h-hud{left:50%;right:auto;bottom:14px;width:min(1100px,calc(100% - 40px));transform:translateX(-50%);height:46px;padding:0 22px;border-radius:3px;background:rgba(10,10,10,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+:root[data-theme="light"] .mc .h-hud{left:50%;right:auto;bottom:14px;width:min(1100px,calc(100% - 40px));transform:translateX(-50%);height:46px;padding:0 22px;border-radius:3px;background:rgba(10,10,10,.92)}
 :root[data-theme="light"] .mc .nl sup{opacity:1}
 :root[data-theme="light"] .mc .menu{background:var(--mc-ink)}
 .mc .menu-foot .theme-toggle{display:flex}
