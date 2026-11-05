@@ -54,16 +54,14 @@ async function main() {
   if (ADMIN_STORAGE_STATE) {
     const adminContext = await browser.newContext({ storageState: ADMIN_STORAGE_STATE })
     const adminPage = await adminContext.newPage()
-    console.log(`
-=== Back-office (${SALON_URL}) ===`)
+    console.log(`\n=== Back-office (${SALON_URL}) ===`)
     for (const path of ADMIN_PAGES) {
       const violations = await auditPage(adminPage, `${SALON_URL}${path}`)
       printViolations(path, violations)
       totalViolations += violations.length
     }
   } else {
-    console.log('
-(Back-office ignoré : définir A11Y_STORAGE_STATE pour l’auditer, cf. en-tête du script.)')
+    console.log('\n(Back-office ignoré : définir A11Y_STORAGE_STATE pour l’auditer, cf. en-tête du script.)')
   }
 
   await browser.close()
