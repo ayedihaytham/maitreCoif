@@ -104,6 +104,14 @@ export function PlanningBoard({ role, currentUserId, coiffeurs }: { role: Role; 
     load()
   }, [load])
 
+  // Les rendez-vous passés deviennent « Terminé » tout seuls : on relit le planning toutes les minutes.
+  useEffect(() => {
+    const t = window.setInterval(() => {
+      if (document.visibilityState === 'visible') load()
+    }, 60_000)
+    return () => window.clearInterval(t)
+  }, [load])
+
   // Sur petit écran, la liste est plus lisible que la chronologie.
   useEffect(() => {
     if (window.innerWidth < 900) setVue('liste')

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/prisma'
+import { terminerRendezVousPasses } from '@/lib/terminer-passes'
 import { refuserSiRobot } from '@/lib/turnstile'
 import { inclurePrestations, prestationsDuRendezVous } from '@/lib/prestations'
 import { checkRateLimit, clientIpFrom } from '@/lib/rate-limit'
@@ -55,6 +56,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Code de suivi requis' }, { status: 400 })
   }
 
+  await terminerRendezVousPasses()
   const rendezVous = await prisma.rendezVous.findMany({
     where: { codeSuivi },
     orderBy: { date: 'desc' },

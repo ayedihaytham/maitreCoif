@@ -7,6 +7,9 @@ import { useSearchParams } from 'next/navigation'
 
 import { AdminSidebar } from '@/components/admin/sidebar'
 import { PlanningBoard } from '@/components/admin/planning-board'
+import { EquipeManager } from '@/components/admin/equipe-manager'
+import { FermeturesManager } from '@/components/admin/fermetures-manager'
+import { GalerieManager } from '@/components/admin/galerie-manager'
 import { RdvDialog } from '@/components/admin/rdv-dialog'
 import { ServicesManager } from '@/components/admin/services-manager'
 import { StatistiquesView, type StatsAffichees } from '@/components/admin/statistiques-view'
@@ -38,7 +41,7 @@ export function PreviewClient() {
         prochain={{ heure: '16:30', client: 'Sami B.', prestations: 'Coupe + Barbe', coiffeur: 'houcem', jour: "aujourd'hui" }}
         onSignOut={() => {}}
       />
-      <main style={{ flex: 1, minWidth: 0 }}>
+      <main style={{ flex: 1, minWidth: 0 }} className={v === 'svc' || v === 'eq' || v === 'fer' || v === 'gal' ? 'ad-body' : undefined}>
         {v === 'plan' && <PlanningBoard role="ADMIN" currentUserId="a" coiffeurs={coiffeurs} />}
         {v === 'stats' && <StatistiquesView periode="mois" stats={stats} />}
         {v === 'svc' && (
@@ -46,6 +49,33 @@ export function PreviewClient() {
             initial={[
               { id: '1', nom: 'Coupe classique', description: 'Aux ciseaux', prix: 28, duree: 30, categorie: 'Coupe', actif: true },
               { id: '2', nom: 'Barbe', description: null, prix: 18, duree: 20, categorie: 'Barbe', actif: false },
+            ]}
+          />
+        )}
+        {v === 'eq' && (
+          <EquipeManager
+            initial={[
+              { id: 'a', nom: 'kallel', prenom: 'ahmed', email: 'ahmed.kallel.exemple@gmail.com', telephone: '20130289', role: 'ADMIN', photo: null, specialites: ['Coupe & barbe', 'Coloration'], bio: 'Fondateur du salon.', actif: true },
+              { id: 'b', nom: 'houcem', prenom: 'houcem', email: 'houcem@exemple.com', telephone: null, role: 'COIFFEUR', photo: null, specialites: [], bio: null, actif: true },
+              { id: 'c', nom: 'baklouti', prenom: 'wassim', email: 'wassim.baklouti.tres.long.exemple@gmail.com', telephone: null, role: 'COIFFEUR', photo: null, specialites: ['Dégradé'], bio: null, actif: false },
+            ]}
+          />
+        )}
+        {v === 'fer' && (
+          <FermeturesManager
+            coiffeurs={coiffeurs}
+            initial={[
+              { id: '1', coiffeurId: null, coiffeur: null, dateDebut: '2026-12-24', dateFin: '2026-12-26', motif: 'Fêtes de fin d’année' },
+              { id: '2', coiffeurId: 'a', coiffeur: { prenom: 'ahmed', nom: 'kallel' }, dateDebut: '2027-01-10', dateFin: '2027-01-10', motif: null },
+            ]}
+          />
+        )}
+        {v === 'gal' && (
+          <GalerieManager
+            initial={[
+              { id: '1', url: '/maitre-coif-facade.jpg', legende: 'L’enseigne lumineuse' },
+              { id: '2', url: '/maitre-coif-interieur.jpg', legende: null },
+              { id: '3', url: '/maitre-coif-team.png', legende: 'L’équipe au complet' },
             ]}
           />
         )}

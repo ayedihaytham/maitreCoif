@@ -262,7 +262,7 @@ export function RdvDialog({ open, onOpenChange, coiffeurs, defaultCoiffeurId, de
             )}
           </div>
 
-          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          <label className="flex min-h-8 items-center gap-2 text-xs text-muted-foreground">
             <input
               type="checkbox"
               checked={horsHoraires}

@@ -1,5 +1,6 @@
 import { prestationsDuRendezVous } from '@/lib/prestations'
 import { prisma } from '@/lib/prisma'
+import { terminerRendezVousPasses } from '@/lib/terminer-passes'
 import { timeToMinutes } from '@/lib/slots'
 
 export type Periode = 'semaine' | 'mois' | 'annee'
@@ -39,6 +40,7 @@ function* eachDate(from: Date, to: Date) {
 
 export async function getStatistiques(periode: Periode) {
   const { from, to } = getPlage(periode)
+  await terminerRendezVousPasses()
 
   const [coiffeurs, disponibilites, rendezVous] = await Promise.all([
     prisma.user.findMany({ where: { role: { in: ['COIFFEUR', 'ADMIN'] }, actif: true }, select: { id: true, nom: true, prenom: true } }),

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { envoyerRappelEmail } from '@/lib/notifications'
 import { prisma } from '@/lib/prisma'
+import { terminerRendezVousPasses } from '@/lib/terminer-passes'
 import { inclurePrestations, prestationsDuRendezVous } from '@/lib/prestations'
 import { maintenantSalon } from '@/lib/slots'
 import { envoyerRappelWhatsapp } from '@/lib/whatsapp'
@@ -13,6 +14,8 @@ export async function GET(request: Request) {
   if (!secret || request.headers.get('authorization') !== `Bearer ${secret}`) {
     return NextResponse.json({ error: 'Accès refusé' }, { status: 401 })
   }
+
+  await terminerRendezVousPasses({ forcer: true })
 
   // Rendez-vous de demain (jour civil du salon), confirmés, pas encore rappelés.
   const { dateISO: aujourdhui } = maintenantSalon()

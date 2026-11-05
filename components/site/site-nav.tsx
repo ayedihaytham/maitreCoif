@@ -16,6 +16,7 @@ const NAV_LINKS = [
   { href: '/', label: 'Accueil' },
   { href: '/services', label: 'Services' },
   { href: '/equipe', label: 'Notre équipe' },
+  { href: '/galerie', label: 'Galerie' },
   { href: '/suivi', label: 'Suivi de réservation' },
 ]
 

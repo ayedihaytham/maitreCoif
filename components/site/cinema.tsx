@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 
 import { borner } from '@/lib/utils'
 
-const SCENES = ['Ouverture', 'Prestations', "L'univers", "L'équipe", 'Avis', 'Fin']
+const SCENES = ['Ouverture', 'Prestations', 'Le salon', 'Galerie', "L'équipe", 'Avis', 'Fin']
 
 const tous = (sel: string) => Array.from(document.querySelectorAll<HTMLElement>(sel))
 

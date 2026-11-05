@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth'
 import { creerRendezVousConfirme, notifierConfirmation } from '@/lib/booking'
 import { chargerPrestations, inclurePrestations, totaux } from '@/lib/prestations'
 import { prisma } from '@/lib/prisma'
+import { terminerRendezVousPasses } from '@/lib/terminer-passes'
 import { genererCodeSuiviUnique } from '@/lib/code-suivi'
 import { checkRateLimit, clientIpFrom } from '@/lib/rate-limit'
 import { creneauEstProposable, estDatePassee } from '@/lib/slots'
@@ -80,6 +81,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
   }
 
+  await terminerRendezVousPasses()
   const { searchParams } = new URL(request.url)
   const dateFrom = searchParams.get('from')
   const dateTo = searchParams.get('to')

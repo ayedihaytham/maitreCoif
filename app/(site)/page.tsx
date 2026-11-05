@@ -48,7 +48,7 @@ async function getAccueilData() {
       },
     }),
     prisma.avis.aggregate({ _avg: { note: true }, _count: { _all: true } }),
-    prisma.photoSalon.findMany({ orderBy: [{ ordre: 'asc' }, { dateCreation: 'asc' }], take: 2 }),
+    prisma.photoSalon.findMany({ orderBy: [{ ordre: 'asc' }, { dateCreation: 'asc' }], take: 5, select: { id: true, legende: true } }),
     prochaineDisponibilite().catch(() => null),
   ])
 
@@ -202,7 +202,7 @@ export default async function AccueilPage() {
       <section className="h-uni" data-scene="2" data-track aria-labelledby="t-uni">
         <div className="h-uni-media">
           <Image
-            src={photoPrincipale?.url ?? '/maitre-coif-interieur.jpg'}
+            src={photoPrincipale ? `/api/galerie/${photoPrincipale.id}/image` : '/maitre-coif-interieur.jpg'}
             alt={photoPrincipale?.legende || 'Mur de cadres du salon, affiche Maitre Coif Since 2005'}
             fill
             sizes="100vw"
@@ -216,7 +216,7 @@ export default async function AccueilPage() {
             Notre enseigne
           </span>
           <Image
-            src={photoSecondaire?.url ?? '/maitre-coif-facade.jpg'}
+            src={photoSecondaire ? `/api/galerie/${photoSecondaire.id}/image` : '/maitre-coif-facade.jpg'}
             alt={photoSecondaire?.legende || "Détail de l'enseigne lumineuse"}
             fill
             sizes="340px"
@@ -253,9 +253,61 @@ export default async function AccueilPage() {
         </div>
       </section>
 
-      {/* Le casting */}
+      {/* Galerie : les 5 premières photos, même mouvement que les prestations */}
+      {photosSalon.length > 0 && (
+        <section className="h-reel" data-scene="3" data-pin style={{ '--n': photosSalon.length + 1 } as CSSProperties} aria-labelledby="t-gal">
+          <div className="h-stage">
+            <div className="h-reel-head">
+              <div>
+                <div className="lbl">La galerie</div>
+                <h2 className="h2" id="t-gal">
+                  Le salon <em>en images.</em>
+                </h2>
+              </div>
+              <Link className="tlink" href="/galerie">
+                Toute la galerie <ArrowRight className="size-3.5" aria-hidden="true" />
+              </Link>
+            </div>
+
+            <div className="h-strip">
+              {photosSalon.map((photo, i) => (
+                <article key={photo.id} className="h-card ph" data-depth>
+                  <Image
+                    src={`/api/galerie/${photo.id}/image`}
+                    alt={photo.legende || `Photo ${i + 1} du salon Maitre Coif`}
+                    fill
+                    sizes="(max-width: 760px) 80vw, 440px"
+                    className="ph-img"
+                  />
+                  <span className="shade" aria-hidden="true" />
+                  <span className="flare" />
+                  <div className="no" aria-hidden="true">
+                    {String(i + 1).padStart(2, '0')}
+                  </div>
+                  {photo.legende && <p className="legend">{photo.legende}</p>}
+                </article>
+              ))}
+              <article className="h-card all" data-depth>
+                <span className="flare" />
+                <div className="no" aria-hidden="true">
+                  +
+                </div>
+                <div>
+                  <h3>Toute la galerie</h3>
+                  <p>Retrouvez toutes les photos du salon et de nos réalisations.</p>
+                  <Link className="btn btn-gold" href="/galerie" style={{ marginTop: 22 }}>
+                    Voir toute la galerie <ArrowRight className="size-4" aria-hidden="true" />
+                  </Link>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* L'équipe */}
       {equipe.length > 0 && (
-        <section className="h-cast" data-scene="3" data-track aria-labelledby="t-cast">
+        <section className="h-cast" data-scene="4" data-track aria-labelledby="t-cast">
           <div className="h-cast-word" aria-hidden="true">
             ÉQUIPE
           </div>
@@ -304,7 +356,7 @@ export default async function AccueilPage() {
 
       {/* La critique */}
       {avisAffiches.length > 0 && (
-        <section className="h-crit" data-scene="4" data-track aria-labelledby="t-crit">
+        <section className="h-crit" data-scene="5" data-track aria-labelledby="t-crit">
           <div className="qmark" aria-hidden="true">
             “
           </div>
@@ -329,7 +381,7 @@ export default async function AccueilPage() {
       )}
 
       {/* Fin */}
-      <section className="h-end" data-scene="5" aria-labelledby="t-cta">
+      <section className="h-end" data-scene="6" aria-labelledby="t-cta">
         <div className="wrap">
           <Reveal>
             <div className="h-next">

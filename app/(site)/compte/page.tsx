@@ -5,6 +5,7 @@ import { ArrowRight } from 'lucide-react'
 
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { terminerRendezVousPasses } from '@/lib/terminer-passes'
 import { inclurePrestations, prestationsDuRendezVous } from '@/lib/prestations'
 import { salonUrl } from '@/lib/salon-host'
 import { maintenantSalon } from '@/lib/slots'
@@ -46,6 +47,7 @@ export default async function ComptePage() {
   // Le personnel n'a pas d'espace client : son compte se gère dans Clerk.
   if (session.user.role !== 'CLIENT') redirect(salonUrl('/planning'))
 
+  await terminerRendezVousPasses()
   const [user, rendezVous] = await Promise.all([
     prisma.user.findUnique({ where: { id: session.user.id } }),
     prisma.rendezVous.findMany({

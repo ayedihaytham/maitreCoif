@@ -63,7 +63,7 @@ export function GalerieManager({ initial }: { initial: Photo[] }) {
   return (
     <div>
       <div className="ad-card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', gap: 16, padding: 22, marginBottom: 28 }}>
-        <div className="flex-1">
+        <div className="min-w-[min(100%,240px)] flex-1">
           <label htmlFor="legende" className="lbl dim">
             Légende (optionnel)
           </label>

@@ -120,3 +120,41 @@ body:has(.menu.open) .h-hud{display:none}
 .mc .cd-cell span{display:block;margin-top:7px;font:600 9.5px/1 var(--mc-sans);letter-spacing:.2em;text-transform:uppercase;color:var(--mc-muted)}
 .mc .cd-msg{font-size:14px;color:var(--mc-muted)}
 @media (max-width:420px){.mc .cd-cell{min-width:0;flex:1}}
+
+/* Galerie : grille et photo agrandie */
+.mc .gal-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:clamp(12px,2vw,22px)}
+.mc .gal-item{position:relative;display:block;width:100%;aspect-ratio:4/3;overflow:hidden;padding:0;background:var(--mc-panel2);border:1px solid var(--mc-line);border-radius:3px;cursor:zoom-in;transition:border-color .25s}
+.mc .gal-item img{object-fit:cover;transition:transform .6s var(--h-ease)}
+.mc .gal-item:hover,.mc .gal-item:focus-visible{border-color:var(--mc-gold)}
+.mc .gal-item:hover img{transform:scale(1.04)}
+.mc .gal-cap{position:absolute;left:0;right:0;bottom:0;padding:34px 16px 14px;background:linear-gradient(0deg,rgba(10,10,10,.82),rgba(10,10,10,0));color:#f5f3ee;font-size:13.5px;line-height:1.4;text-align:left}
+.gal-dialog{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;margin:0;padding:0;border:0;background:rgba(10,10,10,.94);color:#f5f3ee}
+.gal-dialog:not([open]){display:none}
+.gal-dialog::backdrop{background:rgba(10,10,10,.6)}
+.gal-fig{position:absolute;inset:64px 72px;margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.gal-fig img{max-width:100%;max-height:calc(100% - 44px);object-fit:contain}
+.gal-fig figcaption{font-size:14px;line-height:1.5;text-align:center;color:#d9d6cf}
+.gal-btn{position:absolute;display:grid;place-items:center;width:46px;height:46px;padding:0;background:rgba(10,10,10,.6);border:1px solid rgba(245,243,238,.3);border-radius:50%;color:#f5f3ee;cursor:pointer;transition:border-color .2s,background .2s}
+.gal-btn:hover,.gal-btn:focus-visible{border-color:#d4af37;background:rgba(10,10,10,.9)}
+.gal-btn svg{width:22px;height:22px}
+.gal-close{right:16px;top:16px}
+.gal-prev{left:16px;top:50%;margin-top:-23px}
+.gal-next{right:16px;top:50%;margin-top:-23px}
+@media (max-width:640px){.gal-fig{inset:70px 12px 24px}.gal-prev{left:10px;top:auto;bottom:16px;margin:0}.gal-next{right:10px;top:auto;bottom:16px;margin:0}}
+
+/* Écrans tactiles : zones de toucher d'au moins 24 px de haut sur les liens isolés */
+@media (max-width:900px){
+  .mc .tlink{min-height:32px}
+  .mc .form-links a{display:inline-flex;align-items:center;min-height:32px}
+}
+
+/* Étapes de la réservation : libellés complets (« Coordonnées ») sur petit écran */
+@media (max-width:480px){
+  .mc .stp{gap:10px;padding:14px 12px}
+  .mc .stp .n{width:28px;height:28px;font-size:12px}
+  .mc .stp .t{font-size:10px;letter-spacing:.1em}
+}
+
+/* Petits écrans : les titres des sections épinglées passent sous la barre du haut, les boutons gardent leur texte sur une ligne */
+@media (max-width:900px){.mc .h-stage{padding-top:76px}}
+@media (max-width:380px){.mc .btn{letter-spacing:.14em;padding:0 20px}}

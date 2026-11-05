@@ -310,7 +310,7 @@
 .mc .badge{display:inline-block;padding:7px 14px;border:1px solid var(--mc-gold);font:600 10.5px/1 var(--mc-sans);letter-spacing:.22em;text-transform:uppercase;color:var(--mc-gold-ink)}
 .mc .badge.ann{border-color:#e5484d;color:var(--mc-danger-ink)}
 .mc .badge.ter{border-color:var(--mc-muted);color:var(--mc-muted)}
-.mc .res{margin-top:34px;max-width:760px;background:linear-gradient(180deg,var(--c-1a1815),var(--c-121110));border:1px solid rgba(212,175,55,.45);border-radius:6px;padding:34px 36px;animation:mc-ticketIn .7s cubic-bezier(.2,.8,.2,1) both}
+.mc .res{margin-top:34px;background:linear-gradient(180deg,var(--c-1a1815),var(--c-121110));border:1px solid rgba(212,175,55,.45);border-radius:6px;padding:34px 36px;animation:mc-ticketIn .7s cubic-bezier(.2,.8,.2,1) both}
 .mc .res h3{margin:18px 0 0;font:400 34px/1.1 var(--mc-serif)}
 .mc .res .kv{margin-top:24px}
 .mc .res .kv p{font-size:26px}

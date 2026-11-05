@@ -93,6 +93,13 @@
 .mc .h-card::after{bottom:8px;background-position:0 3px}
 .mc .h-card.on{border-color:rgba(212,175,55,.7);box-shadow:0 30px 90px rgba(0,0,0,.7),0 0 70px rgba(212,175,55,.16)}
 .mc .h-card .flare{position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 34%,rgba(255,243,214,.12) 50%,transparent 66%);transform:translateX(calc((var(--ad,0) + .0) * 90%))}
+.mc .h-card.ph{padding:0;background:var(--c-0e0d0c)}
+.mc .h-card.ph .ph-img{object-fit:cover;z-index:0}
+.mc .h-card.ph .shade{position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(0deg,rgba(10,10,10,.82) 0%,rgba(10,10,10,.1) 52%,rgba(10,10,10,.35) 100%)}
+.mc .h-card.ph .flare{z-index:2}
+.mc .h-card.ph .no{position:absolute;z-index:3;left:30px;top:44px;color:transparent;-webkit-text-stroke:1px rgba(245,243,238,.85)}
+.mc .h-card.ph .legend{position:absolute;z-index:3;left:0;right:0;bottom:0;margin:0;max-width:none;padding:60px 30px 34px;font-size:15px;line-height:1.5;color:#f5f3ee}
+.mc .h-card.all .btn{align-self:flex-start}
 .mc .h-card .no{font:300 clamp(86px,14vw,170px)/.8 var(--mc-serif);color:transparent;-webkit-text-stroke:1px rgba(212,175,55,.9);letter-spacing:-.02em}
 .mc .h-card h3{margin:0;font:400 clamp(32px,4vw,50px)/1.02 var(--mc-serif);color:var(--mc-ivory)}
 .mc .h-card p{margin:12px 0 0;max-width:34ch;font-size:14px;line-height:1.65;color:var(--mc-muted)}

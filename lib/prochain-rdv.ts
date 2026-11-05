@@ -2,6 +2,7 @@
 // et nombre de rendez-vous du jour. Un coiffeur voit les siens, le gérant ceux de toute l'équipe.
 import { inclurePrestations, prestationsDuRendezVous } from '@/lib/prestations'
 import { prisma } from '@/lib/prisma'
+import { terminerRendezVousPasses } from '@/lib/terminer-passes'
 import { maintenantSalon, timeToMinutes } from '@/lib/slots'
 
 export interface ProchainRdv {
@@ -31,6 +32,7 @@ export function libelleJour(dateRdv: string, dateISO: string): string {
 }
 
 export async function resumeSalon(user: { id: string; role: string }): Promise<{ prochain: ProchainRdv | null; aujourdhui: number }> {
+  await terminerRendezVousPasses()
   const { dateISO, minutes } = maintenantSalon()
   const jour = new Date(`${dateISO}T00:00:00Z`)
   const parCoiffeur = user.role === 'ADMIN' ? {} : { coiffeurId: user.id }
