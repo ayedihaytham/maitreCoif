@@ -3,10 +3,6 @@
 import { useState } from 'react'
 import { Check, Loader2 } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-
 interface ProfileFormProps {
   initial: { nom: string; prenom: string; telephone: string | null }
 }
@@ -35,25 +31,30 @@ export function ProfileForm({ initial }: ProfileFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 border border-border/70 bg-anthracite p-6">
-      <div className="grid gap-5 sm:grid-cols-2">
-        <div>
-          <Label htmlFor="prenom">Prénom</Label>
-          <Input id="prenom" value={prenom} onChange={(e) => setPrenom(e.target.value)} className="mt-1.5" />
-        </div>
-        <div>
-          <Label htmlFor="nom">Nom</Label>
-          <Input id="nom" value={nom} onChange={(e) => setNom(e.target.value)} className="mt-1.5" />
-        </div>
+    <form onSubmit={handleSubmit} className="card-form">
+      <div className="grid2">
+        <label className="fld">
+          <span>Prénom</span>
+          <input className="inp" value={prenom} autoComplete="given-name" onChange={(e) => setPrenom(e.target.value)} />
+        </label>
+        <label className="fld">
+          <span>Nom</span>
+          <input className="inp" value={nom} autoComplete="family-name" onChange={(e) => setNom(e.target.value)} />
+        </label>
       </div>
-      <div>
-        <Label htmlFor="telephone">Téléphone</Label>
-        <Input id="telephone" value={telephone} onChange={(e) => setTelephone(e.target.value)} className="mt-1.5" />
-      </div>
-      <Button type="submit" disabled={loading}>
-        {loading ? <Loader2 className="size-4 animate-spin" /> : saved ? <Check className="size-4" /> : null}
+      <label className="fld">
+        <span>Téléphone</span>
+        <input className="inp" type="tel" value={telephone} autoComplete="tel" onChange={(e) => setTelephone(e.target.value)} />
+      </label>
+      {saved && (
+        <p className="ok-inline" role="status">
+          <Check className="size-3.5" aria-hidden="true" /> Informations enregistrées.
+        </p>
+      )}
+      <button type="submit" className="btn btn-gold" disabled={loading}>
+        {loading && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
         Enregistrer
-      </Button>
+      </button>
     </form>
   )
 }

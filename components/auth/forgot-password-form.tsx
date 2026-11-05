@@ -3,10 +3,6 @@
 import { useState } from 'react'
 import { Loader2, Mail } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
@@ -29,22 +25,23 @@ export function ForgotPasswordForm() {
 
   if (sent) {
     return (
-      <div className="border border-gold/40 bg-anthracite p-6 text-sm leading-6 text-muted-foreground">
-        Si un compte existe avec cet email, un lien de réinitialisation vient de lui être envoyé.
+      <div className="notice" role="status">
+        <Mail className="size-4" aria-hidden="true" />
+        <span>Si un compte existe avec cet email, un lien de réinitialisation vient de lui être envoyé.</span>
       </div>
     )
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 border border-border/70 bg-anthracite p-6 sm:p-8">
-      <div>
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1.5" />
-      </div>
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? <Loader2 className="size-4 animate-spin" /> : <Mail className="size-4" />}
-        Envoyer le lien de réinitialisation
-      </Button>
+    <form onSubmit={handleSubmit} className="card-form">
+      <label className="fld">
+        <span>Email</span>
+        <input className="inp" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+      </label>
+      <button type="submit" className="btn btn-gold" disabled={loading}>
+        {loading ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Mail className="size-4" aria-hidden="true" />}
+        Envoyer le lien
+      </button>
     </form>
   )
 }

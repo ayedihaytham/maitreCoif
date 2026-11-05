@@ -9,25 +9,24 @@ export const metadata: Metadata = {
 
 export default function InscriptionPage() {
   return (
-    <main className="px-5 pb-24 pt-16 sm:px-8 lg:px-12">
-      <div className="mx-auto max-w-md">
-        <div className="eyebrow before:h-px before:w-8 before:bg-gold">Mon compte</div>
-        <h1 className="mt-6 text-3xl font-light uppercase tracking-[0.1em] sm:text-4xl">
-          Créer un <span className="text-gold">compte</span>
-        </h1>
-        <p className="mt-4 text-sm leading-6 text-muted-foreground">
-          Un compte n&apos;est pas obligatoire pour réserver, mais il vous permet de retrouver l&apos;historique de
-          vos rendez-vous et de laisser un avis.
-        </p>
-        <div className="mt-10">
-          <RegisterForm />
+    <main>
+      <div className="wrap page-head sec">
+        <div className="auth-wrap">
+          <div className="lbl">Mon compte</div>
+          <h1 className="page-h1">
+            Créer <em>un compte.</em>
+          </h1>
+          <p className="lead">
+            Un compte n&apos;est pas obligatoire pour réserver, mais il vous permet de retrouver l&apos;historique de vos
+            rendez-vous et de laisser un avis.
+          </p>
+          <div style={{ marginTop: 40 }}>
+            <RegisterForm />
+          </div>
+          <p className="form-foot" style={{ borderTop: 0, textAlign: 'center' }}>
+            Déjà un compte ? <Link href="/connexion">Se connecter</Link>
+          </p>
         </div>
-        <p className="mt-6 text-center text-[11px] text-muted-foreground">
-          Déjà un compte ?{' '}
-          <Link href="/connexion" className="text-gold underline underline-offset-2 hover:text-foreground">
-            Se connecter
-          </Link>
-        </p>
       </div>
     </main>
   )

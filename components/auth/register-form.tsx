@@ -5,10 +5,6 @@ import { useRouter } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import { Loader2, UserPlus } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-
 export function RegisterForm() {
   const router = useRouter()
   const [form, setForm] = useState({ prenom: '', nom: '', email: '', telephone: '', password: '' })
@@ -45,57 +41,56 @@ export function RegisterForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 border border-border/70 bg-anthracite p-6 sm:p-8">
-      <div className="grid gap-5 sm:grid-cols-2">
-        <div>
-          <Label htmlFor="prenom">Prénom</Label>
-          <Input id="prenom" required value={form.prenom} onChange={(e) => update('prenom', e.target.value)} className="mt-1.5" />
-        </div>
-        <div>
-          <Label htmlFor="nom">Nom</Label>
-          <Input id="nom" required value={form.nom} onChange={(e) => update('nom', e.target.value)} className="mt-1.5" />
-        </div>
+    <form onSubmit={handleSubmit} className="card-form">
+      <div className="grid2">
+        <label className="fld">
+          <span>Prénom</span>
+          <input className="inp" required autoComplete="given-name" value={form.prenom} onChange={(e) => update('prenom', e.target.value)} />
+        </label>
+        <label className="fld">
+          <span>Nom</span>
+          <input className="inp" required autoComplete="family-name" value={form.nom} onChange={(e) => update('nom', e.target.value)} />
+        </label>
       </div>
-      <div>
-        <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
+      <label className="fld">
+        <span>Email</span>
+        <input
+          className="inp"
           type="email"
+          autoComplete="email"
           required
           value={form.email}
           onChange={(e) => update('email', e.target.value)}
-          className="mt-1.5"
         />
-      </div>
-      <div>
-        <Label htmlFor="telephone">Téléphone (optionnel)</Label>
-        <Input
-          id="telephone"
-          type="tel"
-          value={form.telephone}
-          onChange={(e) => update('telephone', e.target.value)}
-          className="mt-1.5"
-        />
-      </div>
-      <div>
-        <Label htmlFor="password">Mot de passe</Label>
-        <Input
-          id="password"
+      </label>
+      <label className="fld">
+        <span>Téléphone (optionnel)</span>
+        <input className="inp" type="tel" autoComplete="tel" value={form.telephone} onChange={(e) => update('telephone', e.target.value)} />
+      </label>
+      <label className="fld">
+        <span>Mot de passe</span>
+        <input
+          className="inp"
           type="password"
+          autoComplete="new-password"
           required
           minLength={8}
           value={form.password}
           onChange={(e) => update('password', e.target.value)}
-          className="mt-1.5"
         />
-      </div>
+        <p className="hint">8 caractères minimum.</p>
+      </label>
 
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && (
+        <p className="err" role="alert" style={{ margin: '-6px 0 16px' }}>
+          {error}
+        </p>
+      )}
 
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? <Loader2 className="size-4 animate-spin" /> : <UserPlus className="size-4" />}
+      <button type="submit" className="btn btn-gold" disabled={loading}>
+        {loading ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <UserPlus className="size-4" aria-hidden="true" />}
         Créer mon compte
-      </Button>
+      </button>
     </form>
   )
 }

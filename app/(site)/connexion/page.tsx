@@ -9,19 +9,19 @@ export const metadata: Metadata = {
 
 export default function ConnexionPage() {
   return (
-    <main className="px-5 pb-24 pt-16 sm:px-8 lg:px-12">
-      <div className="mx-auto max-w-md">
-        <div className="eyebrow before:h-px before:w-8 before:bg-gold">Espace client</div>
-        <h1 className="mt-6 text-3xl font-light uppercase tracking-[0.1em] sm:text-4xl">
-          <span className="text-gold">Connexion</span>
-        </h1>
-        <p className="mt-4 text-sm leading-6 text-muted-foreground">
-          Connectez-vous pour retrouver vos rendez-vous et gérer votre compte.
-        </p>
-        <div className="mt-10">
-          <Suspense>
-            <LoginForm />
-          </Suspense>
+    <main>
+      <div className="wrap page-head sec">
+        <div className="auth-wrap">
+          <div className="lbl">Espace client</div>
+          <h1 className="page-h1">
+            <em>Connexion.</em>
+          </h1>
+          <p className="lead">Connectez-vous pour retrouver vos rendez-vous et gérer votre compte.</p>
+          <div style={{ marginTop: 40 }}>
+            <Suspense>
+              <LoginForm />
+            </Suspense>
+          </div>
         </div>
       </div>
     </main>

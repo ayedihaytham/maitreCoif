@@ -4,10 +4,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Check, Loader2 } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-
 export function ResetPasswordForm({ token }: { token: string }) {
   const router = useRouter()
   const [password, setPassword] = useState('')
@@ -48,41 +44,47 @@ export function ResetPasswordForm({ token }: { token: string }) {
 
   if (done) {
     return (
-      <div className="flex items-center gap-3 border border-gold/40 bg-anthracite p-6 text-sm text-muted-foreground">
-        <Check className="size-4 text-gold" /> Mot de passe mis à jour, redirection vers la connexion...
+      <div className="notice" role="status">
+        <Check className="size-4" aria-hidden="true" />
+        <span>Mot de passe mis à jour, redirection vers la connexion…</span>
       </div>
     )
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 border border-border/70 bg-anthracite p-6 sm:p-8">
-      <div>
-        <Label htmlFor="password">Nouveau mot de passe</Label>
-        <Input
-          id="password"
+    <form onSubmit={handleSubmit} className="card-form">
+      <label className="fld">
+        <span>Nouveau mot de passe</span>
+        <input
+          className="inp"
           type="password"
+          autoComplete="new-password"
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-1.5"
         />
-      </div>
-      <div>
-        <Label htmlFor="confirm">Confirmer le mot de passe</Label>
-        <Input
-          id="confirm"
+        <p className="hint">8 caractères minimum.</p>
+      </label>
+      <label className="fld">
+        <span>Confirmer le mot de passe</span>
+        <input
+          className="inp"
           type="password"
+          autoComplete="new-password"
           required
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
-          className="mt-1.5"
         />
-      </div>
-      {error && <p className="text-xs text-destructive">{error}</p>}
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading && <Loader2 className="size-4 animate-spin" />}
+      </label>
+      {error && (
+        <p className="err" role="alert" style={{ margin: '-6px 0 16px' }}>
+          {error}
+        </p>
+      )}
+      <button type="submit" className="btn btn-gold" disabled={loading}>
+        {loading && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
         Réinitialiser le mot de passe
-      </Button>
+      </button>
     </form>
   )
 }

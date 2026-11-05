@@ -48,7 +48,7 @@ export function ReviewDialog({ rendezVousId, serviceNom }: { rendezVousId: strin
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button variant="outline" size="sm" />}>Laisser un avis</DialogTrigger>
+      <DialogTrigger render={<button type="button" className="btn btn-ghost btn-sm" />}>Laisser un avis</DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Votre avis sur : {serviceNom}</DialogTitle>

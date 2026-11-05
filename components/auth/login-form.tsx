@@ -6,9 +6,6 @@ import { signIn } from 'next-auth/react'
 import { Loader2, LogIn } from 'lucide-react'
 import Link from 'next/link'
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { salonUrl } from '@/lib/salon-host'
 
 export function LoginForm() {
@@ -42,43 +39,40 @@ export function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 border border-border/70 bg-anthracite p-6 sm:p-8">
-      <div>
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1.5" />
-      </div>
-      <div>
-        <Label htmlFor="password">Mot de passe</Label>
-        <Input
-          id="password"
+    <form onSubmit={handleSubmit} className="card-form">
+      <label className="fld">
+        <span>Email</span>
+        <input className="inp" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+      </label>
+      <label className="fld">
+        <span>Mot de passe</span>
+        <input
+          className="inp"
           type="password"
+          autoComplete="current-password"
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="mt-1.5"
         />
-      </div>
+      </label>
 
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && (
+        <p className="err" role="alert" style={{ margin: '-6px 0 16px' }}>
+          {error}
+        </p>
+      )}
 
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? <Loader2 className="size-4 animate-spin" /> : <LogIn className="size-4" />}
+      <button type="submit" className="btn btn-gold" disabled={loading}>
+        {loading ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <LogIn className="size-4" aria-hidden="true" />}
         Se connecter
-      </Button>
+      </button>
 
-      <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-        <Link href="/mot-de-passe-oublie" className="text-gold hover:text-foreground">
-          Mot de passe oublié ?
-        </Link>
-        <Link href="/inscription" className="hover:text-foreground">
-          Créer un compte
-        </Link>
+      <div className="form-links">
+        <Link href="/mot-de-passe-oublie">Mot de passe oublié ?</Link>
+        <Link href="/inscription">Créer un compte</Link>
       </div>
-      <p className="border-t border-border/60 pt-4 text-[11px] text-muted-foreground">
-        Membre de l&apos;équipe ?{' '}
-        <Link href={salonUrl('/connexion')} className="text-gold hover:text-foreground">
-          Accéder à l&apos;espace équipe
-        </Link>
+      <p className="form-foot">
+        Membre de l&apos;équipe ? <a href={salonUrl('/connexion')}>Accéder à l&apos;espace équipe</a>
       </p>
     </form>
   )

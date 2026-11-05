@@ -6,8 +6,8 @@ import { ArrowRight } from 'lucide-react'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { salonUrl } from '@/lib/salon-host'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { maintenantSalon } from '@/lib/slots'
+import { cn } from '@/lib/utils'
 import { ProfileForm } from '@/components/compte/profile-form'
 import { EmailForm, PasswordForm } from '@/components/compte/security-forms'
 import { ReviewDialog } from '@/components/compte/review-dialog'
@@ -25,11 +25,16 @@ const STATUT_LABEL: Record<string, string> = {
   ANNULE: 'Annulé',
 }
 
-const STATUT_STYLE: Record<string, string> = {
-  EN_ATTENTE: 'bg-secondary text-secondary-foreground',
-  CONFIRME: 'bg-primary text-primary-foreground',
-  TERMINE: 'bg-transparent border border-border text-foreground',
-  ANNULE: 'bg-destructive/10 text-destructive',
+const STATUT_CLASSE: Record<string, string> = {
+  EN_ATTENTE: 'att',
+  CONFIRME: '',
+  TERMINE: 'ter',
+  ANNULE: 'ann',
+}
+
+function dateLongue(d: Date) {
+  const t = d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })
+  return t.charAt(0).toUpperCase() + t.slice(1)
 }
 
 export default async function ComptePage() {
@@ -55,65 +60,72 @@ export default async function ComptePage() {
 
   if (!user) return null
 
-  const now = new Date()
-  const upcoming = rendezVous.filter((r) => r.date >= new Date(now.toDateString()) && r.statut !== 'ANNULE')
+  // « À venir » = aujourd'hui (jour du salon) ou plus tard, hors annulés.
+  const aujourdhui = maintenantSalon().dateISO
+  const upcoming = rendezVous.filter((r) => r.date.toISOString().slice(0, 10) >= aujourdhui && r.statut !== 'ANNULE')
   const past = rendezVous.filter((r) => !upcoming.includes(r))
 
   return (
-    <main className="px-5 pb-24 pt-16 sm:px-8 lg:px-12">
-      <div className="mx-auto max-w-4xl">
-        <div className="eyebrow before:h-px before:w-8 before:bg-gold">Espace client</div>
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
-          <h1 className="text-3xl font-light uppercase tracking-[0.1em] sm:text-4xl">
-            Bonjour <span className="text-gold">{user.prenom}</span>
+    <main>
+      <div className="wrap page-head sec">
+        <div className="lbl">Espace client</div>
+        <div className="head-row" style={{ marginTop: 6 }}>
+          <h1 className="page-h1" style={{ margin: '14px 0 0' }}>
+            Bonjour <em>{user.prenom}.</em>
           </h1>
-          <Button render={<Link href="/reservation" />} nativeButton={false}>
-            Nouvelle réservation <ArrowRight className="size-4" />
-          </Button>
+          <Link className="btn btn-gold" href="/reservation">
+            Nouvelle réservation <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
         </div>
 
-        <section className="mt-12">
-          <h2 className="mb-4 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Mes informations</h2>
-          <ProfileForm initial={{ nom: user.nom, prenom: user.prenom, telephone: user.telephone }} />
-        </section>
+        <div className="compte-grid">
+          <div>
+            <section className="compte-sec" aria-labelledby="t-venir">
+              <h2 className="sec-t" id="t-venir">
+                <b>Rendez-vous à venir</b>
+              </h2>
+              {upcoming.length === 0 ? (
+                <p className="empty-state">Aucun rendez-vous à venir.</p>
+              ) : (
+                upcoming.map((rdv) => <RendezVousCard key={rdv.id} rdv={rdv} />)
+              )}
+            </section>
 
-        <section className="mt-12">
-          <h2 className="mb-4 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Adresse email</h2>
-          <EmailForm initialEmail={user.email} />
-        </section>
+            <section className="compte-sec" aria-labelledby="t-histo">
+              <h2 className="sec-t" id="t-histo">
+                <b>Historique</b>
+              </h2>
+              {past.length === 0 ? (
+                <p className="empty-state">Aucun rendez-vous passé.</p>
+              ) : (
+                past.map((rdv) => <RendezVousCard key={rdv.id} rdv={rdv} />)
+              )}
+            </section>
+          </div>
 
-        <section className="mt-12">
-          <h2 className="mb-4 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Mot de passe</h2>
-          <PasswordForm />
-        </section>
+          <div>
+            <section className="compte-sec" aria-labelledby="t-infos">
+              <h2 className="sec-t" id="t-infos">
+                <b>Mes informations</b>
+              </h2>
+              <ProfileForm initial={{ nom: user.nom, prenom: user.prenom, telephone: user.telephone }} />
+            </section>
 
-        <section className="mt-12">
-          <h2 className="mb-4 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-            Rendez-vous à venir
-          </h2>
-          {upcoming.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aucun rendez-vous à venir.</p>
-          ) : (
-            <div className="space-y-3">
-              {upcoming.map((rdv) => (
-                <RendezVousCard key={rdv.id} rdv={rdv} />
-              ))}
-            </div>
-          )}
-        </section>
+            <section className="compte-sec" aria-labelledby="t-email">
+              <h2 className="sec-t" id="t-email">
+                <b>Adresse email</b>
+              </h2>
+              <EmailForm initialEmail={user.email} />
+            </section>
 
-        <section className="mt-12">
-          <h2 className="mb-4 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Historique</h2>
-          {past.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aucun rendez-vous passé.</p>
-          ) : (
-            <div className="space-y-3">
-              {past.map((rdv) => (
-                <RendezVousCard key={rdv.id} rdv={rdv} />
-              ))}
-            </div>
-          )}
-        </section>
+            <section className="compte-sec" aria-labelledby="t-mdp">
+              <h2 className="sec-t" id="t-mdp">
+                <b>Mot de passe</b>
+              </h2>
+              <PasswordForm />
+            </section>
+          </div>
+        </div>
       </div>
     </main>
   )
@@ -134,17 +146,17 @@ function RendezVousCard({
   }
 }) {
   return (
-    <article className="flex flex-wrap items-center justify-between gap-4 border border-border/70 bg-anthracite p-5">
+    <article className="rdv">
       <div>
-        <p className="text-sm">
+        <div className="t">
           {rdv.service.nom} — {rdv.coiffeur.prenom} {rdv.coiffeur.nom}
-        </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {rdv.date.toISOString().slice(0, 10)} à {rdv.heureDebut} · {rdv.codeSuivi}
-        </p>
+        </div>
+        <div className="m">
+          {dateLongue(rdv.date)} à {rdv.heureDebut} · {rdv.codeSuivi}
+        </div>
       </div>
-      <div className="flex items-center gap-3">
-        <Badge className={STATUT_STYLE[rdv.statut]}>{STATUT_LABEL[rdv.statut]}</Badge>
+      <div className="rdv-actions">
+        <span className={cn('badge', STATUT_CLASSE[rdv.statut])}>{STATUT_LABEL[rdv.statut]}</span>
         {rdv.statut === 'TERMINE' && !rdv.avis && <ReviewDialog rendezVousId={rdv.id} serviceNom={rdv.service.nom} />}
       </div>
     </article>
