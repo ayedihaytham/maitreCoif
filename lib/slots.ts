@@ -83,6 +83,61 @@ export async function estFerme(coiffeurId: string, dateISO: string, db: DbClient
  * indisponible dès qu'il est réservé").
  */
 export async function getCreneauxDisponibles(coiffeurId: string, serviceId: string, dateISO: string) {
+  return (await getGrilleJour(coiffeurId, serviceId, dateISO)).filter((c) => c.libre).map((c) => c.heure)
+}
+
+interface Plage {
+  heureDebut: string
+  heureFin: string
+}
+
+export interface CreneauGrille {
+  heure: string
+  libre: boolean
+}
+
+/**
+ * Grille des créneaux d'un jour (fonction pure) : pour chaque départ possible
+ * (pas de 30 min dans les disponibilités du coiffeur, durée du service
+ * incluse), indique s'il est libre. Un créneau est indisponible s'il est
+ * déjà passé (aujourd'hui) ou chevauche un rendez-vous existant.
+ */
+export function construireGrille(
+  disponibilites: Plage[],
+  rendezVous: Plage[],
+  duree: number,
+  nowMinutes: number | null,
+): CreneauGrille[] {
+  const vus = new Set<string>()
+  const grille: CreneauGrille[] = []
+
+  for (const dispo of disponibilites) {
+    const debut = timeToMinutes(dispo.heureDebut)
+    const fin = timeToMinutes(dispo.heureFin)
+
+    for (let start = debut; start + duree <= fin; start += SLOT_STEP_MINUTES) {
+      const heure = minutesToTime(start)
+      if (vus.has(heure)) continue
+      vus.add(heure)
+
+      const passe = nowMinutes !== null && start <= nowMinutes
+      const end = start + duree
+      const conflit = rendezVous.some((rdv) =>
+        rangesOverlap(start, end, timeToMinutes(rdv.heureDebut), timeToMinutes(rdv.heureFin)),
+      )
+      grille.push({ heure, libre: !passe && !conflit })
+    }
+  }
+
+  return grille.sort((a, b) => a.heure.localeCompare(b.heure))
+}
+
+/**
+ * Grille d'un coiffeur pour un service et une date : créneaux libres ET
+ * occupés (pour afficher les occupés barrés). Vide si la date est passée, le
+ * salon/coiffeur est fermé ou le service inconnu.
+ */
+export async function getGrilleJour(coiffeurId: string, serviceId: string, dateISO: string): Promise<CreneauGrille[]> {
   if (estDatePassee(dateISO)) return []
 
   const service = await prisma.service.findUnique({ where: { id: serviceId } })
@@ -100,28 +155,58 @@ export async function getCreneauxDisponibles(coiffeurId: string, serviceId: stri
     }),
   ])
 
-  const duree = service.duree
-  const { dateISO: aujourdhui, minutes: nowMinutes } = maintenantSalon()
-  const isToday = dateISO === aujourdhui
+  const { dateISO: aujourdhui, minutes } = maintenantSalon()
+  return construireGrille(disponibilites, rendezVousExistants, service.duree, dateISO === aujourdhui ? minutes : null)
+}
 
-  const creneaux: string[] = []
+export type EtatJour = 'libre' | 'complet' | 'ferme'
 
-  for (const dispo of disponibilites) {
-    const debut = timeToMinutes(dispo.heureDebut)
-    const fin = timeToMinutes(dispo.heureFin)
+/**
+ * État de chacun des `count` jours à partir de `fromISO` pour un coiffeur et
+ * un service : « ferme » (pas d'horaires ce jour-là ou congé), « complet »
+ * (horaires mais plus aucun créneau) ou « libre ». Quatre requêtes en tout,
+ * quel que soit le nombre de jours.
+ */
+export async function getJoursDisponibles(
+  coiffeurId: string,
+  serviceId: string,
+  fromISO: string,
+  count: number,
+): Promise<{ date: string; etat: EtatJour }[]> {
+  const debut = new Date(`${fromISO}T00:00:00Z`)
+  const jours = Array.from({ length: count }, (_, i) => new Date(debut.getTime() + i * 86_400_000))
+  const fin = jours[jours.length - 1]
+  const iso = (d: Date) => d.toISOString().slice(0, 10)
 
-    for (let start = debut; start + duree <= fin; start += SLOT_STEP_MINUTES) {
-      if (isToday && start <= nowMinutes) continue
+  const service = await prisma.service.findUnique({ where: { id: serviceId } })
+  if (!service || !service.actif) return jours.map((d) => ({ date: iso(d), etat: 'ferme' as const }))
 
-      const end = start + duree
-      const conflit = rendezVousExistants.some((rdv) =>
-        rangesOverlap(start, end, timeToMinutes(rdv.heureDebut), timeToMinutes(rdv.heureFin)),
-      )
-      if (!conflit) creneaux.push(minutesToTime(start))
-    }
-  }
+  const [disponibilites, fermetures, rendezVous] = await Promise.all([
+    prisma.disponibilite.findMany({ where: { coiffeurId } }),
+    prisma.fermeture.findMany({
+      where: { dateDebut: { lte: fin }, dateFin: { gte: debut }, OR: [{ coiffeurId: null }, { coiffeurId }] },
+      select: { dateDebut: true, dateFin: true },
+    }),
+    prisma.rendezVous.findMany({
+      where: { coiffeurId, date: { gte: debut, lte: fin }, statut: { not: 'ANNULE' } },
+      select: { date: true, heureDebut: true, heureFin: true },
+    }),
+  ])
 
-  return creneaux
+  const { dateISO: aujourdhui, minutes } = maintenantSalon()
+
+  return jours.map((d) => {
+    const dateISO = iso(d)
+    if (estDatePassee(dateISO)) return { date: dateISO, etat: 'ferme' as const }
+    if (fermetures.some((f) => f.dateDebut <= d && f.dateFin >= d)) return { date: dateISO, etat: 'ferme' as const }
+
+    const dispos = disponibilites.filter((x) => x.jourSemaine === d.getUTCDay())
+    if (dispos.length === 0) return { date: dateISO, etat: 'ferme' as const }
+
+    const existants = rendezVous.filter((r) => iso(r.date) === dateISO)
+    const grille = construireGrille(dispos, existants, service.duree, dateISO === aujourdhui ? minutes : null)
+    return { date: dateISO, etat: grille.some((c) => c.libre) ? ('libre' as const) : ('complet' as const) }
+  })
 }
 
 /**

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import { getCreneauxDisponibles } from '@/lib/slots'
+import { getGrilleJour } from '@/lib/slots'
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -12,6 +12,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Paramètres invalides' }, { status: 400 })
   }
 
-  const creneaux = await getCreneauxDisponibles(coiffeurId, serviceId, date)
-  return NextResponse.json({ creneaux })
+  // `creneaux` : créneaux libres (utilisé par le planning du salon) ;
+  // `grille` : tous les créneaux du jour avec leur état (réservation en ligne).
+  const grille = await getGrilleJour(coiffeurId, serviceId, date)
+  return NextResponse.json({ creneaux: grille.filter((c) => c.libre).map((c) => c.heure), grille })
 }
