@@ -82,12 +82,6 @@
 :root[data-theme="light"] .mc .intro .lg-dark{display:block!important}
 
 .theme-toggle .tt-label{display:none}
-/* barre latérale du back-office : bouton avec libellé */
-.ad .ad-foot .theme-toggle{width:100%;height:auto;justify-content:flex-start;gap:12px;padding:11px 14px;border:0;border-radius:0;font:600 10.5px/1 var(--a-sans);letter-spacing:.18em;text-transform:uppercase;color:var(--a-muted)}
-.ad .ad-foot .theme-toggle:hover{color:var(--a-ivory)}
-.ad .ad-foot .theme-toggle .tt-label{display:inline}
-.ad .ad-foot .theme-toggle svg{width:15px;height:15px}
-@media (max-width:900px){.ad .ad-foot .theme-toggle .tt-label{display:none}.ad .ad-foot .theme-toggle{width:auto}}
 /* espace salon : bouton en haut à droite */
 .es .es-top{position:relative;width:100%}
 .es .es-top .theme-toggle{position:absolute;right:clamp(16px,3vw,40px);top:clamp(30px,5vh,52px)}

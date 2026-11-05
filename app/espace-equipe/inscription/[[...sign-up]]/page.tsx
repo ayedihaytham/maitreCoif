@@ -1,4 +1,4 @@
-import { SignUp } from '@clerk/nextjs'
+import { StaffClerkForm } from '@/components/auth/staff-clerk-form'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
@@ -44,7 +44,7 @@ export default async function InscriptionEquipePage({ params, searchParams }: Pr
             </Link>
           </div>
         ) : (
-          <SignUp path="/inscription" signInUrl="/connexion" fallbackRedirectUrl="/planning" />
+          <StaffClerkForm mode="sign-up" />
         )}
       </div>
     </main>

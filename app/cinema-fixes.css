@@ -12,13 +12,6 @@
 /* les accents des titres révélés ligne par ligne ne sont plus rognés */
 .mc .h-title .ln{padding-top:.2em;margin-top:-.2em}
 
-/* Back-office : zone du logo */
-.ad .ad-side{padding:0 18px 18px}
-.ad .ad-brand{display:flex;align-items:center;width:auto;padding:22px 6px 18px;margin-bottom:18px;border-bottom:1px solid var(--a-line,rgb(var(--mc-fg-rgb) / .12))}
-.ad .ad-brand img{height:52px;width:auto;flex:none}
-.ad .ad-rec{margin:-6px 6px 18px;font:600 10px/1 var(--a-sans);letter-spacing:.26em;text-transform:uppercase;color:var(--a-muted,var(--mc-muted))}
-.ad .ad-user{margin-top:0}
-
 /* Fenêtres de dialogue : défilement interne et cases à cocher soignées */
 [data-slot="dialog-content"]{max-height:calc(100dvh - 2rem);overflow-y:auto;overscroll-behavior:contain}
 [data-slot="dialog-content"] fieldset{border:0;margin:0 0 .25rem;padding:0;min-width:0}

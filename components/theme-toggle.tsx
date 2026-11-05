@@ -11,7 +11,7 @@ type Theme = 'dark' | 'light'
  * avant le premier affichage pour éviter tout clignotement. Le choix est mémorisé
  * dans le navigateur (localStorage).
  */
-export function ThemeToggle({ className }: { className?: string }) {
+export function ThemeToggle({ className, libelle }: { className?: string; libelle?: string }) {
   const [theme, setTheme] = useState<Theme>('dark')
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export function ThemeToggle({ className }: { className?: string }) {
     >
       <Sun className="i-sun" aria-hidden="true" />
       <Moon className="i-moon" aria-hidden="true" />
-      <span className="tt-label">{theme === 'light' ? 'Thème sombre' : 'Thème clair'}</span>
+      <span className="tt-label">{libelle ?? (theme === 'light' ? 'Thème sombre' : 'Thème clair')}</span>
     </button>
   )
 }

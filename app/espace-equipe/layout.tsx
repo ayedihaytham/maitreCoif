@@ -1,5 +1,6 @@
 import '../cinema.css'
 import '../cinema-chrome.css'
+import '../cinema-fixes.css'
 import './espace.css'
 
 import type { Metadata } from 'next'

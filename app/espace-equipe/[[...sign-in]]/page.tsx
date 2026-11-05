@@ -1,4 +1,4 @@
-import { SignIn } from '@clerk/nextjs'
+import { StaffClerkForm } from '@/components/auth/staff-clerk-form'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
@@ -21,7 +21,7 @@ export default function EspaceEquipePage() {
       <div className="es-card">
         {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ? (
           // Pas de lien « S'inscrire » : l'accès se fait uniquement sur invitation.
-          <SignIn path="/connexion" fallbackRedirectUrl="/planning" appearance={{ elements: { footerAction: { display: 'none' } } }} />
+          <StaffClerkForm mode="sign-in" masquerInscription />
         ) : (
           <p className="es-lead">L&apos;authentification de l&apos;équipe n&apos;est pas configurée sur ce déploiement (clés Clerk manquantes).</p>
         )}

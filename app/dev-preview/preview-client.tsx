@@ -31,7 +31,13 @@ export function PreviewClient() {
   const v = useSearchParams().get('v') ?? 'plan'
   return (
     <div className="ad">
-      <AdminSidebar role="ADMIN" nom="ahmed kallel" onSignOut={() => {}} />
+      <AdminSidebar
+        role="ADMIN"
+        nom="ahmed kallel"
+        aujourdhui={7}
+        prochain={{ heure: '16:30', client: 'Sami B.', prestations: 'Coupe + Barbe', coiffeur: 'houcem', jour: "aujourd'hui" }}
+        onSignOut={() => {}}
+      />
       <main style={{ flex: 1, minWidth: 0 }}>
         {v === 'plan' && <PlanningBoard role="ADMIN" currentUserId="a" coiffeurs={coiffeurs} />}
         {v === 'stats' && <StatistiquesView periode="mois" stats={stats} />}
