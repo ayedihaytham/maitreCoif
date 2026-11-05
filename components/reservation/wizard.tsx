@@ -34,6 +34,7 @@ interface CreneauGrille {
 
 type EtatJour = 'libre' | 'complet' | 'ferme'
 
+const MAX_PRESTATIONS = 5 // aligné sur lib/prestations.ts
 const STEPS = ['Coiffeur', 'Service', 'Créneau', 'Coordonnées'] as const
 const JOURS_PROPOSES = 21
 const JOURS_PAR_PAGE = 7
@@ -86,12 +87,14 @@ export function ReservationWizard({
   todayISO: string
 }) {
   const coiffeurInitial = coiffeurs.some((c) => c.id === preselectedCoiffeurId) ? preselectedCoiffeurId! : ''
-  const serviceInitial = services.some((s) => s.id === preselectedServiceId) ? preselectedServiceId! : ''
+  const serviceInitial = services.some((s) => s.id === preselectedServiceId) ? [preselectedServiceId!] : []
 
   // On démarre à la première étape dont la réponse manque.
-  const [step, setStep] = useState(!coiffeurInitial ? 0 : !serviceInitial ? 1 : 2)
+  const [step, setStep] = useState(!coiffeurInitial ? 0 : serviceInitial.length === 0 ? 1 : 2)
   const [coiffeurId, setCoiffeurId] = useState(coiffeurInitial)
-  const [serviceId, setServiceId] = useState(serviceInitial)
+  const [serviceIds, setServiceIds] = useState<string[]>(serviceInitial)
+  // Les appels d'API reçoivent les prestations séparées par des virgules.
+  const serviceId = serviceIds.join(',')
   const [date, setDate] = useState('')
   const [heureDebut, setHeureDebut] = useState('')
   const [page, setPage] = useState(0)
@@ -115,7 +118,12 @@ export function ReservationWizard({
   const [confirmation, setConfirmation] = useState<{ codeSuivi: string } | null>(null)
 
   const coiffeur = coiffeurs.find((c) => c.id === coiffeurId)
-  const service = services.find((s) => s.id === serviceId)
+  // « service » regroupe les prestations choisies : libellé, durée et prix cumulés.
+  const choisies = serviceIds.map((id) => services.find((s) => s.id === id)).filter((s): s is Service => Boolean(s))
+  const service =
+    choisies.length > 0
+      ? { nom: choisies.map((s) => s.nom).join(' + '), duree: choisies.reduce((t, s) => t + s.duree, 0), prix: choisies.reduce((t, s) => t + s.prix, 0) }
+      : undefined
   const heureFin = service && heureDebut ? ajouterMinutes(heureDebut, service.duree) : ''
 
   const jours = useMemo(
@@ -189,16 +197,14 @@ export function ReservationWizard({
       setDate('')
       setHeureDebut('')
     }
-    setStep(serviceId ? 2 : 1)
+    setStep(serviceIds.length > 0 ? 2 : 1)
   }
 
   function choisirService(id: string) {
-    if (id !== serviceId) {
-      setServiceId(id)
-      setDate('')
-      setHeureDebut('')
-    }
-    setStep(coiffeurId ? 2 : 0)
+    // Bascule : on peut cumuler jusqu'à MAX_PRESTATIONS prestations.
+    setServiceIds((actuels) => (actuels.includes(id) ? actuels.filter((x) => x !== id) : actuels.length >= MAX_PRESTATIONS ? actuels : [...actuels, id]))
+    setDate('')
+    setHeureDebut('')
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -222,7 +228,7 @@ export function ReservationWizard({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           coiffeurId,
-          serviceId,
+          serviceIds,
           date,
           heureDebut,
           clientNom: clientNom.trim(),
@@ -387,15 +393,18 @@ export function ReservationWizard({
           {step === 1 && (
             <div>
               <h2 className="sec-t">
-                <b>Choisissez votre service</b>
+                <b>Choisissez vos prestations</b>
               </h2>
+              <p className="hint" style={{ margin: '-6px 0 18px' }}>
+                Vous pouvez en cumuler plusieurs (jusqu&apos;à {MAX_PRESTATIONS}) : la durée et le prix s&apos;additionnent.
+              </p>
               <div className="choices">
                 {services.map((s) => (
                   <button
                     key={s.id}
                     type="button"
-                    className={cn('choice', serviceId === s.id && 'sel')}
-                    aria-pressed={serviceId === s.id}
+                    className={cn('choice', serviceIds.includes(s.id) && 'sel')}
+                    aria-pressed={serviceIds.includes(s.id)}
                     onClick={() => choisirService(s.id)}
                   >
                     <span className="ct">
@@ -409,9 +418,22 @@ export function ReservationWizard({
                   </button>
                 ))}
               </div>
-              <button type="button" className="btn btn-ghost btn-sm back" style={{ marginTop: 22 }} onClick={() => setStep(0)}>
-                <ChevronLeft className="size-4" aria-hidden="true" /> Retour
-              </button>
+              {service && (
+                <div className="svc-total" aria-live="polite">
+                  <span>
+                    {choisies.length} prestation{choisies.length > 1 ? 's' : ''} · {service.duree} min
+                  </span>
+                  <strong>{formatPrix(service.prix)}</strong>
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 12, marginTop: 22, flexWrap: 'wrap' }}>
+                <button type="button" className="btn btn-ghost btn-sm back" onClick={() => setStep(0)}>
+                  <ChevronLeft className="size-4" aria-hidden="true" /> Retour
+                </button>
+                <button type="button" className="btn btn-gold" disabled={!service || !coiffeurId} onClick={() => setStep(2)}>
+                  {coiffeurId ? 'Continuer' : 'Choisissez d’abord un coiffeur'}
+                </button>
+              </div>
             </div>
           )}
 
@@ -428,7 +450,7 @@ export function ReservationWizard({
                 </div>
                 <div className="rc">
                   <span>
-                    <small>Service</small>
+                    <small>{choisies.length > 1 ? 'Prestations' : 'Service'}</small>
                     {service.nom} · {service.duree} min · {formatPrix(service.prix)}
                   </span>
                 </div>
@@ -559,7 +581,7 @@ export function ReservationWizard({
                 </div>
                 <div className="rc">
                   <span>
-                    <small>Service</small>
+                    <small>{choisies.length > 1 ? 'Prestations' : 'Service'}</small>
                     {service.nom} · {service.duree} min · {formatPrix(service.prix)}
                   </span>
                 </div>

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { inclurePrestations, prestationsDuRendezVous } from '@/lib/prestations'
 import { envoyerAnnulationEmail } from '@/lib/notifications'
 import { rendezVousStatutSchema } from '@/lib/validators'
 
@@ -21,7 +22,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const { id } = await params
   const rendezVous = await prisma.rendezVous.findUnique({
     where: { id },
-    include: { coiffeur: { select: { prenom: true, nom: true } }, service: { select: { nom: true } } },
+    include: { coiffeur: { select: { prenom: true, nom: true } }, ...inclurePrestations },
   })
   if (!rendezVous) return NextResponse.json({ error: 'Rendez-vous introuvable' }, { status: 404 })
 
@@ -47,7 +48,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       to: rendezVous.clientEmail,
       clientNom: rendezVous.clientNom,
       coiffeurNom: `${rendezVous.coiffeur.prenom} ${rendezVous.coiffeur.nom}`,
-      serviceNom: rendezVous.service.nom,
+      serviceNom: prestationsDuRendezVous(rendezVous).nom,
       date: rendezVous.date.toISOString().slice(0, 10),
       heureDebut: rendezVous.heureDebut,
       codeSuivi: rendezVous.codeSuivi,

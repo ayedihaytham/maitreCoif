@@ -5,6 +5,7 @@ import { getGrilleJour } from '@/lib/slots'
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const coiffeurId = searchParams.get('coiffeurId')
+  // `serviceId` : une ou plusieurs prestations séparées par des virgules
   const serviceId = searchParams.get('serviceId')
   const date = searchParams.get('date')
 

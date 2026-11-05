@@ -4,7 +4,7 @@ import { changePasswordSchema, deplacementSchema, disponibiliteSchema, fermeture
 
 const validBooking = {
   coiffeurId: '11111111-1111-1111-1111-111111111111',
-  serviceId: '22222222-2222-2222-2222-222222222222',
+  serviceIds: ['22222222-2222-2222-2222-222222222222'],
   date: '2026-09-01',
   heureDebut: '10:00',
   clientNom: 'Ahmed Kallel',

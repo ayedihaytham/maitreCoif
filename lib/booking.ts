@@ -4,6 +4,7 @@ import { Prisma, type RendezVous } from '@prisma/client'
 
 import { envoyerConfirmationEmail, envoyerDeplacementEmail } from '@/lib/notifications'
 import { prisma } from '@/lib/prisma'
+import type { Prestation } from '@/lib/prestations'
 import { creneauEstLibre, minutesToTime, timeToMinutes } from '@/lib/slots'
 import { envoyerConfirmationWhatsapp } from '@/lib/whatsapp'
 
@@ -24,8 +25,8 @@ async function enSerializable<T>(fn: (tx: Prisma.TransactionClient) => Promise<T
 interface NouveauRendezVous {
   codeSuivi: string
   coiffeurId: string
-  serviceId: string
-  dureeService: number
+  /** Prestations choisies (au moins une) ; leur durée détermine l'heure de fin. */
+  prestations: Prestation[]
   clientUserId: string | null
   clientNom: string
   clientTelephone: string
@@ -42,7 +43,7 @@ export function finitAvantMinuit(heureDebut: string, dureeMinutes: number): bool
 
 /** Crée un rendez-vous confirmé si le créneau est libre ; null sinon. */
 export function creerRendezVousConfirme(input: NouveauRendezVous): Promise<RendezVous | null> {
-  const heureFin = minutesToTime(timeToMinutes(input.heureDebut) + input.dureeService)
+  const heureFin = minutesToTime(timeToMinutes(input.heureDebut) + input.prestations.reduce((s, p) => s + p.duree, 0))
 
   return enSerializable(async (tx) => {
     if (!(await creneauEstLibre(input.coiffeurId, input.date, input.heureDebut, heureFin, undefined, tx))) return null
@@ -51,7 +52,8 @@ export function creerRendezVousConfirme(input: NouveauRendezVous): Promise<Rende
       data: {
         codeSuivi: input.codeSuivi,
         coiffeurId: input.coiffeurId,
-        serviceId: input.serviceId,
+        serviceId: input.prestations[0].id,
+        lignes: { create: input.prestations.map((p, ordre) => ({ serviceId: p.id, ordre, nom: p.nom, prix: p.prix, duree: p.duree })) },
         clientUserId: input.clientUserId,
         clientNom: input.clientNom,
         clientTelephone: input.clientTelephone,

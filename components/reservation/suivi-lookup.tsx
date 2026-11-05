@@ -16,6 +16,7 @@ interface RendezVousSuivi {
   demandeEnCours: string | null
   coiffeur: string
   service: string
+  prestations?: string[]
   prix: number
   duree: number
 }
@@ -186,8 +187,15 @@ export function SuiviLookup({ initialCode = '' }: { initialCode?: string }) {
                   {rdv.statut === 'CONFIRME' ? 'Confirmé' : rdv.statut === 'EN_ATTENTE' ? 'En attente' : rdv.statut === 'TERMINE' ? 'Terminé' : 'Annulé'}
                 </div>
                 <h3>
-                  {rdv.service} avec {rdv.coiffeur}
+                  {rdv.prestations && rdv.prestations.length > 1 ? 'Votre séance' : rdv.service} avec {rdv.coiffeur}
                 </h3>
+                {rdv.prestations && rdv.prestations.length > 1 && (
+                  <ul className="prestas">
+                    {rdv.prestations.map((p) => (
+                      <li key={p}>{p}</li>
+                    ))}
+                  </ul>
+                )}
                 <div style={{ marginTop: 8, fontSize: 13.5, color: 'var(--mc-muted)' }}>
                   {rdv.duree} min · {formatPrix(rdv.prix)}
                 </div>

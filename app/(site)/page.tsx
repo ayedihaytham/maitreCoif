@@ -12,6 +12,7 @@ import { ReviewCarousel, type AvisAffiche } from '@/components/site/review-carou
 import { attribuerPortraits } from '@/lib/portraits'
 import { libelleJour, prochaineDisponibilite } from '@/lib/prochaine-disponibilite'
 import { prisma } from '@/lib/prisma'
+import { inclurePrestations, prestationsDuRendezVous } from '@/lib/prestations'
 import { formatPrix } from '@/lib/utils'
 
 export const metadata: Metadata = {
@@ -40,7 +41,7 @@ async function getAccueilData() {
         rendezVous: {
           select: {
             clientNom: true,
-            service: { select: { nom: true } },
+            ...inclurePrestations,
             coiffeur: { select: { prenom: true, nom: true } },
           },
         },
@@ -64,7 +65,7 @@ export default async function AccueilPage() {
     note: a.note,
     texte: a.commentaire ?? '',
     client: a.rendezVous.clientNom,
-    meta: `${a.rendezVous.service.nom} · avec ${a.rendezVous.coiffeur.prenom} ${a.rendezVous.coiffeur.nom}`,
+    meta: `${prestationsDuRendezVous(a.rendezVous).nom} · avec ${a.rendezVous.coiffeur.prenom} ${a.rendezVous.coiffeur.nom}`,
   }))
   const moyenne = statsAvis._avg.note
   const nbAvis = statsAvis._count._all

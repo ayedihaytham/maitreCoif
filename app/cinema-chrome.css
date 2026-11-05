@@ -110,3 +110,11 @@
 /* Correctifs : le texte du plan d'ouverture occupe toute la largeur du conteneur ; le lecteur se retire sous le menu ouvert */
 .mc .ph-copy{width:100%}
 body:has(.menu.open) .h-hud{display:none}
+
+/* Réservation : plusieurs prestations cumulables */
+.mc .choice{position:relative}
+.mc .choice.sel::after{content:"✓";position:absolute;right:-9px;top:-9px;width:22px;height:22px;display:grid;place-items:center;border-radius:50%;background:var(--mc-gold);color:#0a0a0a;font:700 12px/1 var(--mc-sans)}
+.mc .svc-total{display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-top:22px;padding:16px 20px;border:1px dashed var(--mc-line-gold);color:var(--mc-muted);font-size:13.5px}
+.mc .svc-total strong{font:400 26px/1 var(--mc-serif);color:var(--mc-gold)}
+.mc .res .prestas{margin:10px 0 0;padding:0;list-style:none;font-size:13.5px;color:var(--mc-muted)}
+.mc .res .prestas li::before{content:"+ ";color:var(--mc-gold)}

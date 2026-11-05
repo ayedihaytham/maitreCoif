@@ -28,7 +28,7 @@ export default async function AdminServicesPage() {
             Les <em>prestations.</em>
           </>
         }
-        description="Nom, prix et durée : la durée détermine les créneaux proposés en ligne. Un service désactivé n'est plus réservable."
+        description="Nom, prix et durée : la durée détermine les créneaux proposés en ligne. Un service désactivé n'est plus réservable. Les clients peuvent cumuler plusieurs services (durées et prix s'additionnent) ; pour proposer un forfait à tarif réduit (ex. « Coupe + Barbe »), créez-le ici comme un service à part entière."
       />
       <div className="ad-body">
         <ServicesManager initial={servicesForClient} />

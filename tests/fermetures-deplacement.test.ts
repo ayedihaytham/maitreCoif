@@ -17,6 +17,7 @@ const JOUR_DEST = '2099-07-17'
 let coiffeurId: string
 let autreCoiffeurId: string
 let serviceId: string
+let serviceId2: string
 let fermetureSalonId: string
 let fermetureCongeId: string
 
@@ -34,6 +35,7 @@ beforeAll(async () => {
   coiffeurId = a.id
   autreCoiffeurId = b.id
   serviceId = (await prisma.service.create({ data: { nom: 'Service ferm', prix: 10, duree: 30, actif: true } })).id
+  serviceId2 = (await prisma.service.create({ data: { nom: 'Second', prix: 15, duree: 20, actif: true } })).id
 
   for (const id of [coiffeurId, autreCoiffeurId]) {
     await prisma.disponibilite.createMany({ data: [JOUR, JOUR_FERME, JOUR_CONGE, JOUR_DEST].map((j) => ({ ...dispo(j), coiffeurId: id })) })
@@ -51,7 +53,7 @@ afterAll(async () => {
   await prisma.rendezVous.deleteMany({ where: { coiffeurId: { in: [coiffeurId, autreCoiffeurId] } } })
   await prisma.fermeture.deleteMany({ where: { id: { in: [fermetureSalonId, fermetureCongeId] } } })
   await prisma.disponibilite.deleteMany({ where: { coiffeurId: { in: [coiffeurId, autreCoiffeurId] } } })
-  await prisma.service.delete({ where: { id: serviceId } })
+  await prisma.service.deleteMany({ where: { id: { in: [serviceId, serviceId2] } } })
   await prisma.user.deleteMany({ where: { id: { in: [coiffeurId, autreCoiffeurId] } } })
   await prisma.$disconnect()
 })
@@ -94,7 +96,7 @@ describe('déplacement par le salon', () => {
   }
 
   it('déplace un rendez-vous, libère l’ancien créneau et traite les demandes en attente', async () => {
-    const rdv = await creerRendezVousConfirme({ ...base, codeSuivi: `MC-MV${Date.now()}`, coiffeurId, serviceId, dureeService: 30, date: JOUR, heureDebut: '10:00' })
+    const rdv = await creerRendezVousConfirme({ ...base, codeSuivi: `MC-MV${Date.now()}`, coiffeurId, prestations: [{ id: serviceId, nom: 'Service ferm', prix: 10, duree: 30 }], date: JOUR, heureDebut: '10:00' })
     expect(rdv).not.toBeNull()
     await prisma.demandeModification.create({ data: { rendezVousId: rdv!.id, message: 'plus tard svp' } })
 
@@ -106,16 +108,47 @@ describe('déplacement par le salon', () => {
   })
 
   it('refuse un déplacement vers un créneau occupé ou un jour fermé', async () => {
-    const a = await creerRendezVousConfirme({ ...base, codeSuivi: `MC-MA${Date.now()}`, coiffeurId, serviceId, dureeService: 30, date: JOUR, heureDebut: '11:00' })
-    const b = await creerRendezVousConfirme({ ...base, codeSuivi: `MC-MB${Date.now()}`, coiffeurId, serviceId, dureeService: 30, date: JOUR, heureDebut: '12:00' })
+    const a = await creerRendezVousConfirme({ ...base, codeSuivi: `MC-MA${Date.now()}`, coiffeurId, prestations: [{ id: serviceId, nom: 'Service ferm', prix: 10, duree: 30 }], date: JOUR, heureDebut: '11:00' })
+    const b = await creerRendezVousConfirme({ ...base, codeSuivi: `MC-MB${Date.now()}`, coiffeurId, prestations: [{ id: serviceId, nom: 'Service ferm', prix: 10, duree: 30 }], date: JOUR, heureDebut: '12:00' })
 
     expect(await deplacerRendezVous(b!, { coiffeurId, date: JOUR, heureDebut: '11:00' })).toBeNull()
     expect(await deplacerRendezVous(a!, { coiffeurId, date: JOUR_FERME, heureDebut: '11:00' })).toBeNull()
   })
 
   it("permet de décaler un rendez-vous sur un créneau qui chevauche l'ancien (il ne se bloque pas lui-même)", async () => {
-    const rdv = await creerRendezVousConfirme({ ...base, codeSuivi: `MC-MS${Date.now()}`, coiffeurId, serviceId, dureeService: 30, date: JOUR, heureDebut: '15:00' })
+    const rdv = await creerRendezVousConfirme({ ...base, codeSuivi: `MC-MS${Date.now()}`, coiffeurId, prestations: [{ id: serviceId, nom: 'Service ferm', prix: 10, duree: 30 }], date: JOUR, heureDebut: '15:00' })
     const deplace = await deplacerRendezVous(rdv!, { coiffeurId, date: JOUR, heureDebut: '15:15' })
     expect(deplace?.heureDebut).toBe('15:15')
+  })
+})
+
+describe('rendez-vous à plusieurs prestations', () => {
+  it('cumule les durées pour l\'heure de fin et enregistre une ligne par prestation', async () => {
+    const rdv = await creerRendezVousConfirme({
+      codeSuivi: `MC-MP${Date.now()}`,
+      coiffeurId,
+      prestations: [
+        { id: serviceId, nom: 'Service ferm', prix: 10, duree: 30 },
+        { id: serviceId2, nom: 'Second', prix: 15, duree: 20 },
+      ],
+      clientUserId: null,
+      clientNom: 'Multi',
+      clientTelephone: '20000002',
+      clientEmail: null,
+      date: JOUR,
+      heureDebut: '16:00',
+      notes: null,
+    })
+    expect(rdv?.heureFin).toBe('16:50')
+    const lignes = await prisma.rendezVousService.findMany({ where: { rendezVousId: rdv!.id }, orderBy: { ordre: 'asc' } })
+    expect(lignes.map((l) => l.nom)).toEqual(['Service ferm', 'Second'])
+    expect(rdv!.serviceId).toBe(serviceId)
+  })
+
+  it('propose moins de créneaux quand la durée totale augmente', async () => {
+    const un = await getCreneauxDisponibles(coiffeurId, serviceId, JOUR)
+    const deux = await getCreneauxDisponibles(coiffeurId, [serviceId, serviceId2], JOUR)
+    expect(deux.length).toBeLessThanOrEqual(un.length)
+    expect(await creneauEstProposable(coiffeurId, `${serviceId},${serviceId2}`, JOUR, '10:00')).toBe(true)
   })
 })

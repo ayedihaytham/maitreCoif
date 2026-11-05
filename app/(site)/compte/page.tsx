@@ -5,6 +5,7 @@ import { ArrowRight } from 'lucide-react'
 
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { inclurePrestations, prestationsDuRendezVous } from '@/lib/prestations'
 import { salonUrl } from '@/lib/salon-host'
 import { maintenantSalon } from '@/lib/slots'
 import { cn } from '@/lib/utils'
@@ -52,7 +53,7 @@ export default async function ComptePage() {
       orderBy: [{ date: 'desc' }, { heureDebut: 'desc' }],
       include: {
         coiffeur: { select: { nom: true, prenom: true } },
-        service: { select: { nom: true } },
+        ...inclurePrestations,
         avis: true,
       },
     }),
@@ -141,7 +142,8 @@ function RendezVousCard({
     date: Date
     heureDebut: string
     coiffeur: { nom: string; prenom: string }
-    service: { nom: string }
+    service: { nom: string; prix: unknown; duree: number }
+    lignes: { nom: string; prix: unknown; duree: number; ordre: number }[]
     avis: { id: string } | null
   }
 }) {
@@ -149,7 +151,7 @@ function RendezVousCard({
     <article className="rdv">
       <div>
         <div className="t">
-          {rdv.service.nom} — {rdv.coiffeur.prenom} {rdv.coiffeur.nom}
+          {prestationsDuRendezVous(rdv).nom} — {rdv.coiffeur.prenom} {rdv.coiffeur.nom}
         </div>
         <div className="m">
           {dateLongue(rdv.date)} à {rdv.heureDebut} · {rdv.codeSuivi}
@@ -157,7 +159,7 @@ function RendezVousCard({
       </div>
       <div className="rdv-actions">
         <span className={cn('badge', STATUT_CLASSE[rdv.statut])}>{STATUT_LABEL[rdv.statut]}</span>
-        {rdv.statut === 'TERMINE' && !rdv.avis && <ReviewDialog rendezVousId={rdv.id} serviceNom={rdv.service.nom} />}
+        {rdv.statut === 'TERMINE' && !rdv.avis && <ReviewDialog rendezVousId={rdv.id} serviceNom={prestationsDuRendezVous(rdv).nom} />}
       </div>
     </article>
   )

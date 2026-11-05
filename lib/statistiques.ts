@@ -1,3 +1,4 @@
+import { prestationsDuRendezVous } from '@/lib/prestations'
 import { prisma } from '@/lib/prisma'
 import { timeToMinutes } from '@/lib/slots'
 
@@ -44,7 +45,7 @@ export async function getStatistiques(periode: Periode) {
     prisma.disponibilite.findMany(),
     prisma.rendezVous.findMany({
       where: { date: { gte: from, lte: to } },
-      include: { service: { select: { prix: true, duree: true } } },
+      include: { service: { select: { nom: true, prix: true, duree: true } }, lignes: { select: { nom: true, prix: true, duree: true, ordre: true } } },
     }),
   ])
 
@@ -67,15 +68,16 @@ export async function getStatistiques(periode: Periode) {
   for (const rdv of rendezVous) {
     parStatut[rdv.statut] = (parStatut[rdv.statut] ?? 0) + 1
 
+    const presta = prestationsDuRendezVous(rdv)
     const entry = parCoiffeur.get(rdv.coiffeurId) ?? { rendezVous: 0, minutesReservees: 0, chiffreAffaires: 0 }
     entry.rendezVous += 1
 
     if (rdv.statut !== 'ANNULE') {
-      entry.minutesReservees += rdv.service.duree
-      minutesReserveesTotal += rdv.service.duree
+      entry.minutesReservees += presta.duree
+      minutesReserveesTotal += presta.duree
     }
     if (rdv.statut === 'TERMINE') {
-      const prix = Number(rdv.service.prix)
+      const prix = presta.prix
       entry.chiffreAffaires += prix
       chiffreAffairesTotal += prix
     }

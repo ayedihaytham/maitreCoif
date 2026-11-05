@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/prisma'
+import { inclurePrestations, prestationsDuRendezVous } from '@/lib/prestations'
 import { checkRateLimit, clientIpFrom } from '@/lib/rate-limit'
 import { alerterSalon } from '@/lib/alerte-salon'
 import { envoyerAnnulationEmail, formaterDateLongue } from '@/lib/notifications'
@@ -17,7 +18,9 @@ function serialize(rdv: {
   demandesModification: { message: string }[]
   coiffeur: { prenom: string; nom: string }
   service: { nom: string; prix: unknown; duree: number }
+  lignes: { nom: string; prix: unknown; duree: number; ordre: number }[]
 }) {
+  const presta = prestationsDuRendezVous(rdv)
   return {
     id: rdv.id,
     codeSuivi: rdv.codeSuivi,
@@ -28,9 +31,10 @@ function serialize(rdv: {
     notes: rdv.notes,
     demandeEnCours: rdv.demandesModification[0]?.message ?? null,
     coiffeur: `${rdv.coiffeur.prenom} ${rdv.coiffeur.nom}`,
-    service: rdv.service.nom,
-    prix: Number(rdv.service.prix),
-    duree: rdv.service.duree,
+    service: presta.nom,
+    prestations: (rdv.lignes.length > 0 ? rdv.lignes : [rdv.service]).map((l) => l.nom),
+    prix: presta.prix,
+    duree: presta.duree,
   }
 }
 
@@ -55,7 +59,7 @@ export async function GET(request: Request) {
     orderBy: { date: 'desc' },
     include: {
       coiffeur: { select: { prenom: true, nom: true } },
-      service: { select: { nom: true, prix: true, duree: true } },
+      ...inclurePrestations,
       demandesModification: { where: { traitee: false }, select: { message: true }, take: 1 },
     },
     take: 20,
@@ -83,7 +87,7 @@ export async function POST(request: Request) {
 
   const rendezVous = await prisma.rendezVous.findFirst({
     where: { id, codeSuivi: codeSuivi.trim().toUpperCase() },
-    include: { coiffeur: { select: { prenom: true, nom: true } }, service: { select: { nom: true } } },
+    include: { coiffeur: { select: { prenom: true, nom: true } }, ...inclurePrestations },
   })
 
   if (!rendezVous) return NextResponse.json({ error: 'Rendez-vous introuvable' }, { status: 404 })
@@ -104,7 +108,7 @@ export async function POST(request: Request) {
 
   await alerterSalon(
     'Rendez-vous annulé par le client',
-    `${rendezVous.clientNom} (${rendezVous.clientTelephone}) a annulé son rendez-vous du ${formaterDateLongue(rendezVous.date.toISOString().slice(0, 10))} à ${rendezVous.heureDebut} avec ${rendezVous.coiffeur.prenom} ${rendezVous.coiffeur.nom} (${rendezVous.service.nom}). Le créneau est de nouveau libre.`,
+    `${rendezVous.clientNom} (${rendezVous.clientTelephone}) a annulé son rendez-vous du ${formaterDateLongue(rendezVous.date.toISOString().slice(0, 10))} à ${rendezVous.heureDebut} avec ${rendezVous.coiffeur.prenom} ${rendezVous.coiffeur.nom} (${prestationsDuRendezVous(rendezVous).nom}). Le créneau est de nouveau libre.`,
   )
 
   if (rendezVous.clientEmail) {
@@ -112,7 +116,7 @@ export async function POST(request: Request) {
       to: rendezVous.clientEmail,
       clientNom: rendezVous.clientNom,
       coiffeurNom: `${rendezVous.coiffeur.prenom} ${rendezVous.coiffeur.nom}`,
-      serviceNom: rendezVous.service.nom,
+      serviceNom: prestationsDuRendezVous(rendezVous).nom,
       date: rendezVous.date.toISOString().slice(0, 10),
       heureDebut: rendezVous.heureDebut,
       codeSuivi: rendezVous.codeSuivi,

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { CalendarClock, Check, ChevronLeft, ChevronRight, Loader2, Phone, Plus, X } from 'lucide-react'
 
 import { RdvDialog, type RdvADeplacer } from '@/components/admin/rdv-dialog'
+import { prestationsDuRendezVous } from '@/lib/prestations-utils'
 import { cn, formatPrix } from '@/lib/utils'
 import type { Role } from '@prisma/client'
 
@@ -24,6 +25,7 @@ interface RendezVous {
   statut: 'EN_ATTENTE' | 'CONFIRME' | 'TERMINE' | 'ANNULE'
   notes: string | null
   service: { id: string; nom: string; duree: number; prix: number | string }
+  lignes: { serviceId: string; nom: string; duree: number; prix: number | string; ordre: number }[]
   demandesModification: { id: string; message: string }[]
 }
 
@@ -141,7 +143,7 @@ export function PlanningBoard({ role, currentUserId, coiffeurs }: { role: Role; 
   const actifs = rendezVous.filter((r) => r.statut !== 'ANNULE')
   const aConfirmer = actifs.filter((r) => r.statut === 'EN_ATTENTE').length
   const demandes = actifs.filter((r) => r.demandesModification.length > 0).length
-  const chiffre = actifs.reduce((somme, r) => somme + Number(r.service.prix), 0)
+  const chiffre = actifs.reduce((somme, r) => somme + prestationsDuRendezVous(r).prix, 0)
   const selected = rendezVous.find((r) => r.id === selectedId) ?? null
 
   async function changeStatut(id: string, statut: string) {
@@ -169,7 +171,7 @@ export function PlanningBoard({ role, currentUserId, coiffeurs }: { role: Role; 
   }
 
   function ouvrirDeplacement(rdv: RendezVous) {
-    setDeplacement({ id: rdv.id, coiffeurId: rdv.coiffeurId, clientNom: rdv.clientNom, service: rdv.service })
+    setDeplacement({ id: rdv.id, coiffeurId: rdv.coiffeurId, clientNom: rdv.clientNom, service: { ids: rdv.lignes.length > 0 ? rdv.lignes.map((l) => l.serviceId) : [rdv.service.id], nom: prestationsDuRendezVous(rdv).nom, duree: prestationsDuRendezVous(rdv).duree } })
     setColonneCible(rdv.coiffeurId)
     setDialogOpen(true)
   }
@@ -320,7 +322,7 @@ export function PlanningBoard({ role, currentUserId, coiffeurs }: { role: Role; 
                               {h >= 62 ? ` — ${rdv.heureFin}` : ''}
                             </span>
                             <strong>{rdv.clientNom}</strong>
-                            <span className="s">{rdv.service.nom}</span>
+                            <span className="s">{prestationsDuRendezVous(rdv).nom}</span>
                             {rdv.demandesModification.length > 0 && <i className="dm" title="Demande de modification du client" />}
                             <span className="sr-only">
                               {STATUT_LABEL[rdv.statut]}
@@ -358,7 +360,7 @@ export function PlanningBoard({ role, currentUserId, coiffeurs }: { role: Role; 
                               {rdv.heureDebut} — {rdv.heureFin}
                             </span>
                             <strong>{rdv.clientNom}</strong>
-                            <small>{rdv.service.nom}</small>
+                            <small>{prestationsDuRendezVous(rdv).nom}</small>
                           </span>
                           <span className={STATUT_TAG[rdv.statut]}>{STATUT_LABEL[rdv.statut]}</span>
                         </button>
@@ -385,8 +387,17 @@ export function PlanningBoard({ role, currentUserId, coiffeurs }: { role: Role; 
 
                 <div className="kv">
                   <div>
-                    <small>Prestation</small>
-                    {selected.service.nom} · {selected.service.duree} min · {formatPrix(Number(selected.service.prix))}
+                    <small>{selected.lignes.length > 1 ? 'Prestations' : 'Prestation'}</small>
+                    {(selected.lignes.length > 0 ? selected.lignes : [selected.service]).map((l) => (
+                      <div key={l.nom}>
+                        {l.nom} · {l.duree} min · {formatPrix(Number(l.prix))}
+                      </div>
+                    ))}
+                    {selected.lignes.length > 1 && (
+                      <strong>
+                        Total : {prestationsDuRendezVous(selected).duree} min · {formatPrix(prestationsDuRendezVous(selected).prix)}
+                      </strong>
+                    )}
                   </div>
                   <div>
                     <small>Coiffeur</small>

@@ -9,7 +9,7 @@ export const loginSchema = z.object({
 
 export const guestBookingSchema = z.object({
   coiffeurId: z.string().uuid(),
-  serviceId: z.string().uuid(),
+  serviceIds: z.array(z.string().uuid()).min(1, 'Choisissez au moins une prestation').max(5, '5 prestations au maximum'),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date invalide'),
   heureDebut: heureSchema,
   clientNom: z.string().min(2, 'Nom requis').max(100),
@@ -106,7 +106,7 @@ const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date invalide')
 // mêmes champs que la réservation publique, sans anti-bot.
 export const salonBookingSchema = z.object({
   coiffeurId: z.string().uuid(),
-  serviceId: z.string().uuid(),
+  serviceIds: z.array(z.string().uuid()).min(1, 'Choisissez au moins une prestation').max(5, '5 prestations au maximum'),
   date: dateSchema,
   heureDebut: heureSchema,
   clientNom: z.string().min(2, 'Nom requis').max(100),

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { deplacerRendezVous, finitAvantMinuit, notifierDeplacement } from '@/lib/booking'
 import { prisma } from '@/lib/prisma'
+import { inclurePrestations, prestationsDuRendezVous } from '@/lib/prestations'
 import { estDatePassee, timeToMinutes } from '@/lib/slots'
 import { deplacementSchema } from '@/lib/validators'
 
@@ -13,7 +14,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 
   const { id } = await params
-  const rendezVous = await prisma.rendezVous.findUnique({ where: { id }, include: { service: { select: { nom: true } } } })
+  const rendezVous = await prisma.rendezVous.findUnique({ where: { id }, include: { ...inclurePrestations } })
   if (!rendezVous) return NextResponse.json({ error: 'Rendez-vous introuvable' }, { status: 404 })
 
   const parsed = deplacementSchema.safeParse(await request.json())
@@ -45,6 +46,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "Ce créneau n'est pas libre (rendez-vous existant ou fermeture)." }, { status: 409 })
   }
 
-  await notifierDeplacement(deplace, { coiffeurNom: `${coiffeur.prenom} ${coiffeur.nom}`, serviceNom: rendezVous.service.nom })
+  await notifierDeplacement(deplace, { coiffeurNom: `${coiffeur.prenom} ${coiffeur.nom}`, serviceNom: prestationsDuRendezVous(rendezVous).nom })
   return NextResponse.json(deplace)
 }

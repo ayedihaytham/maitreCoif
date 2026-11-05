@@ -9,6 +9,7 @@ const MAX_JOURS = 31
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const coiffeurId = searchParams.get('coiffeurId')
+  // `serviceId` : une ou plusieurs prestations séparées par des virgules
   const serviceId = searchParams.get('serviceId')
   const from = searchParams.get('from')
   const count = Number(searchParams.get('count') ?? 21)

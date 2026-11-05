@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { envoyerRappelEmail } from '@/lib/notifications'
 import { prisma } from '@/lib/prisma'
+import { inclurePrestations, prestationsDuRendezVous } from '@/lib/prestations'
 import { maintenantSalon } from '@/lib/slots'
 import { envoyerRappelWhatsapp } from '@/lib/whatsapp'
 
@@ -20,14 +21,14 @@ export async function GET(request: Request) {
 
   const rendezVous = await prisma.rendezVous.findMany({
     where: { date: demain, statut: 'CONFIRME', rappelEnvoye: false },
-    include: { coiffeur: { select: { prenom: true, nom: true } }, service: { select: { nom: true } } },
+    include: { coiffeur: { select: { prenom: true, nom: true } }, ...inclurePrestations },
   })
 
   let envoyes = 0
   for (const rdv of rendezVous) {
     const details = {
       coiffeurNom: `${rdv.coiffeur.prenom} ${rdv.coiffeur.nom}`,
-      serviceNom: rdv.service.nom,
+      serviceNom: prestationsDuRendezVous(rdv).nom,
       date: rdv.date.toISOString().slice(0, 10),
       heureDebut: rdv.heureDebut,
       codeSuivi: rdv.codeSuivi,

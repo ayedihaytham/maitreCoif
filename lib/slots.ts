@@ -1,6 +1,7 @@
 import type { Prisma } from '@prisma/client'
 
 import { prisma } from '@/lib/prisma'
+import { chargerPrestations, totaux } from '@/lib/prestations'
 
 // Fuseau du salon : les dates/heures des rendez-vous sont des heures murales
 // locales (ex. "10:00" = 10h à Tunis), pas de l'UTC.
@@ -82,7 +83,7 @@ export async function estFerme(coiffeurId: string, dateISO: string, db: DbClient
  * (y compris EN_ATTENTE, cf. règle de gestion "un créneau devient
  * indisponible dès qu'il est réservé").
  */
-export async function getCreneauxDisponibles(coiffeurId: string, serviceId: string, dateISO: string) {
+export async function getCreneauxDisponibles(coiffeurId: string, serviceId: string | string[], dateISO: string) {
   return (await getGrilleJour(coiffeurId, serviceId, dateISO)).filter((c) => c.libre).map((c) => c.heure)
 }
 
@@ -137,11 +138,12 @@ export function construireGrille(
  * occupés (pour afficher les occupés barrés). Vide si la date est passée, le
  * salon/coiffeur est fermé ou le service inconnu.
  */
-export async function getGrilleJour(coiffeurId: string, serviceId: string, dateISO: string): Promise<CreneauGrille[]> {
+export async function getGrilleJour(coiffeurId: string, serviceId: string | string[], dateISO: string): Promise<CreneauGrille[]> {
   if (estDatePassee(dateISO)) return []
 
-  const service = await prisma.service.findUnique({ where: { id: serviceId } })
-  if (!service || !service.actif) return []
+  const prestations = await chargerPrestations(serviceId)
+  if (!prestations) return []
+  const dureeTotale = totaux(prestations).duree
   if (await estFerme(coiffeurId, dateISO)) return []
 
   const date = new Date(`${dateISO}T00:00:00Z`)
@@ -156,7 +158,7 @@ export async function getGrilleJour(coiffeurId: string, serviceId: string, dateI
   ])
 
   const { dateISO: aujourdhui, minutes } = maintenantSalon()
-  return construireGrille(disponibilites, rendezVousExistants, service.duree, dateISO === aujourdhui ? minutes : null)
+  return construireGrille(disponibilites, rendezVousExistants, dureeTotale, dateISO === aujourdhui ? minutes : null)
 }
 
 export type EtatJour = 'libre' | 'complet' | 'ferme'
@@ -169,7 +171,7 @@ export type EtatJour = 'libre' | 'complet' | 'ferme'
  */
 export async function getJoursDisponibles(
   coiffeurId: string,
-  serviceId: string,
+  serviceId: string | string[],
   fromISO: string,
   count: number,
 ): Promise<{ date: string; etat: EtatJour }[]> {
@@ -178,8 +180,8 @@ export async function getJoursDisponibles(
   const fin = jours[jours.length - 1]
   const iso = (d: Date) => d.toISOString().slice(0, 10)
 
-  const service = await prisma.service.findUnique({ where: { id: serviceId } })
-  if (!service || !service.actif) return jours.map((d) => ({ date: iso(d), etat: 'ferme' as const }))
+  const prestations = await chargerPrestations(serviceId)
+  if (!prestations) return jours.map((d) => ({ date: iso(d), etat: 'ferme' as const }))
 
   const [disponibilites, fermetures, rendezVous] = await Promise.all([
     prisma.disponibilite.findMany({ where: { coiffeurId } }),
@@ -204,7 +206,7 @@ export async function getJoursDisponibles(
     if (dispos.length === 0) return { date: dateISO, etat: 'ferme' as const }
 
     const existants = rendezVous.filter((r) => iso(r.date) === dateISO)
-    const grille = construireGrille(dispos, existants, service.duree, dateISO === aujourdhui ? minutes : null)
+    const grille = construireGrille(dispos, existants, totaux(prestations).duree, dateISO === aujourdhui ? minutes : null)
     return { date: dateISO, etat: grille.some((c) => c.libre) ? ('libre' as const) : ('complet' as const) }
   })
 }
@@ -248,6 +250,6 @@ export async function creneauEstLibre(
  * Le créneau demandé fait-il partie de ceux proposés au public ? Empêche de
  * réserver hors des horaires du coiffeur en appelant l'API directement.
  */
-export async function creneauEstProposable(coiffeurId: string, serviceId: string, dateISO: string, heureDebut: string) {
+export async function creneauEstProposable(coiffeurId: string, serviceId: string | string[], dateISO: string, heureDebut: string) {
   return (await getCreneauxDisponibles(coiffeurId, serviceId, dateISO)).includes(heureDebut)
 }

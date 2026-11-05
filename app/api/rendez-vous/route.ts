@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { auth } from '@/lib/auth'
 import { creerRendezVousConfirme, notifierConfirmation } from '@/lib/booking'
+import { chargerPrestations, inclurePrestations, totaux } from '@/lib/prestations'
 import { prisma } from '@/lib/prisma'
 import { genererCodeSuiviUnique } from '@/lib/code-suivi'
 import { checkRateLimit, clientIpFrom } from '@/lib/rate-limit'
@@ -28,14 +29,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Vérification anti-robot échouée, merci de réessayer.' }, { status: 400 })
   }
 
-  const { coiffeurId, serviceId, date, heureDebut, clientNom, clientTelephone, clientEmail, notes } = parsed.data
+  const { coiffeurId, serviceIds, date, heureDebut, clientNom, clientTelephone, clientEmail, notes } = parsed.data
 
-  const [coiffeur, service] = await Promise.all([
+  const [coiffeur, prestations] = await Promise.all([
     prisma.user.findFirst({ where: { id: coiffeurId, role: { in: ['COIFFEUR', 'ADMIN'] }, actif: true } }),
-    prisma.service.findFirst({ where: { id: serviceId, actif: true } }),
+    chargerPrestations(serviceIds),
   ])
 
-  if (!coiffeur || !service) {
+  if (!coiffeur || !prestations || prestations.length !== new Set(serviceIds).size) {
     return NextResponse.json({ error: 'Coiffeur ou service introuvable' }, { status: 404 })
   }
 
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
   // Le créneau doit faire partie de ceux réellement proposés (horaires du
   // coiffeur, fermetures, créneau pas déjà passé) : l'API ne doit pas
   // accepter un horaire que l'interface n'aurait jamais affiché.
-  if (!(await creneauEstProposable(coiffeurId, serviceId, date, heureDebut))) {
+  if (!(await creneauEstProposable(coiffeurId, serviceIds, date, heureDebut))) {
     return NextResponse.json({ error: "Ce créneau n'est pas disponible, merci d'en choisir un autre." }, { status: 409 })
   }
 
@@ -54,8 +55,7 @@ export async function POST(request: Request) {
   const rendezVous = await creerRendezVousConfirme({
     codeSuivi: await genererCodeSuiviUnique(),
     coiffeurId,
-    serviceId,
-    dureeService: service.duree,
+    prestations,
     clientUserId: session?.user.role === 'CLIENT' ? session.user.id : null,
     clientNom,
     clientTelephone,
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Ce créneau vient d'être réservé, merci d'en choisir un autre." }, { status: 409 })
   }
 
-  await notifierConfirmation(rendezVous, { coiffeurNom: `${coiffeur.prenom} ${coiffeur.nom}`, serviceNom: service.nom })
+  await notifierConfirmation(rendezVous, { coiffeurNom: `${coiffeur.prenom} ${coiffeur.nom}`, serviceNom: totaux(prestations).nom })
 
   return NextResponse.json({ id: rendezVous.id, codeSuivi: rendezVous.codeSuivi }, { status: 201 })
 }
@@ -105,7 +105,7 @@ export async function GET(request: Request) {
     orderBy: [{ date: 'asc' }, { heureDebut: 'asc' }],
     include: {
       coiffeur: { select: { id: true, nom: true, prenom: true } },
-      service: { select: { id: true, nom: true, duree: true, prix: true } },
+      ...inclurePrestations,
       demandesModification: { where: { traitee: false }, select: { id: true, message: true } },
     },
   })

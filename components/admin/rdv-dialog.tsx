@@ -32,7 +32,7 @@ export interface RdvADeplacer {
   id: string
   coiffeurId: string
   clientNom: string
-  service: { id?: string; nom: string; duree: number }
+  service: { ids: string[]; nom: string; duree: number }
 }
 
 type Props = {
@@ -55,7 +55,7 @@ export function RdvDialog({ open, onOpenChange, coiffeurs, defaultCoiffeurId, de
   const deplace = Boolean(deplacement)
   const [services, setServices] = useState<Service[]>([])
   const [coiffeurId, setCoiffeurId] = useState(defaultCoiffeurId)
-  const [serviceId, setServiceId] = useState('')
+  const [choisis, setChoisis] = useState<string[]>([])
   const [date, setDate] = useState(defaultDate)
   const [heureDebut, setHeureDebut] = useState('')
   const [horsHoraires, setHorsHoraires] = useState(false)
@@ -72,7 +72,7 @@ export function RdvDialog({ open, onOpenChange, coiffeurs, defaultCoiffeurId, de
   useEffect(() => {
     if (!open) return
     setCoiffeurId(deplacement?.coiffeurId ?? defaultCoiffeurId)
-    setServiceId('')
+    setChoisis([])
     setDate(defaultDate)
     setHeureDebut('')
     setHorsHoraires(false)
@@ -92,7 +92,7 @@ export function RdvDialog({ open, onOpenChange, coiffeurs, defaultCoiffeurId, de
   }, [open, deplace])
 
   // Pour un déplacement on reprend le service du rendez-vous (donc sa durée).
-  const serviceIdEffectif = deplace ? deplacement?.service.id : serviceId
+  const serviceIdEffectif = (deplace ? deplacement?.service.ids : choisis)?.join(',') || undefined
 
   useEffect(() => {
     if (!open || !coiffeurId || !serviceIdEffectif || !date) {
@@ -113,6 +113,10 @@ export function RdvDialog({ open, onOpenChange, coiffeurs, defaultCoiffeurId, de
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    if (!deplace && choisis.length === 0) {
+      setError('Choisissez au moins une prestation.')
+      return
+    }
     if (!heureDebut) {
       setError('Choisissez un créneau.')
       return
@@ -130,7 +134,7 @@ export function RdvDialog({ open, onOpenChange, coiffeurs, defaultCoiffeurId, de
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               coiffeurId,
-              serviceId,
+              serviceIds: choisis,
               date,
               heureDebut,
               clientNom: clientNom.trim(),
@@ -184,17 +188,27 @@ export function RdvDialog({ open, onOpenChange, coiffeurs, defaultCoiffeurId, de
           </div>
 
           {!deplace && (
-            <div>
-              <Label htmlFor="rdv-service">Service</Label>
-              <select id="rdv-service" required value={serviceId} onChange={(e) => setServiceId(e.target.value)} className={selectClass}>
-                <option value="">Choisir…</option>
+            <fieldset>
+              <legend className="text-sm font-medium">Prestations (une ou plusieurs)</legend>
+              <div className="mt-1.5 max-h-44 space-y-1 overflow-y-auto rounded-md border border-input p-2">
                 {services.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.nom} ({s.duree} min)
-                  </option>
+                  <label key={s.id} className="flex cursor-pointer items-center gap-2.5 rounded px-1.5 py-1 text-sm hover:bg-muted/40">
+                    <input
+                      type="checkbox"
+                      checked={choisis.includes(s.id)}
+                      onChange={(e) => setChoisis((c) => (e.target.checked ? [...c, s.id] : c.filter((x) => x !== s.id)))}
+                    />
+                    <span className="flex-1">{s.nom}</span>
+                    <span className="text-xs text-muted-foreground">{s.duree} min</span>
+                  </label>
                 ))}
-              </select>
-            </div>
+              </div>
+              {choisis.length > 1 && (
+                <p className="mt-1.5 text-[11px] text-muted-foreground">
+                  Durée totale : {services.filter((s) => choisis.includes(s.id)).reduce((t, s) => t + s.duree, 0)} min
+                </p>
+              )}
+            </fieldset>
           )}
 
           <div>
@@ -225,7 +239,7 @@ export function RdvDialog({ open, onOpenChange, coiffeurs, defaultCoiffeurId, de
                 </p>
               </div>
             ) : !serviceIdEffectif ? (
-              <p className="mt-2 text-xs text-muted-foreground">Choisissez d&apos;abord un service.</p>
+              <p className="mt-2 text-xs text-muted-foreground">Choisissez d&apos;abord une prestation.</p>
             ) : creneaux.length === 0 ? (
               <p className="mt-2 text-xs text-muted-foreground">Aucun créneau libre ce jour-là (horaires, fermeture ou complet).</p>
             ) : (

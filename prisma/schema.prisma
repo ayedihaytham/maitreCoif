@@ -64,6 +64,25 @@ model Service {
   actif       Boolean  @default(true)
 
   rendezVous RendezVous[]
+  lignes     RendezVousService[]
+}
+
+// Une prestation d'un rendez-vous. Un rendez-vous peut en contenir plusieurs
+// (« Coupe » + « Barbe »). Nom, prix et durée sont copiés au moment de la
+// réservation : modifier le tarif plus tard ne change pas l'historique.
+// `RendezVous.serviceId` reste la première prestation (affichage de repli).
+model RendezVousService {
+  rendezVousId String
+  rendezVous   RendezVous @relation(fields: [rendezVousId], references: [id], onDelete: Cascade)
+  serviceId    String
+  service      Service    @relation(fields: [serviceId], references: [id])
+  ordre        Int
+  nom          String
+  prix         Decimal    @db.Decimal(10, 2)
+  duree        Int // minutes
+
+  @@id([rendezVousId, serviceId])
+  @@index([serviceId])
 }
 
 model Disponibilite {
@@ -100,6 +119,7 @@ model RendezVous {
   // Rappel J-1 déjà envoyé (cf. /api/cron/rappels)
   rappelEnvoye Boolean         @default(false)
 
+  lignes RendezVousService[]
   avis Avis?
   demandesModification DemandeModification[]
 
