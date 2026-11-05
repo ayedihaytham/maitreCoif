@@ -1,0 +1,108 @@
+/* =====================================================================
+   Thèmes sombre (par défaut) et clair.
+   Toutes les couleurs du site public (.mc), du back-office (.ad), de l'espace salon
+   et des fenêtres de dialogue passent par les variables ci-dessous. Le thème est porté
+   par <html data-theme="dark|light"> (cf. components/theme-toggle.tsx).
+   Les valeurs « sombre » reprennent exactement les couleurs d'origine du site.
+   ===================================================================== */
+
+:root{
+  /* ───── Sombre (défaut) ───── */
+  --mc-ink:#0a0a0a;--mc-panel:#161514;--mc-panel2:#0f0e0d;--mc-ivory:#f5f3ee;--mc-soft:#d9d6cf;--mc-muted:#a09d96;--mc-lead:#cfccc4;
+  --mc-gold:#d4af37;--mc-gold-soft:#e8cf7a;--mc-gold-ink:#d4af37;--mc-halo:#fff3d6;
+  --mc-line:rgba(245,243,238,.12);--mc-line-gold:rgba(212,175,55,.35);
+  --mc-fg-rgb:245 243 238;--mc-bg-rgb:10 10 10;
+  --mc-on-gold:#0a0a0a;--mc-foot:#070707;--mc-danger-ink:#ff8a8d;--mc-ok-ink:#a8e9b7;
+  --c-1a1815:#1a1815;--c-171512:#171512;--c-14130f:#14130f;--c-16140f:#16140f;--c-1a1a1a:#1a1a1a;--c-161514:#161514;
+  --c-121110:#121110;--c-100f0d:#100f0d;--c-0b0a09:#0b0a09;--c-0e0d0c:#0e0d0c;--c-0f0e0d:#0f0e0d;--c-12110f:#12110f;--c-0f0e0c:#0f0e0c;
+  --c-25231f:#25231f;--c-2a2823:#2a2823;--c-2a2410:#2a2410;--c-e9e6df:#e9e6df;--c-7d7a73:#7d7a73;--c-77746e:#77746e;--c-3a3832:#3a3832;
+
+  --a-ink:var(--mc-ink);--a-panel:#121110;--a-panel2:#0e0d0c;--a-ivory:var(--mc-ivory);--a-soft:var(--mc-soft);--a-muted:var(--mc-muted);
+  --a-gold:#d4af37;--a-gold-soft:#e8cf7a;--a-gold-ink:#d4af37;--a-red:#ff6b6e;--a-green:#7bd88f;
+  --a-line:rgba(245,243,238,.1);--a-line-gold:rgba(212,175,55,.35);
+
+  /* jetons shadcn / Tailwind */
+  --background:#0a0a0a;--foreground:#f5f3ee;--card:#1a1a1a;--card-foreground:#f5f3ee;--popover:#1a1a1a;--popover-foreground:#f5f3ee;
+  --secondary:#1a1a1a;--secondary-foreground:#f5f3ee;--muted:#1a1a1a;--muted-foreground:#a09d96;--border:#3a3832;--input:#3a3832;
+  --gold:#d4af37;--anthracite:#1a1a1a;--selection-fg:#0a0a0a;
+  color-scheme:dark;
+}
+
+:root[data-theme="light"]{
+  /* ───── Clair : papier chaud, encre brune, or plus profond pour le texte ───── */
+  --mc-ink:#f6f3ec;--mc-panel:#ffffff;--mc-panel2:#efeae0;--mc-ivory:#1b1915;--mc-soft:#3b372f;--mc-muted:#6a655a;--mc-lead:#4a463d;
+  --mc-gold:#d4af37;--mc-gold-soft:#e3c35a;--mc-gold-ink:#7d5f08;--mc-halo:#fff3d6;
+  --mc-line:rgba(27,25,21,.14);--mc-line-gold:rgba(125,95,8,.42);
+  --mc-fg-rgb:27 25 21;--mc-bg-rgb:246 243 236;
+  --mc-danger-ink:#b3202a;--mc-ok-ink:#1f6b34;--mc-foot:#ece7db;
+  --c-1a1815:#ffffff;--c-171512:#ffffff;--c-14130f:#ffffff;--c-16140f:#ffffff;--c-1a1a1a:#ffffff;--c-161514:#ffffff;
+  --c-121110:#f1ede4;--c-100f0d:#f1ede4;--c-0b0a09:#f1ede4;--c-0e0d0c:#f1ede4;--c-0f0e0d:#f1ede4;--c-12110f:#f1ede4;--c-0f0e0c:#f1ede4;
+  --c-25231f:#e9e3d4;--c-2a2823:#d6cfbf;--c-2a2410:#f1e8c4;--c-e9e6df:#2a2720;--c-7d7a73:#6f6a60;--c-77746e:#8a8578;--c-3a3832:#d6d0c2;
+
+  --a-panel:#ffffff;--a-panel2:#f1ede4;--a-gold-ink:#7d5f08;--a-red:#b3202a;--a-green:#1f7a3a;--a-gold-soft:#e3c35a;
+  --a-line:rgba(27,25,21,.12);--a-line-gold:rgba(125,95,8,.4);
+
+  --background:#f6f3ec;--foreground:#1b1915;--card:#ffffff;--card-foreground:#1b1915;--popover:#ffffff;--popover-foreground:#1b1915;
+  --secondary:#efeae0;--secondary-foreground:#1b1915;--muted:#efeae0;--muted-foreground:#6a655a;--border:#d6d0c2;--input:#cfc8b8;
+  --gold:#7d5f08;--anthracite:#ffffff;--selection-fg:#0a0a0a;
+  color-scheme:light;
+}
+/* l'or plein (fond de bouton) garde la même teinte : le texte posé dessus reste sombre */
+:root[data-theme="light"] :is(.bg-gold){background-color:#d4af37}
+:root[data-theme="light"] :is(.bg-gold.text-background){color:#0a0a0a}
+:root[data-theme="light"] ::selection{background:#d4af37;color:#0a0a0a}
+
+/* ───── Zones photographiques : elles restent sombres dans les deux thèmes ─────
+   (photo plein cadre + texte clair). On y redéclare les valeurs du thème sombre. */
+:root[data-theme="light"] .mc :is(.h-hero,.hero,.ph-hero,.h-uni,.intro,.h-hud,.nav:not(.solid)){
+  --mc-ink:#0a0a0a;--mc-panel:#161514;--mc-panel2:#0f0e0d;--mc-ivory:#f5f3ee;--mc-soft:#d9d6cf;--mc-muted:#a09d96;--mc-lead:#cfccc4;
+  --mc-gold-ink:#d4af37;--mc-gold-soft:#e8cf7a;
+  --mc-line:rgba(245,243,238,.12);--mc-line-gold:rgba(212,175,55,.35);
+  --mc-fg-rgb:245 243 238;--mc-bg-rgb:10 10 10;--mc-danger-ink:#ff8a8d;
+  --c-1a1815:#1a1815;--c-121110:#121110;--c-0e0d0c:#0e0d0c;--c-0f0e0d:#0f0e0d;--c-161514:#161514;
+  color:var(--mc-ivory);
+}
+
+/* ───── Bouton de bascule de thème ───── */
+.theme-toggle{display:inline-flex;align-items:center;justify-content:center;flex:none;width:40px;height:40px;padding:0;background:transparent;border:1px solid var(--mc-line);border-radius:2px;color:var(--mc-soft);cursor:pointer;transition:color .2s,border-color .2s,background .2s}
+.theme-toggle:hover{color:var(--mc-gold-ink);border-color:var(--mc-line-gold)}
+.theme-toggle:focus-visible{outline:2px solid #d4af37;outline-offset:3px}
+.theme-toggle svg{width:17px;height:17px}
+.theme-toggle .i-moon{display:none}
+:root[data-theme="light"] .theme-toggle .i-sun{display:none}
+:root[data-theme="light"] .theme-toggle .i-moon{display:block}
+:root[data-theme="light"] .mc .nav:not(.solid) .theme-toggle{color:#d9d6cf;border-color:rgba(245,243,238,.25)}
+
+/* ───── Logo : version dorée sur fond sombre, version noire et or sur fond clair ───── */
+.lg-light{display:none!important}
+:root[data-theme="light"] .lg-light{display:block!important}
+:root[data-theme="light"] .lg-dark{display:none!important}
+:root[data-theme="light"] .mc .nav:not(.solid) .lg-dark{display:block!important}
+:root[data-theme="light"] .mc .nav:not(.solid) .lg-light{display:none!important}
+:root[data-theme="light"] .mc .intro .lg-dark{display:block!important}
+
+.theme-toggle .tt-label{display:none}
+/* barre latérale du back-office : bouton avec libellé */
+.ad .ad-foot .theme-toggle{width:100%;height:auto;justify-content:flex-start;gap:12px;padding:11px 14px;border:0;border-radius:0;font:600 10.5px/1 var(--a-sans);letter-spacing:.18em;text-transform:uppercase;color:var(--a-muted)}
+.ad .ad-foot .theme-toggle:hover{color:var(--a-ivory)}
+.ad .ad-foot .theme-toggle .tt-label{display:inline}
+.ad .ad-foot .theme-toggle svg{width:15px;height:15px}
+@media (max-width:900px){.ad .ad-foot .theme-toggle .tt-label{display:none}.ad .ad-foot .theme-toggle{width:auto}}
+/* espace salon : bouton en haut à droite */
+.es .es-top{position:relative;width:100%}
+.es .es-top .theme-toggle{position:absolute;right:clamp(16px,3vw,40px);top:clamp(30px,5vh,52px)}
+/* menu mobile du site : bouton au pied du menu */
+.mc .menu-foot .theme-toggle{margin-bottom:18px}
+
+/* ───── Thème clair : ombres plus douces, barre de lecture en pastille sombre ───── */
+:root[data-theme="light"] .mc :is(.tk,.hz,.res,.h-card,.h-card.on,.fr,.fr:hover,.cc,.cc:hover,.ph-small,.card-form,.scanner,.h-next,.mbar){box-shadow:0 14px 38px rgba(27,25,21,.12)}
+:root[data-theme="light"] .mc .pt{box-shadow:0 10px 26px rgba(27,25,21,.18)}
+:root[data-theme="light"] .mc .h-cs:hover .pt{box-shadow:0 12px 34px rgba(27,25,21,.22)}
+:root[data-theme="light"] .mc .h-card .flare{opacity:.4}
+:root[data-theme="light"] .ad :is(.pl-panel,.ad-card,.bg-anthracite){box-shadow:0 10px 30px rgba(27,25,21,.1)}
+:root[data-theme="light"] [data-slot="dialog-content"]{box-shadow:0 30px 80px rgba(27,25,21,.28)}
+:root[data-theme="light"] [data-slot="dialog-overlay"]{background:rgba(27,25,21,.5)}
+:root[data-theme="light"] .mc .h-hud{left:50%;right:auto;bottom:14px;width:min(1100px,calc(100% - 40px));transform:translateX(-50%);height:46px;padding:0 22px;border-radius:3px;background:rgba(10,10,10,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+:root[data-theme="light"] .mc .nl sup{opacity:1}
+:root[data-theme="light"] .mc .menu{background:var(--mc-ink)}
+.mc .menu-foot .theme-toggle{display:flex}

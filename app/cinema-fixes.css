@@ -1,32 +1,32 @@
 /* Correctifs ciblés : fenêtre de rendez-vous, zone du logo du back-office, carte de fin d'accueil. */
 
 /* Accueil, section finale : fond uni et sans halo autour du bouton ; titre en police sobre */
-.mc .h-end{background:#0a0a0a}
+.mc .h-end{background:var(--mc-ink)}
 .mc .h-end .btn-gold,.mc .h-end .btn-gold:hover:not(:disabled){box-shadow:none}
 .mc .h-end .h-title-end{font-family:var(--mc-sans);font-weight:600;letter-spacing:-.03em;font-size:clamp(34px,5vw,68px)}
 .mc .h-end .h-title-end em{font-style:normal;font-weight:600}
-.mc .h-next{display:inline-flex;flex-direction:column;align-items:center;gap:8px;padding:26px 40px;border:1px solid rgba(212,175,55,.5);border-radius:4px;background:#16140f}
+.mc .h-next{display:inline-flex;flex-direction:column;align-items:center;gap:8px;padding:26px 40px;border:1px solid rgba(212,175,55,.5);border-radius:4px;background:var(--c-16140f)}
 .mc .h-next small{font:600 10.5px/1 var(--mc-sans);letter-spacing:.24em;text-transform:uppercase;color:var(--mc-muted)}
-.mc .h-next strong{font:600 clamp(24px,3vw,34px)/1.1 var(--mc-sans);letter-spacing:-.02em;color:var(--mc-gold)}
+.mc .h-next strong{font:600 clamp(24px,3vw,34px)/1.1 var(--mc-sans);letter-spacing:-.02em;color:var(--mc-gold-ink)}
 .mc .h-next span{font-size:13px;color:var(--mc-muted)}
 /* les accents des titres révélés ligne par ligne ne sont plus rognés */
 .mc .h-title .ln{padding-top:.2em;margin-top:-.2em}
 
 /* Back-office : zone du logo */
 .ad .ad-side{padding:0 18px 18px}
-.ad .ad-brand{display:flex;align-items:center;width:auto;padding:22px 6px 18px;margin-bottom:18px;border-bottom:1px solid var(--a-line,rgba(245,243,238,.12))}
+.ad .ad-brand{display:flex;align-items:center;width:auto;padding:22px 6px 18px;margin-bottom:18px;border-bottom:1px solid var(--a-line,rgb(var(--mc-fg-rgb) / .12))}
 .ad .ad-brand img{height:52px;width:auto;flex:none}
-.ad .ad-rec{margin:-6px 6px 18px;font:600 10px/1 var(--a-sans);letter-spacing:.26em;text-transform:uppercase;color:var(--a-muted,#a09d96)}
+.ad .ad-rec{margin:-6px 6px 18px;font:600 10px/1 var(--a-sans);letter-spacing:.26em;text-transform:uppercase;color:var(--a-muted,var(--mc-muted))}
 .ad .ad-user{margin-top:0}
 
 /* Fenêtres de dialogue : défilement interne et cases à cocher soignées */
 [data-slot="dialog-content"]{max-height:calc(100dvh - 2rem);overflow-y:auto;overscroll-behavior:contain}
 [data-slot="dialog-content"] fieldset{border:0;margin:0 0 .25rem;padding:0;min-width:0}
-[data-slot="dialog-content"] fieldset legend{margin-bottom:.4rem;font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#a09d96}
-[data-slot="dialog-content"] fieldset>div{border-color:rgba(245,243,238,.14)!important;background:#0f0e0c;max-height:11rem}
-[data-slot="dialog-content"] input[type="checkbox"]{appearance:none;-webkit-appearance:none;flex:none;width:18px;height:18px;margin:0;border:1.5px solid rgba(245,243,238,.4);border-radius:3px;background:transparent;display:inline-grid;place-content:center;cursor:pointer;transition:background .15s,border-color .15s}
-[data-slot="dialog-content"] input[type="checkbox"]::after{content:"";width:9px;height:5px;margin-top:-2px;border-left:2px solid #0a0a0a;border-bottom:2px solid #0a0a0a;transform:rotate(-45deg) scale(0);transition:transform .12s}
-[data-slot="dialog-content"] input[type="checkbox"]:checked{background:#d4af37;border-color:#d4af37}
+[data-slot="dialog-content"] fieldset legend{margin-bottom:.4rem;font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--mc-muted)}
+[data-slot="dialog-content"] fieldset>div{border-color:rgb(var(--mc-fg-rgb) / .14)!important;background:var(--c-0f0e0c);max-height:11rem}
+[data-slot="dialog-content"] input[type="checkbox"]{appearance:none;-webkit-appearance:none;flex:none;width:18px;height:18px;margin:0;border:1.5px solid rgb(var(--mc-fg-rgb) / .4);border-radius:3px;background:transparent;display:inline-grid;place-content:center;cursor:pointer;transition:background .15s,border-color .15s}
+[data-slot="dialog-content"] input[type="checkbox"]::after{content:"";width:9px;height:5px;margin-top:-2px;border-left:2px solid var(--mc-on-gold);border-bottom:2px solid var(--mc-on-gold);transform:rotate(-45deg) scale(0);transition:transform .12s}
+[data-slot="dialog-content"] input[type="checkbox"]:checked{background:#d4af37;border-color:var(--mc-gold-ink)}
 [data-slot="dialog-content"] input[type="checkbox"]:checked::after{transform:rotate(-45deg) scale(1)}
 [data-slot="dialog-content"] input[type="checkbox"]:focus-visible{outline:2px solid #d4af37;outline-offset:2px}
 

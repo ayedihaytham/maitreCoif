@@ -3,7 +3,8 @@ import '../cinema-chrome.css'
 import './espace.css'
 
 import type { Metadata } from 'next'
-import Image from 'next/image'
+import { ThemeLogo } from '@/components/theme-logo'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -21,10 +22,9 @@ export default function EspaceSalonLayout({ children }: { children: React.ReactN
       <div className="es-vf bl" aria-hidden="true" />
       <div className="es-vf br" aria-hidden="true" />
       <header className="es-top">
-        <Image src="/logo-gold.png" alt="Maitre Coif" width={376} height={310} priority />
-        <span className="es-tag">
-          Espace salon
-        </span>
+        <ThemeLogo priority />
+        <span className="es-tag">Espace salon</span>
+        <ThemeToggle />
       </header>
       {children}
       <div className="h-grain" aria-hidden="true" />

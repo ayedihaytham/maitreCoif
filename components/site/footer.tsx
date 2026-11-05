@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import { ThemeLogo } from '@/components/theme-logo'
 
 import { prisma } from '@/lib/prisma'
 
@@ -33,7 +33,7 @@ export async function Footer() {
   return (
     <footer className="foot">
       <div className="wrap">
-        <Image src="/logo-gold.png" alt="Maitre Coif" width={376} height={310} className="logo-f" />
+        <ThemeLogo className="logo-f" />
 
         <div className="cred" style={premier ? undefined : { gridTemplateColumns: 'repeat(2,minmax(0,1fr))' }}>
           <div>

@@ -5,6 +5,8 @@ import type { Metadata, Viewport } from 'next'
 import { Cormorant_Garamond, Manrope } from 'next/font/google'
 import { salonUrl } from '@/lib/salon-host'
 import './globals.css'
+import './theme.css'
+import { ThemeSync } from '@/components/theme-toggle'
 
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope' })
 // Italique chargé pour les citations et le bandeau défilant du site public.
@@ -20,7 +22,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  colorScheme: 'dark',
+  colorScheme: 'dark light',
   themeColor: '#0A0A0A',
 }
 
@@ -57,10 +59,17 @@ const clerkAppearance = {
   },
 }
 
+const THEME_SCRIPT = `try{var t=localStorage.getItem('mc-theme');document.documentElement.dataset.theme=t==='light'?'light':'dark'}catch(e){}`
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const page = (
-    <html lang="fr" className="bg-background">
+    <html lang="fr" className="bg-background" data-theme="dark" suppressHydrationWarning>
+      <head>
+        {/* Applique le thème choisi avant le premier affichage (sombre par défaut). */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className={`${manrope.variable} ${cormorant.variable}`}>
+        <ThemeSync />
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

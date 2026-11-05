@@ -1,12 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useClerk } from '@clerk/nextjs'
 import { ArrowUpRight, BarChart3, CalendarOff, CalendarRange, Images, LogOut, Scissors, Users } from 'lucide-react'
 
+import { ThemeLogo } from '@/components/theme-logo'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { siteUrl } from '@/lib/salon-host'
 import { cn } from '@/lib/utils'
 import type { Role } from '@prisma/client'
@@ -67,7 +68,7 @@ export function AdminSidebar({ role, nom, onSignOut }: Props) {
   return (
     <aside className="ad-side" aria-label="Navigation du back-office">
       <Link className="ad-brand" href="/planning" aria-label="Maitre Coif, planning">
-        <Image src="/logo-gold.png" alt="Maitre Coif" width={376} height={310} priority />
+        <ThemeLogo priority />
       </Link>
       <div className="ad-rec">Espace salon</div>
 
@@ -96,6 +97,7 @@ export function AdminSidebar({ role, nom, onSignOut }: Props) {
           <ArrowUpRight aria-hidden="true" />
           <span>Retour au site</span>
         </a>
+        <ThemeToggle className="ad-theme" />
         {onSignOut && (
           <button type="button" onClick={onSignOut}>
             <LogOut aria-hidden="true" />

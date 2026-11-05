@@ -2,11 +2,12 @@
 
 import type { CSSProperties } from 'react'
 import { useEffect, useRef, useState } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LayoutDashboard, LogOut, Menu, User, X } from 'lucide-react'
 
+import { ThemeLogo } from '@/components/theme-logo'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { StaffSignOutButton } from '@/components/auth/staff-sign-out'
 import { salonUrl } from '@/lib/salon-host'
 import { cn } from '@/lib/utils'
@@ -90,7 +91,7 @@ export function SiteNav({ user }: SiteNavProps) {
       <header ref={entete} className={cn('nav', (!plateau || defile || ouvert) && 'solid')}>
         <div className="nav-left">
           <Link className="logo" href="/" aria-label="Maitre Coif, accueil">
-            <Image src="/logo-gold.png" alt="Maitre Coif" width={376} height={310} priority />
+            <ThemeLogo priority />
           </Link>
         </div>
 
@@ -119,6 +120,7 @@ export function SiteNav({ user }: SiteNavProps) {
               )}
             </>
           )}
+          <ThemeToggle />
           <Link className="btn btn-gold btn-sm cta btn-ticket" href="/reservation" style={{ marginLeft: 10 }}>
             Réserver
           </Link>
@@ -172,6 +174,7 @@ export function SiteNav({ user }: SiteNavProps) {
           </div>
         )}
         <div className="menu-foot">
+          <ThemeToggle />
           Route Afran Km 5, Sfax
           <br />
           Mardi — Samedi · 10h00 — 20h30 · Sur rendez-vous
