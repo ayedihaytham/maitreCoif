@@ -7,7 +7,8 @@ import { salonUrl } from '@/lib/salon-host'
 import './globals.css'
 
 const manrope = Manrope({ subsets: ['latin'], variable: '--font-manrope' })
-const cormorant = Cormorant_Garamond({ subsets: ['latin'], variable: '--font-cormorant' })
+// Italique chargé pour les citations et le bandeau défilant du site public.
+const cormorant = Cormorant_Garamond({ subsets: ['latin'], style: ['normal', 'italic'], variable: '--font-cormorant' })
 
 export const metadata: Metadata = {
   title: {

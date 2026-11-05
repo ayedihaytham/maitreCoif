@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowRight, Scissors } from 'lucide-react'
+import { Clock } from 'lucide-react'
 
+import { Reveal } from '@/components/site/reveal'
 import { prisma } from '@/lib/prisma'
 import { formatPrix } from '@/lib/utils'
 
@@ -16,59 +17,60 @@ export default async function ServicesPage() {
   const services = await prisma.service.findMany({ where: { actif: true }, orderBy: [{ categorie: 'asc' }, { prix: 'asc' }] })
 
   const categories = Array.from(new Set(services.map((s) => s.categorie || 'Autres')))
+  let numero = 0
 
   return (
     <main>
-      <section className="border-b border-border/60 px-5 pb-16 pt-20 sm:px-8 sm:pb-20 sm:pt-28 lg:px-12">
-        <div className="mx-auto max-w-7xl">
-          <div className="eyebrow before:h-px before:w-8 before:bg-gold">Prestations</div>
-          <h1 className="mt-8 max-w-2xl text-balance text-4xl font-light uppercase leading-[1.08] tracking-[0.12em] sm:text-6xl">
-            Nos <span className="text-gold">services</span>
-          </h1>
-          <p className="mt-6 max-w-md text-sm leading-7 text-muted-foreground">
-            Des prestations pensées pour chaque style, réalisées avec des produits professionnels et un savoir-faire
-            exigeant.
-          </p>
-        </div>
-      </section>
+      <div className="wrap page-head sec">
+        <div className="lbl">Nos prestations</div>
+        <h1 className="page-h1">
+          Nos <em>services.</em>
+        </h1>
+        <p className="lead">
+          Des prestations pensées pour chaque style, réalisées avec des produits professionnels et un savoir-faire
+          exigeant. Tarifs en dinars tunisiens (DT), à régler au salon.
+        </p>
 
-      <section className="px-5 py-16 sm:px-8 sm:py-24 lg:px-12">
-        <div className="mx-auto max-w-7xl space-y-14">
-          {categories.map((categorie) => (
-            <div key={categorie}>
-              <p className="eyebrow mb-6 before:h-px before:w-8 before:bg-gold">{categorie}</p>
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {services.length === 0 ? (
+          <p className="empty-state" style={{ marginTop: 56 }}>
+            Aucun service disponible pour le moment.
+          </p>
+        ) : (
+          <div className="s-list">
+            {categories.map((categorie) => (
+              <div key={categorie}>
+                <Reveal className="s-cat">
+                  <div className="lbl">{categorie}</div>
+                </Reveal>
                 {services
                   .filter((s) => (s.categorie || 'Autres') === categorie)
-                  .map((service) => (
-                    <article key={service.id} className="border border-border/70 bg-anthracite p-6">
-                      <Scissors className="size-5 text-gold" aria-hidden="true" />
-                      <h3 className="mt-5 text-lg font-light tracking-[0.06em]">{service.nom}</h3>
-                      {service.description && (
-                        <p className="mt-2 text-xs leading-6 text-muted-foreground">{service.description}</p>
-                      )}
-                      <div className="mt-6 flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{service.duree} min</span>
-                        <span className="text-gold">{formatPrix(Number(service.prix))}</span>
-                      </div>
-                    </article>
-                  ))}
+                  .map((s) => {
+                    numero += 1
+                    return (
+                      <Reveal as="article" key={s.id} className="s-row">
+                        <div className="no" aria-hidden="true">
+                          {String(numero).padStart(2, '0')}
+                        </div>
+                        <div>
+                          <h2 style={{ margin: 0, font: '400 34px/1.1 var(--mc-serif)' }}>{s.nom}</h2>
+                          {s.description && <p>{s.description}</p>}
+                        </div>
+                        <div className="d">
+                          <Clock className="size-3.5" aria-hidden="true" />
+                          {s.duree} min
+                        </div>
+                        <div className="p">{formatPrix(Number(s.prix))}</div>
+                        <Link className="btn btn-ghost btn-sm" href={`/reservation?serviceId=${s.id}`}>
+                          Réserver
+                        </Link>
+                      </Reveal>
+                    )
+                  })}
               </div>
-            </div>
-          ))}
-
-          {services.length === 0 && <p className="text-sm text-muted-foreground">Aucun service disponible pour le moment.</p>}
-
-          <div className="flex justify-center pt-6">
-            <Link
-              href="/reservation"
-              className="flex items-center gap-2 border border-gold px-6 py-3 text-[10px] uppercase tracking-[0.18em] text-gold transition-colors hover:bg-gold hover:text-background"
-            >
-              Réserver un rendez-vous <ArrowRight className="size-4" />
-            </Link>
+            ))}
           </div>
-        </div>
-      </section>
+        )}
+      </div>
     </main>
   )
 }

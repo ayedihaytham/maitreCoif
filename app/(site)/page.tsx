@@ -1,11 +1,18 @@
+import type { CSSProperties } from 'react'
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight, Scissors, Star } from 'lucide-react'
+import { ArrowRight, ChevronDown, Clock } from 'lucide-react'
 
+import { HomeEffects } from '@/components/site/home-effects'
+import { Intro } from '@/components/site/intro'
+import { PortraitRond } from '@/components/site/portrait'
+import { Reveal } from '@/components/site/reveal'
+import { ReviewCarousel, type AvisAffiche } from '@/components/site/review-carousel'
+import { attribuerPortraits } from '@/lib/portraits'
+import { libelleJour, prochaineDisponibilite } from '@/lib/prochaine-disponibilite'
 import { prisma } from '@/lib/prisma'
-import { Button } from '@/components/ui/button'
-import { cn, formatPrix } from '@/lib/utils'
+import { formatPrix } from '@/lib/utils'
 
 export const metadata: Metadata = {
   title: 'Accueil',
@@ -18,218 +25,341 @@ export const metadata: Metadata = {
 export const revalidate = 60
 
 async function getAccueilData() {
-  const [services, coiffeurs, avis, photosSalon] = await Promise.all([
-    prisma.service.findMany({ where: { actif: true }, orderBy: { prix: 'asc' }, take: 3 }),
+  const [tousLesServices, coiffeurs, avis, statsAvis, photosSalon, prochaine] = await Promise.all([
+    prisma.service.findMany({ where: { actif: true }, orderBy: { prix: 'asc' } }),
     prisma.user.findMany({
       where: { role: { in: ['COIFFEUR', 'ADMIN'] }, actif: true },
       orderBy: { dateCreation: 'asc' },
-      take: 4,
+      take: 3,
     }),
     prisma.avis.findMany({
-      where: { note: { gte: 4 } },
+      where: { note: { gte: 4 }, commentaire: { not: null } },
       orderBy: { dateCreation: 'desc' },
-      take: 3,
-      include: { rendezVous: { select: { clientNom: true } } },
+      take: 5,
+      include: {
+        rendezVous: {
+          select: {
+            clientNom: true,
+            service: { select: { nom: true } },
+            coiffeur: { select: { prenom: true, nom: true } },
+          },
+        },
+      },
     }),
-    prisma.photoSalon.findMany({ orderBy: [{ ordre: 'asc' }, { dateCreation: 'asc' }], take: 4 }),
+    prisma.avis.aggregate({ _avg: { note: true }, _count: { _all: true } }),
+    prisma.photoSalon.findMany({ orderBy: [{ ordre: 'asc' }, { dateCreation: 'asc' }], take: 2 }),
+    prochaineDisponibilite().catch(() => null),
   ])
 
-  return { services, coiffeurs, avis, photosSalon }
+  return { tousLesServices, coiffeurs, avis, statsAvis, photosSalon, prochaine }
 }
 
 export default async function AccueilPage() {
-  const { services, coiffeurs, avis, photosSalon } = await getAccueilData()
+  const { tousLesServices, coiffeurs, avis, statsAvis, photosSalon, prochaine } = await getAccueilData()
 
-  const galerie =
-    photosSalon.length > 0
-      ? photosSalon.map((p) => ({ src: p.url, alt: p.legende ?? '' }))
-      : [{ src: '/maitre-coif-interieur.jpg', alt: 'Décoration intérieure du salon Maitre Coif' }]
+  const services = tousLesServices.slice(0, 5)
+  const equipe = attribuerPortraits(coiffeurs)
+  const avisAffiches: AvisAffiche[] = avis.map((a) => ({
+    id: a.id,
+    note: a.note,
+    texte: a.commentaire ?? '',
+    client: a.rendezVous.clientNom,
+    meta: `${a.rendezVous.service.nom} · avec ${a.rendezVous.coiffeur.prenom} ${a.rendezVous.coiffeur.nom}`,
+  }))
+  const moyenne = statsAvis._avg.note
+  const nbAvis = statsAvis._count._all
+
+  // Bandeau défilant : les noms des prestations, répétés pour toujours remplir la largeur.
+  const noms = tousLesServices.map((s) => s.nom)
+  const bandeau = noms.length > 0 ? Array.from({ length: Math.max(1, Math.ceil(8 / noms.length)) }).flatMap(() => noms) : []
+
+  const photoPrincipale = photosSalon[0]
+  const photoSecondaire = photosSalon[1]
 
   return (
     <main>
-      <section className="relative overflow-hidden border-b border-border/60">
-        <Image
-          src="/maitre-coif-facade.jpg"
-          alt="Enseigne du salon Maitre Coif"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center opacity-70"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/85 to-background/50" />
-        <div className="relative mx-auto max-w-7xl px-5 pb-20 pt-28 sm:px-8 sm:pb-28 sm:pt-36 lg:px-12">
-          <div className="eyebrow before:h-px before:w-8 before:bg-gold">Salon de coiffure & barbier</div>
-          <h1 className="mt-8 max-w-3xl text-balance text-4xl font-light uppercase leading-[1.08] tracking-[0.12em] sm:text-6xl">
-            L&apos;art de la coupe,
-            <br />
-            <span className="text-gold">révélé avec précision.</span>
-          </h1>
-          <p className="mt-6 max-w-md text-sm leading-7 text-muted-foreground">
-            Chez Maitre Coif, chaque rendez-vous est pensé pour révéler votre style, dans un cadre élégant et
-            attentif au détail.
-          </p>
-          <div className="mt-10 flex flex-wrap gap-4">
-            <Button
-              size="lg"
-              className="uppercase tracking-[0.16em]"
-              render={<Link href="/reservation" />}
-              nativeButton={false}
-            >
-              Réserver un rendez-vous <ArrowRight className="size-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="uppercase tracking-[0.16em]"
-              render={<Link href="/equipe" />}
-              nativeButton={false}
-            >
-              Découvrir l&apos;équipe
-            </Button>
+      <Intro />
+      <HomeEffects />
+
+      {/* ───────────── Scène 01 · Ouverture ───────────── */}
+      <section className="hero" data-scene="0" aria-label="Ouverture">
+        <div className="hero-media" id="heroMedia">
+          <Image
+            src="/maitre-coif-facade.jpg"
+            alt="Enseigne lumineuse Maitre Coif, en lettres rétro-éclairées"
+            fill
+            preload
+            quality={70}
+            sizes="100vw"
+          />
+        </div>
+        <div className="glow" />
+        <svg className="grain" aria-hidden="true">
+          <filter id="grain-accueil">
+            <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" stitchTiles="stitch" />
+            <feColorMatrix type="saturate" values="0" />
+          </filter>
+          <rect width="100%" height="100%" filter="url(#grain-accueil)" />
+        </svg>
+        <span className="vf tl" />
+        <span className="vf tr" />
+        <span className="vf bl" />
+        <span className="vf br" />
+
+        <div className="hero-copy">
+          <div className="lbl" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <span style={{ width: 32, height: 1, background: 'var(--mc-gold)' }} />
+            Salon de coiffure &amp; barbier
           </div>
+          <h1>
+            L&apos;art de la coupe,
+            <em>révélé avec précision.</em>
+          </h1>
+          <p>
+            Chez Maitre Coif, chaque rendez-vous est pensé pour révéler votre style, dans un cadre élégant et attentif au
+            détail.
+          </p>
+          <div className="cta-row">
+            <Link className="btn btn-gold" href="/reservation">
+              Réserver un rendez-vous <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
+            <Link className="btn btn-ghost" href="/equipe">
+              Découvrir l&apos;équipe
+            </Link>
+          </div>
+        </div>
+
+        <div className="hero-bar">
+          <span>
+            <span className="rec" />
+            Scène 01 / 05<span className="hm"> · Ouverture</span>
+          </span>
+          <span className="mid">
+            Défiler <ChevronDown className="size-3.5" style={{ color: 'var(--mc-gold)' }} aria-hidden="true" />
+          </span>
+          <span>
+            Mar — Sam · 10h00 — 20h30<span className="hm"> · Sfax</span>
+          </span>
         </div>
       </section>
 
-      <section className="bg-anthracite px-5 py-16 sm:px-8 sm:py-24 lg:px-12">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-10 flex items-end justify-between gap-6 sm:mb-14">
-            <div>
-              <p className="eyebrow before:h-px before:w-8 before:bg-gold">Nos prestations</p>
-              <h2 className="mt-5 text-2xl font-light uppercase tracking-[0.16em] sm:text-3xl">Services phares</h2>
-            </div>
-            <Link
-              href="/services"
-              className="hidden items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-gold hover:text-foreground sm:flex"
-            >
-              Tous nos services <ArrowRight className="size-3.5" />
-            </Link>
-          </div>
-          <div className="grid gap-5 sm:grid-cols-3">
-            {services.map((service) => (
-              <article key={service.id} className="border border-border/70 bg-background p-6">
-                <Scissors className="size-5 text-gold" aria-hidden="true" />
-                <h3 className="mt-5 text-lg font-light tracking-[0.06em]">{service.nom}</h3>
-                <p className="mt-2 text-xs leading-6 text-muted-foreground">{service.description}</p>
-                <div className="mt-6 flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{service.duree} min</span>
-                  <span className="text-gold">{formatPrix(Number(service.prix))}</span>
-                </div>
-              </article>
+      {bandeau.length > 0 && (
+        <div className="mq" aria-hidden="true">
+          <div className="mq-track">
+            {[0, 1].map((g) => (
+              <div className="mq-grp" key={g}>
+                {bandeau.map((nom, i) => (
+                  <span key={i} style={{ display: 'contents' }}>
+                    <span>{nom}</span>
+                    <i />
+                  </span>
+                ))}
+              </div>
             ))}
           </div>
         </div>
-      </section>
+      )}
 
-      <section className="px-5 py-16 sm:px-8 sm:py-24 lg:px-12">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-2 lg:items-center lg:gap-16">
-          {galerie.length === 1 ? (
-            <div className="relative aspect-[4/3] overflow-hidden border border-border/70">
-              <Image src={galerie[0].src} alt={galerie[0].alt} fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-cover" />
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-3">
-              {galerie.map((photo, i) => (
-                <div
-                  key={i}
-                  className={cn('relative overflow-hidden border border-border/70', i === 0 && galerie.length === 3 && 'col-span-2 aspect-[16/9]', 'aspect-square')}
-                >
-                  <Image src={photo.src} alt={photo.alt} fill sizes="(min-width: 1024px) 25vw, 50vw" className="object-cover" />
+      {/* ───────────── Scène 02 · Prestations ───────────── */}
+      {services.length > 0 && (
+        <section className="sec" data-scene="1" aria-labelledby="t-serv">
+          <div className="wrap">
+            <Reveal className="head-row">
+              <div>
+                <div className="lbl">Scène 02 / 05 · Nos prestations</div>
+                <h2 className="h2" id="t-serv">
+                  Cinq gestes, <em>une signature.</em>
+                </h2>
+              </div>
+              <Link className="tlink" href="/services">
+                Tous nos services <ArrowRight className="size-3.5" aria-hidden="true" />
+              </Link>
+            </Reveal>
+
+            <Reveal className="film" delay={1}>
+              <div className="perf" aria-hidden="true" />
+              <div className="strip" style={{ '--n': services.length } as CSSProperties}>
+                {services.map((s, i) => (
+                  <article key={s.id} className="fr spotlit">
+                    <div className="no" aria-hidden="true">
+                      {String(i + 1).padStart(2, '0')}
+                    </div>
+                    <div>
+                      <h3>{s.nom}</h3>
+                      {s.description && <p>{s.description}</p>}
+                      <Link className="tlink go" href={`/reservation?serviceId=${s.id}`}>
+                        Réserver
+                      </Link>
+                    </div>
+                    <div className="meta">
+                      <span className="dur">
+                        <Clock className="size-3.5" aria-hidden="true" />
+                        {s.duree} min
+                      </span>
+                      <b>{formatPrix(Number(s.prix))}</b>
+                    </div>
+                  </article>
+                ))}
+              </div>
+              <div className="perf" aria-hidden="true" />
+            </Reveal>
+          </div>
+        </section>
+      )}
+
+      {/* ───────────── Scène 03 · L'univers ───────────── */}
+      <section className="sec" data-scene="2" style={{ paddingTop: 20 }} aria-labelledby="t-uni">
+        <div className="wrap">
+          <div className="uni">
+            <Reveal className="ph">
+              <Image
+                className="ph-big"
+                src={photoPrincipale?.url ?? '/maitre-coif-interieur.jpg'}
+                alt={photoPrincipale?.legende || 'Mur de cadres du salon, affiche Maitre Coif Since 2005'}
+                width={1400}
+                height={1000}
+                sizes="(min-width: 900px) 55vw, 100vw"
+              />
+              <Image
+                className="ph-small"
+                src={photoSecondaire?.url ?? '/maitre-coif-facade.jpg'}
+                alt={photoSecondaire?.legende || "Détail de l'enseigne lumineuse"}
+                width={680}
+                height={450}
+                sizes="340px"
+              />
+            </Reveal>
+            <div style={{ position: 'relative' }}>
+              <div className="ghost" aria-hidden="true">
+                2005
+              </div>
+              <Reveal delay={1} className="relative">
+                <div className="lbl">Scène 03 / 05 · L&apos;univers du salon</div>
+                <h2 className="h2" id="t-uni" style={{ fontSize: 'clamp(38px,5vw,60px)' }}>
+                  Un cadre pensé dans les <em>moindres détails.</em>
+                </h2>
+                <p className="lead" style={{ marginBottom: 30 }}>
+                  Chez Maitre Coif, l&apos;expérience commence dès l&apos;entrée : une décoration soignée, une ambiance
+                  chaleureuse et une équipe attentive à chaque détail, pour un moment qui vous ressemble.
+                </p>
+                <div className="fact">
+                  <span className="lbl">Depuis 2005</span>
+                  <span>Une adresse installée à Sfax, route Afran.</span>
                 </div>
-              ))}
+                <div className="fact">
+                  <span className="lbl">Sur rendez-vous</span>
+                  <span>Réservé à l&apos;avance, pour prendre le temps qu&apos;il faut.</span>
+                </div>
+                <div className="fact">
+                  <span className="lbl">Salon &amp; barbier</span>
+                  <span>Coupe, barbe, coloration et soins.</span>
+                </div>
+              </Reveal>
             </div>
-          )}
-          <div>
-            <p className="eyebrow before:h-px before:w-8 before:bg-gold">L&apos;univers du salon</p>
-            <h2 className="mt-5 text-2xl font-light uppercase leading-tight tracking-[0.1em] sm:text-3xl">
-              Un cadre pensé dans les moindres détails
-            </h2>
-            <p className="mt-5 max-w-md text-sm leading-7 text-muted-foreground">
-              Chez Maitre Coif, l&apos;expérience commence dès l&apos;entrée : une décoration soignée, une
-              ambiance chaleureuse et une équipe attentive à chaque détail, pour un moment qui vous ressemble.
-            </p>
           </div>
         </div>
       </section>
 
-      {coiffeurs.length > 0 && (
-        <section className="px-5 py-16 sm:px-8 sm:py-24 lg:px-12">
-          <div className="mx-auto max-w-7xl">
-            <div className="mb-10 flex items-end justify-between gap-6 sm:mb-14">
+      {/* ───────────── Scène 04 · L'équipe ───────────── */}
+      {equipe.length > 0 && (
+        <section className="sec cast" data-scene="3" aria-labelledby="t-cast">
+          <div className="wrap">
+            <Reveal className="head-row">
               <div>
-                <p className="eyebrow before:h-px before:w-8 before:bg-gold">L&apos;équipe</p>
-                <h2 className="mt-5 text-2xl font-light uppercase tracking-[0.16em] sm:text-3xl">
-                  Rencontrez nos coiffeurs
+                <div className="lbl">Scène 04 / 05 · L&apos;équipe</div>
+                <h2 className="h2" id="t-cast">
+                  Rencontrez <em>nos coiffeurs.</em>
                 </h2>
               </div>
-              <Link
-                href="/equipe"
-                className="hidden items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-gold hover:text-foreground sm:flex"
-              >
-                Toute l&apos;équipe <ArrowRight className="size-3.5" />
+              <Link className="tlink" href="/equipe">
+                Toute l&apos;équipe <ArrowRight className="size-3.5" aria-hidden="true" />
               </Link>
-            </div>
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-              {coiffeurs.map((c) => (
-                <Link
-                  key={c.id}
-                  href={`/reservation?coiffeurId=${c.id}`}
-                  className="group border border-border/70 bg-anthracite p-5 transition-all hover:-translate-y-1 hover:border-gold/80"
-                >
-                  <div className="relative size-16 overflow-hidden rounded-full border border-gold/40">
-                    <Image
-                      src={c.photo || '/maitre-coif-team.png'}
-                      alt={`Portrait de ${c.prenom} ${c.nom}`}
-                      fill
-                      sizes="64px"
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  </div>
-                  <h3 className="mt-4 text-sm font-light tracking-[0.06em]">
+            </Reveal>
+
+            <div className="grid3">
+              {equipe.map((c, i) => (
+                <Reveal as="article" key={c.id} className="cc" delay={i}>
+                  <div className="spot" />
+                  <PortraitRond portrait={c.portrait} nom={`${c.prenom} ${c.nom}`} />
+                  <h3>
                     {c.prenom} {c.nom}
                   </h3>
-                  <p className="mt-1 text-[11px] text-muted-foreground">{c.specialites[0] ?? 'Coiffeur'}</p>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {avis.length > 0 && (
-        <section className="bg-anthracite px-5 py-16 sm:px-8 sm:py-24 lg:px-12">
-          <div className="mx-auto max-w-7xl">
-            <p className="eyebrow before:h-px before:w-8 before:bg-gold">Ils nous font confiance</p>
-            <h2 className="mt-5 text-2xl font-light uppercase tracking-[0.16em] sm:text-3xl">Avis clients</h2>
-            <div className="mt-10 grid gap-5 sm:grid-cols-3">
-              {avis.map((a) => (
-                <article key={a.id} className="border border-border/70 bg-background p-6">
-                  <div className="flex gap-1 text-gold">
-                    {Array.from({ length: a.note }).map((_, i) => (
-                      <Star key={i} className="size-3.5 fill-gold" aria-hidden="true" />
-                    ))}
+                  <div className="lbl" style={{ position: 'relative', marginTop: 12, fontSize: 10.5 }}>
+                    {c.role === 'ADMIN' ? 'Gérant · Fondateur' : 'Coiffeur'}
                   </div>
-                  {a.commentaire && <p className="mt-4 text-sm leading-6 text-muted-foreground">&quot;{a.commentaire}&quot;</p>}
-                  <p className="mt-4 text-[11px] uppercase tracking-[0.14em] text-gold">{a.rendezVous.clientNom}</p>
-                </article>
+                  {c.specialites.length > 0 && (
+                    <div className="chips">
+                      {c.specialites.slice(0, 3).map((sp) => (
+                        <span className="chip" key={sp}>
+                          {sp}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {c.bio && <p>{c.bio}</p>}
+                  <Link className="tlink" href={`/reservation?coiffeurId=${c.id}`}>
+                    Réserver avec {c.prenom} <ArrowRight className="size-3.5" aria-hidden="true" />
+                  </Link>
+                </Reveal>
               ))}
             </div>
           </div>
         </section>
       )}
 
-      <section className="px-5 py-16 sm:px-8 sm:py-24 lg:px-12">
-        <div className="mx-auto flex max-w-7xl flex-col items-start gap-6 border-t border-gold/30 pt-10 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="max-w-xl text-2xl font-light uppercase tracking-[0.1em] sm:text-3xl">
-            Prêt à révéler votre style ?
-          </h2>
-          <Button
-            size="lg"
-            className="uppercase tracking-[0.16em]"
-            render={<Link href="/reservation" />}
-            nativeButton={false}
-          >
-            Réserver maintenant <ArrowRight className="size-4" />
-          </Button>
+      {/* ───────────── Scène 05 · Critique ───────────── */}
+      {avisAffiches.length > 0 && (
+        <section className="sec crit" data-scene="4" aria-labelledby="t-crit">
+          <div className="qmark" aria-hidden="true">
+            “
+          </div>
+          <div className="wrap" style={{ position: 'relative' }}>
+            <Reveal>
+              <div className="lbl" id="t-crit">
+                Scène 05 / 05 · Ils nous font confiance
+              </div>
+            </Reveal>
+            <Reveal delay={1}>
+              <ReviewCarousel avis={avisAffiches} />
+            </Reveal>
+            {moyenne !== null && (
+              <Reveal delay={2}>
+                <div style={{ marginTop: 34, fontSize: 12, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--mc-muted)' }}>
+                  Note moyenne {moyenne.toFixed(1).replace('.', ',')} / 5 · {nbAvis} avis
+                </div>
+              </Reveal>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ───────────── Final · Prise de rendez-vous ───────────── */}
+      <section className="sec cta-sec" aria-labelledby="t-cta" style={{ paddingBlock: 'clamp(70px,9vw,110px)' }}>
+        <div className="wrap">
+          {prochaine && (
+            <Reveal>
+              <div className="pill">
+                <span className="pulse" />
+                <span>
+                  Prochaine disponibilité : {libelleJour(prochaine.dateISO, prochaine.joursAvant)}, {prochaine.heure} avec{' '}
+                  {prochaine.coiffeur}
+                </span>
+              </div>
+            </Reveal>
+          )}
+          <Reveal as="h2" delay={1} className="h2" id="t-cta">
+            Prêt à révéler <em>votre style ?</em>
+          </Reveal>
+          <Reveal delay={2} className="cta-final">
+            <Link className="btn btn-gold" href="/reservation" style={{ height: 62, padding: '0 44px', fontSize: 13 }}>
+              Réserver maintenant <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
+          </Reveal>
+          <Reveal delay={3}>
+            <div style={{ marginTop: 22, fontSize: 13, color: 'var(--mc-muted)' }}>
+              Confirmation immédiate · Annulation possible jusqu&apos;à 2 h avant le rendez-vous
+            </div>
+          </Reveal>
         </div>
       </section>
     </main>

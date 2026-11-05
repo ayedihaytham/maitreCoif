@@ -187,3 +187,21 @@ pnpm db:seed      # réinitialise les données de démonstration
   la personne y crée son mot de passe, puis se connecte sur le sous-domaine. Aucun mot de passe n'est stocké pour
   le personnel (Auth.js le refuse).
 - **Sans clés Clerk** (preview, tests) : le site public et l'espace client fonctionnent, le back-office est fermé.
+
+## Design du site public (« Séance »)
+
+Le site public (accueil, services, équipe, réservation, suivi) suit une direction cinématique : noir et or, scènes
+numérotées, pellicule pour les services, billet pour la réservation, pied de page en générique.
+
+- **Styles** : `app/cinema.css`, importé uniquement par `app/(site)/layout.tsx`. Toutes les règles sont préfixées par
+  `.mc`, le conteneur du gabarit public : le back-office et les composants hors de ce gabarit ne sont pas affectés.
+- **Composants** : `components/site/` (navigation, pied de page, portrait, apparition progressive, effets de l'accueil,
+  carrousel d'avis) et `components/reservation/` (assistant de réservation, suivi).
+- **Portraits** : `lib/portraits.ts`. La planche de 4 portraits du seed (`maitre-coif-team.png`) est découpée, un portrait
+  par personne (version allégée : `public/maitre-coif-portraits.webp`) ; au-delà, ou sans photo, un monogramme s'affiche.
+  Une photo téléversée par le gérant passe avant.
+- **Disponibilités** : `GET /api/disponibilites` renvoie aussi `grille` (créneaux libres et occupés) et
+  `GET /api/disponibilites/jours` l'état des 21 prochains jours (libre, complet, fermé). L'accueil affiche la
+  « prochaine disponibilité » (`lib/prochaine-disponibilite.ts`).
+- **Mouvement** : animations CSS, coupées avec `prefers-reduced-motion`. Pas de vidéo ni d'écran d'introduction qui
+  retarderait l'affichage.

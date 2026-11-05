@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, Star } from 'lucide-react'
 
+import { PortraitRond } from '@/components/site/portrait'
+import { Reveal } from '@/components/site/reveal'
+import { attribuerPortraits } from '@/lib/portraits'
 import { prisma } from '@/lib/prisma'
 
 export const metadata: Metadata = {
@@ -24,16 +26,18 @@ async function getEquipe() {
     },
   })
 
-  return coiffeurs.map((c) => {
+  return attribuerPortraits(coiffeurs).map((c) => {
     const notes = c.rendezVousCoiffeur.map((r) => r.avis?.note).filter((n): n is number => typeof n === 'number')
     const moyenne = notes.length ? notes.reduce((a, b) => a + b, 0) / notes.length : null
     return {
       id: c.id,
+      prenom: c.prenom,
       nom: `${c.prenom} ${c.nom}`,
-      role: c.specialites.join(', ') || (c.role === 'ADMIN' ? 'Fondateur' : 'Coiffeur'),
-      rating: moyenne ? moyenne.toFixed(1) : '—',
-      photo: c.photo || '/maitre-coif-team.png',
-      isFondateur: c.role === 'ADMIN',
+      role: c.role === 'ADMIN' ? 'Gérant · Fondateur' : 'Coiffeur',
+      specialites: c.specialites,
+      bio: c.bio,
+      note: moyenne ? moyenne.toFixed(1).replace('.', ',') : null,
+      portrait: c.portrait,
     }
   })
 }
@@ -43,83 +47,54 @@ export default async function EquipePage() {
 
   return (
     <main>
-      <section className="border-b border-border/60 px-5 pb-16 pt-20 sm:px-8 sm:pb-20 sm:pt-28 lg:px-12">
-        <div className="mx-auto max-w-7xl">
-          <div className="eyebrow before:h-px before:w-8 before:bg-gold">L&apos;équipe</div>
-          <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_0.8fr] lg:items-end">
-            <h1 className="max-w-3xl text-balance text-4xl font-light uppercase leading-[1.08] tracking-[0.12em] sm:text-6xl">
-              Des gestes précis.
-              <br />
-              <span className="text-gold">Des styles singuliers.</span>
-            </h1>
-            <p className="max-w-sm text-sm leading-7 text-muted-foreground lg:justify-self-end">
-              Une équipe de passionnés, réunie autour d&apos;une même exigence : révéler votre style avec justesse,
-              dans un cadre où chaque détail compte.
-            </p>
-          </div>
-        </div>
-      </section>
+      <div className="wrap page-head sec">
+        <div className="lbl">L&apos;équipe</div>
+        <h1 className="page-h1">
+          Des gestes précis. <em>Des styles singuliers.</em>
+        </h1>
+        <p className="lead">
+          Une équipe de passionnés, réunie autour d&apos;une même exigence : révéler votre style avec justesse, dans un
+          cadre où chaque détail compte. Choisissez votre coiffeur et trouvez le créneau qui vous ressemble.
+        </p>
 
-      <section className="bg-anthracite px-5 py-16 sm:px-8 sm:py-24 lg:px-12">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-10 flex items-end justify-between gap-6 sm:mb-14">
-            <div>
-              <p className="eyebrow before:h-px before:w-8 before:bg-gold">Les experts</p>
-              <h2 className="mt-5 text-2xl font-light uppercase tracking-[0.16em] sm:text-3xl">Notre équipe</h2>
-            </div>
-            <p className="hidden max-w-xs text-right text-xs leading-6 text-muted-foreground sm:block">
-              Choisissez votre coiffeur et trouvez le créneau qui vous ressemble.
-            </p>
-          </div>
-
-          {equipe.length === 0 ? (
-            <p className="text-sm text-muted-foreground">L&apos;équipe sera bientôt annoncée.</p>
-          ) : (
-            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {equipe.map((member) => (
-                <article
-                  key={member.id}
-                  className="group border border-border/70 bg-background p-5 transition-all duration-300 hover:-translate-y-1 hover:border-gold/80 hover:shadow-[0_12px_30px_rgba(0,0,0,0.25)] sm:p-6"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="relative size-24 overflow-hidden rounded-full border border-gold/40 sm:size-28">
-                      <Image
-                        src={member.photo}
-                        alt={`Portrait de ${member.nom}`}
-                        fill
-                        sizes="(min-width: 640px) 112px, 96px"
-                        className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    </div>
-                    {member.isFondateur && (
-                      <span className="border border-gold/70 px-2 py-1 text-[9px] uppercase tracking-[0.16em] text-gold">
-                        Fondateur
+        {equipe.length === 0 ? (
+          <p className="empty-state" style={{ marginTop: 56 }}>
+            L&apos;équipe sera bientôt annoncée.
+          </p>
+        ) : (
+          <div className="t-grid">
+            {equipe.map((m, i) => (
+              <Reveal as="article" key={m.id} className="cc" delay={i % 3}>
+                <div className="spot" />
+                <PortraitRond portrait={m.portrait} nom={m.nom} />
+                <h2 style={{ position: 'relative', margin: '30px 0 0', font: '400 38px/1.05 var(--mc-serif)' }}>{m.nom}</h2>
+                <div className="lbl" style={{ position: 'relative', marginTop: 12, fontSize: 10.5 }}>
+                  {m.role}
+                </div>
+                {m.note && (
+                  <div style={{ position: 'relative', marginTop: 12, display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: 'var(--mc-gold)' }}>
+                    <Star className="size-3.5" fill="currentColor" aria-hidden="true" />
+                    <span>{m.note} / 5</span>
+                  </div>
+                )}
+                {m.specialites.length > 0 && (
+                  <div className="chips">
+                    {m.specialites.map((sp) => (
+                      <span className="chip" key={sp}>
+                        {sp}
                       </span>
-                    )}
+                    ))}
                   </div>
-                  <div className="mt-7 flex items-end justify-between gap-4">
-                    <div>
-                      <h3 className="text-lg font-light tracking-[0.08em]">{member.nom}</h3>
-                      <p className="mt-2 text-xs text-muted-foreground">{member.role}</p>
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-gold">
-                      <Star className="size-3 fill-gold" aria-hidden="true" />
-                      {member.rating}
-                    </div>
-                  </div>
-                  <div className="my-6 h-px bg-border/60" />
-                  <Link
-                    href={`/reservation?coiffeurId=${member.id}`}
-                    className="flex items-center justify-between text-[10px] uppercase tracking-[0.16em] text-gold transition-colors hover:text-foreground"
-                  >
-                    Voir ses disponibilités <ArrowRight className="size-4" />
-                  </Link>
-                </article>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+                )}
+                {m.bio && <p>{m.bio}</p>}
+                <Link className="tlink" href={`/reservation?coiffeurId=${m.id}`}>
+                  Voir ses disponibilités <ArrowRight className="size-3.5" aria-hidden="true" />
+                </Link>
+              </Reveal>
+            ))}
+          </div>
+        )}
+      </div>
     </main>
   )
 }

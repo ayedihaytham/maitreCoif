@@ -7,22 +7,21 @@ export const metadata: Metadata = {
   description: 'Retrouvez votre rendez-vous avec votre code de suivi.',
 }
 
-export default function SuiviPage() {
+export default async function SuiviPage({ searchParams }: { searchParams: Promise<{ code?: string }> }) {
+  const { code } = await searchParams
+
   return (
-    <main className="px-5 pb-24 pt-16 sm:px-8 lg:px-12">
-      <div className="mx-auto max-w-2xl">
-        <div className="eyebrow before:h-px before:w-8 before:bg-gold">Suivi</div>
-        <h1 className="mt-6 text-3xl font-light uppercase tracking-[0.1em] sm:text-4xl">
-          Suivre ma <span className="text-gold">réservation</span>
+    <main>
+      <div className="wrap page-head sec">
+        <div className="lbl">Suivi de réservation</div>
+        <h1 className="page-h1">
+          Retrouvez <em>votre rendez-vous.</em>
         </h1>
-        <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground">
-          Retrouvez le statut de votre rendez-vous à l&apos;aide de votre code de suivi (reçu lors de la
-          réservation).
+        <p className="lead">
+          Retrouvez le statut de votre rendez-vous à l&apos;aide de votre code de suivi (reçu lors de la réservation).
         </p>
 
-        <div className="mt-12">
-          <SuiviLookup />
-        </div>
+        <SuiviLookup initialCode={code?.slice(0, 20) ?? ''} />
       </div>
     </main>
   )

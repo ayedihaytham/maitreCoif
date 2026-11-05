@@ -1,14 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Check, Loader2, PencilLine, Search, X } from 'lucide-react'
 
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
-import { formatPrix } from '@/lib/utils'
+import { cn, formatPrix } from '@/lib/utils'
 
 interface RendezVousSuivi {
   id: string
@@ -32,30 +27,42 @@ const STATUT_LABEL: Record<RendezVousSuivi['statut'], string> = {
   ANNULE: 'Annulé',
 }
 
-const STATUT_STYLE: Record<RendezVousSuivi['statut'], string> = {
-  EN_ATTENTE: 'bg-secondary text-secondary-foreground',
-  CONFIRME: 'bg-primary text-primary-foreground',
-  TERMINE: 'bg-transparent border border-border text-foreground',
-  ANNULE: 'bg-destructive/10 text-destructive',
+const STATUT_CLASSE: Record<RendezVousSuivi['statut'], string> = {
+  EN_ATTENTE: 'att',
+  CONFIRME: '',
+  TERMINE: 'ter',
+  ANNULE: 'ann',
 }
 
-export function SuiviLookup() {
-  const [codeSuivi, setCodeSuivi] = useState('')
+function dateLongue(date: string) {
+  const iso = date.slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return date
+  const t = new Date(`${iso}T00:00:00Z`).toLocaleDateString('fr-FR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    timeZone: 'UTC',
+  })
+  return t.charAt(0).toUpperCase() + t.slice(1)
+}
+
+export function SuiviLookup({ initialCode = '' }: { initialCode?: string }) {
+  const [codeSuivi, setCodeSuivi] = useState(initialCode)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [results, setResults] = useState<RendezVousSuivi[] | null>(null)
   const [cancellingId, setCancellingId] = useState<string | null>(null)
+  const [confirmCancelId, setConfirmCancelId] = useState<string | null>(null)
   const [modifyingId, setModifyingId] = useState<string | null>(null)
   const [modifyMessage, setModifyMessage] = useState('')
   const [submittingModifyId, setSubmittingModifyId] = useState<string | null>(null)
 
-  async function handleSearch(e: React.FormEvent) {
-    e.preventDefault()
+  async function search(code: string) {
     setError(null)
     setResults(null)
     setLoading(true)
     try {
-      const params = new URLSearchParams({ codeSuivi })
+      const params = new URLSearchParams({ codeSuivi: code })
       const res = await fetch(`/api/rendez-vous/suivi?${params}`)
       const data = await res.json()
       if (!res.ok) {
@@ -71,6 +78,21 @@ export function SuiviLookup() {
     }
   }
 
+  // Arrivée depuis l'écran de confirmation : /suivi?code=MC-XXXXXX lance la recherche.
+  const dejaLance = useRef(false)
+  useEffect(() => {
+    if (initialCode && !dejaLance.current) {
+      dejaLance.current = true
+      search(initialCode)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialCode])
+
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault()
+    search(codeSuivi)
+  }
+
   async function handleCancel(rdv: RendezVousSuivi) {
     setCancellingId(rdv.id)
     setError(null)
@@ -82,10 +104,11 @@ export function SuiviLookup() {
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error ?? 'Impossible d\'annuler ce rendez-vous.')
+        setError(data.error ?? "Impossible d'annuler ce rendez-vous.")
         return
       }
       setResults((prev) => prev?.map((r) => (r.id === rdv.id ? { ...r, statut: 'ANNULE' } : r)) ?? null)
+      setConfirmCancelId(null)
     } catch {
       setError('Impossible de contacter le serveur.')
     } finally {
@@ -123,113 +146,144 @@ export function SuiviLookup() {
 
   return (
     <div>
-      <form onSubmit={handleSearch} className="border border-border/70 bg-anthracite p-6">
-        <div>
-          <Label htmlFor="codeSuivi">Code de suivi</Label>
-          <Input
-            id="codeSuivi"
-            placeholder="MC-XXXXXXX"
-            value={codeSuivi}
-            onChange={(e) => setCodeSuivi(e.target.value)}
-            className="mt-1.5"
-            required
-          />
-        </div>
-
-        <Button type="submit" className="mt-5 w-full" disabled={loading}>
-          {loading ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />}
-          Rechercher
-        </Button>
-
-        {error && <p className="mt-4 text-xs text-destructive">{error}</p>}
+      <form onSubmit={handleSearch} className="suivi-form" noValidate>
+        <label className="fld">
+          <span>Code de suivi</span>
+          <div className="suivi-row">
+            <input
+              className="inp"
+              placeholder="MC-XXXXXXX"
+              value={codeSuivi}
+              onChange={(e) => setCodeSuivi(e.target.value)}
+              autoComplete="off"
+              required
+            />
+            <button type="submit" className="btn btn-gold" disabled={loading || !codeSuivi.trim()}>
+              {loading ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <Search className="size-4" aria-hidden="true" />}
+              Rechercher
+            </button>
+          </div>
+        </label>
+        {error && (
+          <p className="err" role="alert">
+            {error}
+          </p>
+        )}
       </form>
 
       {results && results.length > 0 && (
-        <div className="mt-8 space-y-4">
-          {results.map((rdv) => (
-            <article key={rdv.id} className="border border-border/70 bg-background p-6">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="font-display text-xl tracking-[0.1em] text-gold">{rdv.codeSuivi}</p>
-                <Badge className={STATUT_STYLE[rdv.statut]}>{STATUT_LABEL[rdv.statut]}</Badge>
-              </div>
-              <div className="mt-4 grid gap-1 text-xs leading-6 text-muted-foreground sm:grid-cols-2">
-                <p>
-                  <span className="text-foreground">Service :</span> {rdv.service} ({rdv.duree} min — {formatPrix(rdv.prix)})
-                </p>
-                <p>
-                  <span className="text-foreground">Coiffeur :</span> {rdv.coiffeur}
-                </p>
-                <p>
-                  <span className="text-foreground">Date :</span> {rdv.date}
-                </p>
-                <p>
-                  <span className="text-foreground">Heure :</span> {rdv.heureDebut} — {rdv.heureFin}
-                </p>
-              </div>
-              {rdv.notes && <p className="mt-3 whitespace-pre-line text-xs italic text-muted-foreground">&quot;{rdv.notes}&quot;</p>}
+        <div>
+          {results.map((rdv) => {
+            const actif = rdv.statut === 'EN_ATTENTE' || rdv.statut === 'CONFIRME'
+            return (
+              <article key={rdv.id} className="res">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+                  <span className="lbl">Code {rdv.codeSuivi}</span>
+                  <span className={cn('badge', STATUT_CLASSE[rdv.statut])}>{STATUT_LABEL[rdv.statut]}</span>
+                </div>
+                <h3>
+                  {rdv.service} avec {rdv.coiffeur}
+                </h3>
+                <div style={{ marginTop: 8, fontSize: 13.5, color: 'var(--mc-muted)' }}>
+                  {rdv.duree} min · {formatPrix(rdv.prix)}
+                </div>
+                <div className="kv">
+                  <div>
+                    <div className="lbl dim" style={{ fontSize: 10.5 }}>
+                      Date
+                    </div>
+                    <p>{dateLongue(rdv.date)}</p>
+                  </div>
+                  <div>
+                    <div className="lbl dim" style={{ fontSize: 10.5 }}>
+                      Heure
+                    </div>
+                    <p style={{ color: 'var(--mc-gold)' }}>
+                      {rdv.heureDebut} — {rdv.heureFin}
+                    </p>
+                  </div>
+                </div>
+                {rdv.notes && <p className="note">« {rdv.notes} »</p>}
 
-              {(rdv.statut === 'EN_ATTENTE' || rdv.statut === 'CONFIRME') && (
-                <div className="mt-5 border-t border-border/60 pt-4">
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleCancel(rdv)}
-                      disabled={cancellingId === rdv.id}
-                    >
-                      {cancellingId === rdv.id ? <Loader2 className="size-3.5 animate-spin" /> : <X className="size-3.5" />}
-                      Annuler ce rendez-vous
-                    </Button>
-                    {!rdv.demandeEnCours && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setModifyingId(modifyingId === rdv.id ? null : rdv.id)
-                          setModifyMessage('')
-                          setError(null)
-                        }}
-                      >
-                        <PencilLine className="size-3.5" /> Demander une modification
-                      </Button>
+                {actif && (
+                  <div>
+                    <div className="act">
+                      {confirmCancelId === rdv.id ? (
+                        <>
+                          <span className="hint" style={{ margin: '0 12px 0 0', alignSelf: 'center' }}>
+                            Annuler définitivement ce rendez-vous ?
+                          </span>
+                          <button type="button" className="btn btn-danger btn-sm" onClick={() => handleCancel(rdv)} disabled={cancellingId === rdv.id}>
+                            {cancellingId === rdv.id ? <Loader2 className="size-3.5 animate-spin" aria-hidden="true" /> : <X className="size-3.5" aria-hidden="true" />}
+                            Oui, annuler
+                          </button>
+                          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setConfirmCancelId(null)}>
+                            Non, le garder
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setConfirmCancelId(rdv.id)}>
+                            <X className="size-3.5" aria-hidden="true" /> Annuler ce rendez-vous
+                          </button>
+                          {!rdv.demandeEnCours && (
+                            <button
+                              type="button"
+                              className="btn btn-ghost btn-sm"
+                              onClick={() => {
+                                setModifyingId(modifyingId === rdv.id ? null : rdv.id)
+                                setModifyMessage('')
+                                setError(null)
+                              }}
+                            >
+                              <PencilLine className="size-3.5" aria-hidden="true" /> Demander une modification
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+
+                    {rdv.demandeEnCours && (
+                      <p className="okmsg" style={{ display: 'flex', gap: 10 }}>
+                        <Check className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                        <span>
+                          Votre demande de modification est transmise au salon, qui reviendra vers vous. En attendant, votre
+                          rendez-vous reste confirmé à l&apos;horaire initial : « {rdv.demandeEnCours} »
+                        </span>
+                      </p>
+                    )}
+
+                    {modifyingId === rdv.id && (
+                      <div style={{ marginTop: 24 }}>
+                        <label className="fld">
+                          <span>Votre demande</span>
+                          <textarea
+                            className="inp"
+                            placeholder="Ex. Pourriez-vous décaler mon rendez-vous à 15h ?"
+                            value={modifyMessage}
+                            onChange={(e) => setModifyMessage(e.target.value)}
+                            rows={3}
+                          />
+                        </label>
+                        <p className="hint" style={{ margin: '-8px 0 16px' }}>
+                          Votre rendez-vous reste confirmé tant que le salon ne l&apos;a pas déplacé.
+                        </p>
+                        <button
+                          type="button"
+                          className="btn btn-gold btn-sm"
+                          onClick={() => handleModificationRequest(rdv)}
+                          disabled={submittingModifyId === rdv.id}
+                        >
+                          {submittingModifyId === rdv.id && <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />}
+                          Envoyer la demande
+                        </button>
+                      </div>
                     )}
                   </div>
-
-                  {rdv.demandeEnCours && (
-                    <p className="mt-3 flex items-start gap-2 text-xs text-gold">
-                      <Check className="mt-0.5 size-3.5 shrink-0" />
-                      <span>
-                        Votre demande de modification est transmise au salon, qui reviendra vers vous. En attendant,
-                        votre rendez-vous reste confirmé à l&apos;horaire initial : &quot;{rdv.demandeEnCours}&quot;
-                      </span>
-                    </p>
-                  )}
-
-                  {modifyingId === rdv.id && (
-                    <div className="mt-4 space-y-3">
-                      <Textarea
-                        placeholder="Ex. Pourriez-vous décaler mon rendez-vous à 15h ?"
-                        value={modifyMessage}
-                        onChange={(e) => setModifyMessage(e.target.value)}
-                        rows={3}
-                      />
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={() => handleModificationRequest(rdv)}
-                        disabled={submittingModifyId === rdv.id}
-                      >
-                        {submittingModifyId === rdv.id && <Loader2 className="size-3.5 animate-spin" />}
-                        Envoyer la demande
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </article>
-          ))}
+                )}
+              </article>
+            )
+          })}
         </div>
       )}
     </div>
