@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/prisma'
 import { checkRateLimit, clientIpFrom } from '@/lib/rate-limit'
+import { refuserSiRobot } from '@/lib/turnstile'
 import { registerSchema } from '@/lib/validators-auth'
 
 export async function POST(request: Request) {
@@ -12,6 +13,9 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json()
+  const robot = await refuserSiRobot(body, ip)
+  if (robot) return robot
+
   const parsed = registerSchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
 

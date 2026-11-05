@@ -219,7 +219,7 @@
 .ad .st-sec h2{margin:0 0 16px;font:600 10.5px/1.2 var(--a-sans);letter-spacing:.28em;text-transform:uppercase;color:var(--a-muted)}
 .ad .st-bar{display:flex;height:16px;overflow:hidden;border:1px solid var(--a-line);border-radius:2px;background:var(--c-0b0a09)}
 .ad .st-bar i{display:block;height:100%}
-.ad .st-legend{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:16px}
+.ad .st-legend{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px}
 @media (max-width:760px){.ad .st-legend{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .ad .st-legend div{padding:14px 16px;background:var(--a-panel2);border:1px solid var(--a-line);border-radius:3px}
 .ad .st-legend .dot{display:inline-block;width:9px;height:9px;margin-right:9px;border-radius:50%}

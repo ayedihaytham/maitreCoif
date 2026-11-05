@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/prisma'
+import { refuserSiRobot } from '@/lib/turnstile'
 import { inclurePrestations, prestationsDuRendezVous } from '@/lib/prestations'
 import { checkRateLimit, clientIpFrom } from '@/lib/rate-limit'
 import { alerterSalon } from '@/lib/alerte-salon'
@@ -79,6 +80,9 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json()
+  const robot = await refuserSiRobot(body, ip)
+  if (robot) return robot
+
   const { id, codeSuivi } = body as { id?: string; codeSuivi?: string }
 
   if (!id || !codeSuivi) {

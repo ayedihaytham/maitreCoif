@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { Check, Loader2, PencilLine, Search, X } from 'lucide-react'
 
+import { MESSAGE_ANTI_ROBOT, useAntiRobot } from '@/components/reservation/turnstile'
+import { etatRendezVous } from '@/lib/compte-a-rebours'
 import { cn, formatPrix } from '@/lib/utils'
 
 interface RendezVousSuivi {
@@ -47,8 +49,59 @@ function dateLongue(date: string) {
   return t.charAt(0).toUpperCase() + t.slice(1)
 }
 
+const deux = (n: number) => String(n).padStart(2, '0')
+
+/** Temps restant avant le rendez-vous, mis à jour chaque seconde. */
+function CompteARebours({ date, debut, fin }: { date: string; debut: string; fin: string }) {
+  const [maintenant, setMaintenant] = useState<Date | null>(null)
+
+  useEffect(() => {
+    setMaintenant(new Date())
+    const t = window.setInterval(() => setMaintenant(new Date()), 1000)
+    return () => window.clearInterval(t)
+  }, [])
+
+  if (!maintenant) return null
+  const e = etatRendezVous(date.slice(0, 10), debut, fin, maintenant)
+
+  if (e.etat !== 'avant') {
+    return (
+      <div className="cd cd-msg" role="status">
+        {e.etat === 'en_cours' ? 'Votre rendez-vous est en cours.' : 'Ce rendez-vous est passé.'}
+      </div>
+    )
+  }
+
+  const { jours, heures, minutes, secondes } = e.reste
+  const cases = [
+    { v: jours, l: jours > 1 ? 'jours' : 'jour' },
+    { v: heures, l: 'heures' },
+    { v: minutes, l: 'min' },
+    { v: secondes, l: 'sec' },
+  ]
+  const texte = `${jours > 0 ? `${jours} j ` : ''}${heures} h ${minutes} min`
+  return (
+    <div className="cd" role="timer" aria-label={`Temps restant avant votre rendez-vous : ${texte}`}>
+      <div className="lbl dim" style={{ fontSize: 10.5 }}>
+        Temps restant
+      </div>
+      <div className="cd-cells" aria-hidden="true">
+        {cases.map((c) => (
+          <div key={c.l} className="cd-cell">
+            <b>{deux(c.v)}</b>
+            <span>{c.l}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function SuiviLookup({ initialCode = '' }: { initialCode?: string }) {
   const [codeSuivi, setCodeSuivi] = useState(initialCode)
+  // Un jeton anti-robot par action sensible (annuler, demander une modification).
+  const robotAnnulation = useAntiRobot()
+  const robotModification = useAntiRobot()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [results, setResults] = useState<RendezVousSuivi[] | null>(null)
@@ -95,14 +148,19 @@ export function SuiviLookup({ initialCode = '' }: { initialCode?: string }) {
   }
 
   async function handleCancel(rdv: RendezVousSuivi) {
-    setCancellingId(rdv.id)
     setError(null)
+    if (robotAnnulation.manquant) {
+      setError(MESSAGE_ANTI_ROBOT)
+      return
+    }
+    setCancellingId(rdv.id)
     try {
       const res = await fetch('/api/rendez-vous/suivi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: rdv.id, codeSuivi: rdv.codeSuivi }),
+        body: JSON.stringify({ id: rdv.id, codeSuivi: rdv.codeSuivi, turnstileToken: robotAnnulation.token }),
       })
+      robotAnnulation.renouveler()
       const data = await res.json()
       if (!res.ok) {
         setError(data.error ?? "Impossible d'annuler ce rendez-vous.")
@@ -122,14 +180,19 @@ export function SuiviLookup({ initialCode = '' }: { initialCode?: string }) {
       setError('Merci de préciser votre demande (5 caractères minimum).')
       return
     }
+    if (robotModification.manquant) {
+      setError(MESSAGE_ANTI_ROBOT)
+      return
+    }
     setSubmittingModifyId(rdv.id)
     setError(null)
     try {
       const res = await fetch('/api/rendez-vous/modification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: rdv.id, codeSuivi: rdv.codeSuivi, message: modifyMessage }),
+        body: JSON.stringify({ id: rdv.id, codeSuivi: rdv.codeSuivi, message: modifyMessage, turnstileToken: robotModification.token }),
       })
+      robotModification.renouveler()
       const data = await res.json()
       if (!res.ok) {
         setError(data.error ?? "Impossible d'envoyer cette demande.")
@@ -212,6 +275,7 @@ export function SuiviLookup({ initialCode = '' }: { initialCode?: string }) {
                     </p>
                   </div>
                 </div>
+                {actif && <CompteARebours date={rdv.date} debut={rdv.heureDebut} fin={rdv.heureFin} />}
                 {rdv.notes && <p className="note">« {rdv.notes} »</p>}
 
                 {actif && (
@@ -219,6 +283,7 @@ export function SuiviLookup({ initialCode = '' }: { initialCode?: string }) {
                     <div className="act">
                       {confirmCancelId === rdv.id ? (
                         <>
+                          {robotAnnulation.widget && <div style={{ flexBasis: '100%' }}>{robotAnnulation.widget}</div>}
                           <span className="hint" style={{ margin: '0 12px 0 0', alignSelf: 'center' }}>
                             Annuler définitivement ce rendez-vous ?
                           </span>
@@ -277,6 +342,7 @@ export function SuiviLookup({ initialCode = '' }: { initialCode?: string }) {
                         <p className="hint" style={{ margin: '-8px 0 16px' }}>
                           Votre rendez-vous reste confirmé tant que le salon ne l&apos;a pas déplacé.
                         </p>
+                        {robotModification.widget && <div style={{ marginBottom: 14 }}>{robotModification.widget}</div>}
                         <button
                           type="button"
                           className="btn btn-gold btn-sm"

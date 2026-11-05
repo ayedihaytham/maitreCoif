@@ -104,9 +104,20 @@ Aucun service payant n'est requis.
 
 ## Anti-bot (Cloudflare Turnstile)
 
-Optionnel : renseignez `NEXT_PUBLIC_TURNSTILE_SITE_KEY` et `TURNSTILE_SECRET_KEY` pour afficher le widget sur le
-formulaire de réservation et vérifier le jeton côté serveur. Sans ces clés, seuls le honeypot et le rate limiting
-(partagé en base) restent actifs.
+La réservation en ligne est protégée par trois barrières : un champ piège invisible (honeypot), une limite de tentatives par adresse IP
+(8 réservations / 10 min) et une vérification anti-robot Cloudflare Turnstile à la confirmation.
+
+**Activer Turnstile (gratuit, 3 minutes)** :
+1. Sur dash.cloudflare.com → Turnstile → « Add widget », domaine `maitrecoif.com` (ajoutez aussi `localhost` pour les essais), mode « Managed ».
+2. Copiez les deux clés dans Vercel (Settings → Environment Variables) : `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (clé du site) et `TURNSTILE_SECRET_KEY` (clé secrète), puis redéployez.
+3. Tant que `TURNSTILE_SECRET_KEY` est vide, la vérification est désactivée (les deux autres barrières restent actives).
+
+Pour essayer en local avec les clés de test de Cloudflare (le widget affiche « Success! » tout seul) :
+`NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA`.
+
+**Attaques par saturation (DDoS)** : un captcha arrête les robots qui réservent, pas le trafic de masse. Ce second risque se traite avant
+l'application : sur Vercel, activez le pare-feu (Firewall → « Attack Challenge Mode » en cas d'attaque, et une règle de limitation de
+débit sur `/api/*`) ; ou placez le domaine derrière le proxy Cloudflare.
 
 ## Rappels automatiques
 

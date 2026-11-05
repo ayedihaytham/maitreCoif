@@ -221,6 +221,12 @@ export function ReservationWizard({
       return
     }
 
+    // Anti-robot : le widget Cloudflare doit être validé avant d'envoyer (s'il est configuré).
+    if (process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && !turnstileToken) {
+      setSubmitError('Merci de valider la vérification anti-robot avant de confirmer.')
+      return
+    }
+
     setSubmitting(true)
     try {
       const res = await fetch('/api/rendez-vous', {
@@ -654,6 +660,11 @@ export function ReservationWizard({
                 <input id="website" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
               </div>
 
+              {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+                <p className="hint" style={{ margin: '4px 0 10px' }}>
+                  Vérification de sécurité : elle protège le salon contre les réservations automatiques.
+                </p>
+              )}
               <TurnstileWidget key={turnstileKey} onToken={setTurnstileToken} />
 
               {submitError && (

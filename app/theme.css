@@ -100,3 +100,4 @@
 :root[data-theme="light"] .mc .nl sup{opacity:1}
 :root[data-theme="light"] .mc .menu{background:var(--mc-ink)}
 .mc .menu-foot .theme-toggle{display:flex}
+:root[data-theme="light"] .es .es-light{display:none}

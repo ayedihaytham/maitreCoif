@@ -29,7 +29,6 @@ const LIBELLE_PERIODE: Record<PeriodeStats, string> = {
 // Une couleur par statut (jamais la couleur seule : chaque statut a aussi son libellé et son nombre).
 const STATUTS: { key: string; label: string; couleur: string }[] = [
   { key: 'CONFIRME', label: 'Confirmés', couleur: '#d4af37' },
-  { key: 'EN_ATTENTE', label: 'À confirmer', couleur: '#8d7b3c' },
   { key: 'TERMINE', label: 'Terminés', couleur: '#7bd88f' },
   { key: 'ANNULE', label: 'Annulés', couleur: '#ff6b6e' },
 ]

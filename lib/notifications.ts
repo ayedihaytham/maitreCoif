@@ -15,6 +15,25 @@ export function formaterDateLongue(dateISO: string): string {
 
 const SITE_URL = (process.env.AUTH_URL || 'https://maitrecoif.fr').replace(/\/$/, '')
 
+/** Adresse directe du suivi d'un rendez-vous : le code est déjà rempli et la recherche lancée. */
+export function lienSuivi(codeSuivi: string): string {
+  return `${SITE_URL}/suivi?code=${encodeURIComponent(codeSuivi)}`
+}
+
+const echapper = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
+/** Version HTML d'un email texte : mise en page sobre aux couleurs du salon et bouton d'action. */
+export function htmlEmail(texte: string, action?: { libelle: string; url: string }): string {
+  const paragraphes = texte
+    .split(/\n{2,}/)
+    .map((p) => `<p style="margin:0 0 16px">${echapper(p).replace(/\n/g, '<br>')}</p>`)
+    .join('')
+  const bouton = action
+    ? `<p style="margin:24px 0"><a href="${echapper(action.url)}" style="display:inline-block;padding:14px 26px;background:#d4af37;color:#0a0a0a;text-decoration:none;font-weight:bold;font-size:13px;letter-spacing:.12em;text-transform:uppercase">${echapper(action.libelle)}</a></p><p style="margin:0 0 8px;font-size:12px;color:#6a655a;word-break:break-all">Le bouton ne s'affiche pas ? Copiez ce lien dans votre navigateur :<br><a href="${echapper(action.url)}" style="color:#7d5f08">${echapper(action.url)}</a></p>`
+    : ''
+  return `<!doctype html><html lang="fr"><body style="margin:0;background:#f6f3ec;font-family:Arial,Helvetica,sans-serif;color:#1b1915"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:28px 14px"><table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;background:#ffffff;border:1px solid #e4dfd2"><tr><td style="padding:22px 30px;border-bottom:3px solid #d4af37;font-size:13px;font-weight:bold;letter-spacing:.22em;text-transform:uppercase">Maitre Coif</td></tr><tr><td style="padding:28px 30px;font-size:15px;line-height:1.6">${paragraphes}${bouton}</td></tr></table></td></tr></table></body></html>`
+}
+
 interface ConfirmationDetails {
   to: string
   clientNom: string
@@ -27,20 +46,9 @@ interface ConfirmationDetails {
 
 export async function envoyerConfirmationEmail(details: ConfirmationDetails) {
   const subject = `Maitre Coif — Confirmation de votre rendez-vous (${details.codeSuivi})`
-  const body = `Bonjour ${details.clientNom},\n\nVotre rendez-vous est enregistré :\n- Service : ${details.serviceNom}\n- Coiffeur : ${details.coiffeurNom}\n- Date : ${formaterDateLongue(details.date)} à ${details.heureDebut}\n- Code de suivi : ${details.codeSuivi}\n\nSuivez ou annulez votre réservation sur ${SITE_URL}/suivi avec ce code.\n\nÀ bientôt,\nL'équipe Maitre Coif`
-
-  if (!resend || !process.env.RESEND_FROM) {
-    console.log(`[email:stub] à ${details.to} — ${subject}\n${body}`)
-    return { sent: false, stub: true }
-  }
-
-  await resend.emails.send({
-    from: process.env.RESEND_FROM,
-    to: details.to,
-    subject,
-    text: body,
-  })
-  return { sent: true, stub: false }
+  const lien = lienSuivi(details.codeSuivi)
+  const body = `Bonjour ${details.clientNom},\n\nVotre rendez-vous est enregistré :\n- Service : ${details.serviceNom}\n- Coiffeur : ${details.coiffeurNom}\n- Date : ${formaterDateLongue(details.date)} à ${details.heureDebut}\n- Code de suivi : ${details.codeSuivi}\n\nSuivez, modifiez ou annulez votre rendez-vous à tout moment avec ce lien :\n${lien}\n\nÀ bientôt,\nL'équipe Maitre Coif`
+  return envoyerEmailSimple(details.to, subject, body, { libelle: 'Suivre mon rendez-vous', url: lien })
 }
 
 export async function envoyerResetPasswordEmail(to: string, prenom: string, resetUrl: string) {
@@ -97,17 +105,16 @@ interface ConfirmationSmsDetails {
 }
 
 export async function envoyerConfirmationSms(details: ConfirmationSmsDetails) {
-  const message = `Maitre Coif : RDV confirme le ${formaterDateLongue(details.date)} a ${details.heureDebut} avec ${details.coiffeurNom} (${details.serviceNom}). Code de suivi : ${details.codeSuivi}. Suivi/annulation : ${SITE_URL}/suivi`
+  const message = `Maitre Coif : RDV confirme le ${formaterDateLongue(details.date)} a ${details.heureDebut} avec ${details.coiffeurNom} (${details.serviceNom}). Code de suivi : ${details.codeSuivi}. Suivi/annulation : ${lienSuivi(details.codeSuivi)}`
   return envoyerSms({ to: details.to, message })
 }
 
-export async function envoyerEmailSimple(to: string, subject: string, body: string) {
+export async function envoyerEmailSimple(to: string, subject: string, body: string, action?: { libelle: string; url: string }) {
   if (!resend || !process.env.RESEND_FROM) {
-    console.log(`[email:stub] à ${to} — ${subject}
-${body}`)
+    console.log(`[email:stub] à ${to} — ${subject}\n${body}`)
     return { sent: false, stub: true }
   }
-  await resend.emails.send({ from: process.env.RESEND_FROM, to, subject, text: body })
+  await resend.emails.send({ from: process.env.RESEND_FROM, to, subject, text: body, html: htmlEmail(body, action) })
   return { sent: true, stub: false }
 }
 
@@ -149,15 +156,16 @@ Petit rappel : vous avez rendez-vous demain.
 - Coiffeur : ${details.coiffeurNom}
 - Date : ${formaterDateLongue(details.date)} à ${details.heureDebut}
 
-Un empêchement ? Annulez ou modifiez sur ${SITE_URL}/suivi avec le code ${details.codeSuivi}.
+Un empêchement ? Annulez ou modifiez votre rendez-vous ici :
+${lienSuivi(details.codeSuivi)}
 
 À demain,
 L'équipe Maitre Coif`
-  return envoyerEmailSimple(details.to, subject, body)
+  return envoyerEmailSimple(details.to, subject, body, { libelle: 'Gérer mon rendez-vous', url: lienSuivi(details.codeSuivi) })
 }
 
 export function envoyerDeplacementEmail(details: RdvEmailDetails) {
   const subject = `Maitre Coif — Votre rendez-vous a été déplacé (${details.codeSuivi})`
-  const body = `Bonjour ${details.clientNom},\n\nVotre rendez-vous a été déplacé. Nouveau créneau :\n- Service : ${details.serviceNom}\n- Coiffeur : ${details.coiffeurNom}\n- Date : ${formaterDateLongue(details.date)} à ${details.heureDebut}\n\nCe créneau ne vous convient pas ? Annulez ou faites une demande sur ${SITE_URL}/suivi avec le code ${details.codeSuivi}.\n\nL'équipe Maitre Coif`
-  return envoyerEmailSimple(details.to, subject, body)
+  const body = `Bonjour ${details.clientNom},\n\nVotre rendez-vous a été déplacé. Nouveau créneau :\n- Service : ${details.serviceNom}\n- Coiffeur : ${details.coiffeurNom}\n- Date : ${formaterDateLongue(details.date)} à ${details.heureDebut}\n\nCe créneau ne vous convient pas ? Annulez ou faites une demande ici :\n${lienSuivi(details.codeSuivi)}\n\nL'équipe Maitre Coif`
+  return envoyerEmailSimple(details.to, subject, body, { libelle: 'Gérer mon rendez-vous', url: lienSuivi(details.codeSuivi) })
 }

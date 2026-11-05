@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { MESSAGE_ANTI_ROBOT, useAntiRobot } from '@/components/reservation/turnstile'
 import { useRouter } from 'next/navigation'
 import { signIn } from 'next-auth/react'
 import { Loader2, UserPlus } from 'lucide-react'
@@ -10,6 +11,7 @@ export function RegisterForm() {
   const [form, setForm] = useState({ prenom: '', nom: '', email: '', telephone: '', password: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const robot = useAntiRobot()
 
   function update<K extends keyof typeof form>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }))
@@ -18,13 +20,18 @@ export function RegisterForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    if (robot.manquant) {
+      setError(MESSAGE_ANTI_ROBOT)
+      return
+    }
     setLoading(true)
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, turnstileToken: robot.token }),
       })
+      robot.renouveler()
       const data = await res.json()
       if (!res.ok) {
         setError(data.error ?? 'Une erreur est survenue.')
@@ -86,6 +93,8 @@ export function RegisterForm() {
           {error}
         </p>
       )}
+
+      {robot.widget}
 
       <button type="submit" className="btn btn-gold" disabled={loading}>
         {loading ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : <UserPlus className="size-4" aria-hidden="true" />}

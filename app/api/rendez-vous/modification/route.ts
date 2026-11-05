@@ -4,6 +4,7 @@ import { alerterSalon } from '@/lib/alerte-salon'
 import { formaterDateLongue } from '@/lib/notifications'
 import { prisma } from '@/lib/prisma'
 import { checkRateLimit, clientIpFrom } from '@/lib/rate-limit'
+import { refuserSiRobot } from '@/lib/turnstile'
 import { demandeModificationSchema } from '@/lib/validators'
 
 export async function POST(request: Request) {
@@ -13,6 +14,9 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json()
+  const robot = await refuserSiRobot(body, ip)
+  if (robot) return robot
+
   const parsed = demandeModificationSchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
 

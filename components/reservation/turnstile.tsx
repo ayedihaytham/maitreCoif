@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 interface TurnstileApi {
   render: (
@@ -63,3 +63,32 @@ export function TurnstileWidget({ onToken }: { onToken: (token: string) => void 
   if (!SITE_KEY) return null
   return <div ref={containerRef} />
 }
+
+export const ANTI_ROBOT_ACTIF = Boolean(SITE_KEY)
+
+/**
+ * Anti-robot d'un formulaire : `widget` à placer dans le formulaire, `token` à envoyer avec la
+ * requête, `manquant` tant que le visiteur n'a pas passé la vérification. Un jeton ne sert qu'une
+ * fois : appeler `renouveler()` après chaque envoi.
+ */
+export function useAntiRobot() {
+  const [token, setToken] = useState('')
+  const [cle, setCle] = useState(0)
+  const renouveler = useCallback(() => {
+    setToken('')
+    setCle((k) => k + 1)
+  }, [])
+
+  const widget = ANTI_ROBOT_ACTIF ? (
+    <div>
+      <p className="hint" style={{ margin: '4px 0 10px' }}>
+        Vérification de sécurité : elle protège le salon contre les robots.
+      </p>
+      <TurnstileWidget key={cle} onToken={setToken} />
+    </div>
+  ) : null
+
+  return { token, widget, manquant: ANTI_ROBOT_ACTIF && !token, renouveler }
+}
+
+export const MESSAGE_ANTI_ROBOT = 'Merci de valider la vérification anti-robot avant de continuer.'
