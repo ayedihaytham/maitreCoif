@@ -37,12 +37,12 @@ const clerkAppearance = {
     borderRadius: '0.125rem',
     fontFamily: 'var(--font-manrope), system-ui, sans-serif',
   },
-  // Le formulaire Clerk reprend la charte du site : carte sombre unie, filet doré, même police.
+  // Le formulaire Clerk prend l'allure d'un billet de cinéma : carte sombre, filet doré, titres en Cormorant.
   elements: {
     card: {
       backgroundColor: '#14120f',
       border: '1px solid rgba(212,175,55,.28)',
-      boxShadow: 'none',
+      boxShadow: '0 30px 80px rgba(0,0,0,.6), 0 0 80px rgba(255,243,214,.05)',
     },
     headerTitle: { fontFamily: 'var(--font-manrope), system-ui, sans-serif', fontWeight: 600, fontSize: '1.6rem' },
     formButtonPrimary: {

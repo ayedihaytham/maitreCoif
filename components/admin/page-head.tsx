@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-// En-tête commun des pages du back-office : étiquette de section, titre,
+// En-tête commun des pages de la régie : étiquette de section, titre en serif,
 // description facultative et zone d'actions à droite.
 export function AdminPageHead({
   section,

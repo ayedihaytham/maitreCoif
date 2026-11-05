@@ -20,7 +20,7 @@ function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
   )
 }
 
-// Pied de page : adresse, horaires, équipe, réseaux.
+// Pied de page en « générique de fin ».
 export async function Footer() {
   const equipe = await prisma.user.findMany({
     where: { role: { in: ['COIFFEUR', 'ADMIN'] }, actif: true },

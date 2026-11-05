@@ -23,7 +23,7 @@ export default async function ServicesPage() {
 
   return (
     <main>
-      <Cinema />
+      <Cinema hud={false} />
       <PageHero
         etiquette="Nos prestations"
         image="/maitre-coif-interieur.jpg"

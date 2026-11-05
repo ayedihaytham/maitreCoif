@@ -4,8 +4,9 @@ import Image from 'next/image'
 import { cn } from '@/lib/utils'
 
 /**
- * Bandeau d'ouverture des pages intérieures : photo plein cadre (facultative) et titre
- * révélé ligne par ligne. Le parallaxe est piloté par <Cinema /> (data-track="out").
+ * Plan d'ouverture des pages intérieures : image plein cadre étalonnée (facultative),
+ * lumière qui dérive, cadre de viseur, titre révélé ligne par ligne. Le parallaxe est
+ * piloté par <Cinema hud={false} /> (data-track="out").
  */
 export function PageHero({
   etiquette,
@@ -28,7 +29,12 @@ export function PageHero({
           <Image src={image} alt="" fill priority sizes="100vw" />
         </div>
       )}
+      <div className="ph-light" aria-hidden="true" />
       <div className="ph-shade" aria-hidden="true" />
+      <span className="ph-vf tl" aria-hidden="true" />
+      <span className="ph-vf tr" aria-hidden="true" />
+      <span className="ph-vf bl" aria-hidden="true" />
+      <span className="ph-vf br" aria-hidden="true" />
 
       <div className="wrap ph-copy">
         <div className="lbl">{etiquette}</div>

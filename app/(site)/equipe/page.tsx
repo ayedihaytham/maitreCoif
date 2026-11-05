@@ -49,7 +49,7 @@ export default async function EquipePage() {
 
   return (
     <main>
-      <Cinema />
+      <Cinema hud={false} />
       <PageHero
         etiquette="L'équipe"
         image="/maitre-coif-team.png"

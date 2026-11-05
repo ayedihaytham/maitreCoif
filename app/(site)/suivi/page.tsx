@@ -14,7 +14,7 @@ export default async function SuiviPage({ searchParams }: { searchParams: Promis
 
   return (
     <main>
-      <Cinema />
+      <Cinema hud={false} />
       <PageHero
         courte
         etiquette="Suivi de réservation"

@@ -93,7 +93,14 @@ export default async function AccueilPage() {
             sizes="100vw"
           />
         </div>
+        <div className="h-dark" />
+        <div className="h-light" />
+        <div className="h-streak" />
         <div className="h-shade" />
+        <span className="h-vf tl" />
+        <span className="h-vf tr" />
+        <span className="h-vf bl" />
+        <span className="h-vf br" />
 
         <div className="h-copy">
           <div className="lbl" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>

@@ -1,0 +1,45 @@
+/* Correctifs ciblés : fenêtre de rendez-vous, zone du logo du back-office, carte de fin d'accueil. */
+
+/* Accueil, section finale : fond uni et sans halo autour du bouton ; titre en police sobre */
+.mc .h-end{background:#0a0a0a}
+.mc .h-end .btn-gold,.mc .h-end .btn-gold:hover:not(:disabled){box-shadow:none}
+.mc .h-end .h-title-end{font-family:var(--mc-sans);font-weight:600;letter-spacing:-.03em;font-size:clamp(34px,5vw,68px)}
+.mc .h-end .h-title-end em{font-style:normal;font-weight:600}
+.mc .h-next{display:inline-flex;flex-direction:column;align-items:center;gap:8px;padding:26px 40px;border:1px solid rgba(212,175,55,.5);border-radius:4px;background:#16140f}
+.mc .h-next small{font:600 10.5px/1 var(--mc-sans);letter-spacing:.24em;text-transform:uppercase;color:var(--mc-muted)}
+.mc .h-next strong{font:600 clamp(24px,3vw,34px)/1.1 var(--mc-sans);letter-spacing:-.02em;color:var(--mc-gold)}
+.mc .h-next span{font-size:13px;color:var(--mc-muted)}
+/* les accents des titres révélés ligne par ligne ne sont plus rognés */
+.mc .h-title .ln{padding-top:.2em;margin-top:-.2em}
+
+/* Back-office : zone du logo */
+.ad .ad-side{padding:0 18px 18px}
+.ad .ad-brand{display:flex;align-items:center;width:auto;padding:22px 6px 18px;margin-bottom:18px;border-bottom:1px solid var(--a-line,rgba(245,243,238,.12))}
+.ad .ad-brand img{height:52px;width:auto;flex:none}
+.ad .ad-rec{margin:-6px 6px 18px;font:600 10px/1 var(--a-sans);letter-spacing:.26em;text-transform:uppercase;color:var(--a-muted,#a09d96)}
+.ad .ad-user{margin-top:0}
+
+/* Fenêtres de dialogue : défilement interne et cases à cocher soignées */
+[data-slot="dialog-content"]{max-height:calc(100dvh - 2rem);overflow-y:auto;overscroll-behavior:contain}
+[data-slot="dialog-content"] fieldset{border:0;margin:0 0 .25rem;padding:0;min-width:0}
+[data-slot="dialog-content"] fieldset legend{margin-bottom:.4rem;font-size:10px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:#a09d96}
+[data-slot="dialog-content"] fieldset>div{border-color:rgba(245,243,238,.14)!important;background:#0f0e0c;max-height:11rem}
+[data-slot="dialog-content"] input[type="checkbox"]{appearance:none;-webkit-appearance:none;flex:none;width:18px;height:18px;margin:0;border:1.5px solid rgba(245,243,238,.4);border-radius:3px;background:transparent;display:inline-grid;place-content:center;cursor:pointer;transition:background .15s,border-color .15s}
+[data-slot="dialog-content"] input[type="checkbox"]::after{content:"";width:9px;height:5px;margin-top:-2px;border-left:2px solid #0a0a0a;border-bottom:2px solid #0a0a0a;transform:rotate(-45deg) scale(0);transition:transform .12s}
+[data-slot="dialog-content"] input[type="checkbox"]:checked{background:#d4af37;border-color:#d4af37}
+[data-slot="dialog-content"] input[type="checkbox"]:checked::after{transform:rotate(-45deg) scale(1)}
+[data-slot="dialog-content"] input[type="checkbox"]:focus-visible{outline:2px solid #d4af37;outline-offset:2px}
+
+/* Typographie : une seule famille sans empattement, sobre et lisible, sur tout le site et le back-office */
+.mc,.ad,.es{--mc-serif:var(--font-manrope),system-ui,-apple-system,'Segoe UI',sans-serif;--a-serif:var(--mc-serif)}
+.mc em,.ad em,.es em{font-style:normal}
+.mc .h-title .ln.gold>span,.mc .h-end .h-title-end em{font-style:normal}
+.mc :is(h1,h2,h3,h4,.h2,.page-h1,.h-title,.h-title-end),.ad :is(h1,h2,h3,h4),.es :is(h1,h2){font-weight:600;letter-spacing:-.03em}
+.mc h2.sec-t{letter-spacing:.18em}
+.mc :is(h1,h2,.h2,.page-h1,.h-title,.h-title-end) em,.ad :is(h1,h2) em,.es h1 em{font-weight:600}
+.mc .h-title{font-size:clamp(40px,6.6vw,96px);line-height:1}
+.mc .ph-title{font-size:clamp(38px,5.6vw,76px)}
+.mc .page-h1{font-size:clamp(38px,5.6vw,72px)}
+.mc .h2{font-size:clamp(32px,4.4vw,56px)}
+.mc .no,.mc .ghost,.mc .h-ghost,.mc .h-cast-word{font-weight:600}
+[data-slot="dialog-title"]{font-family:var(--font-manrope),system-ui,sans-serif;font-weight:700;font-size:1.35rem;letter-spacing:-.02em}

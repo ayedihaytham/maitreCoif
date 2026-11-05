@@ -20,7 +20,7 @@ const LINKS = [
   { href: '/statistiques', label: 'Statistiques', icon: BarChart3, adminOnly: true },
 ]
 
-/** Horloge du salon (fuseau de Tunis). */
+/** Horloge du salon (fuseau de Tunis), comme le timecode d'un plateau. */
 function HorlogeSalon() {
   const [maintenant, setMaintenant] = useState<Date | null>(null)
 

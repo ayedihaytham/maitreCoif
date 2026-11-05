@@ -255,7 +255,7 @@ export function ReservationWizard({
     }
   }
 
-  // ───────────── Confirmation : récapitulatif horizontal avec le code de suivi ─────────────
+  // ───────────── Confirmation : billet horizontal avec le code de suivi ─────────────
   if (confirmation && coiffeur && service) {
     return (
       <div>
@@ -669,7 +669,7 @@ export function ReservationWizard({
           )}
         </div>
 
-        {/* ───────── Récapitulatif ───────── */}
+        {/* ───────── Billet récapitulatif ───────── */}
         <aside aria-label="Récapitulatif de votre rendez-vous">
           <div className="tk">
             <div className="tk-p">
@@ -743,7 +743,7 @@ export function ReservationWizard({
         </aside>
       </div>
 
-      {/* Barre fixe sur mobile : le récapitulatif reste visible pendant le défilement */}
+      {/* Barre fixe sur mobile : le billet reste visible pendant le défilement */}
       {afficherBarre && actionMobile && (
         <div className="mbar">
           <div>
