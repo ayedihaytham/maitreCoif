@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/prisma'
 import { terminerRendezVousPasses } from '@/lib/terminer-passes'
+import { prevenirCoiffeur } from '@/lib/rdv-emails'
 import { refuserSiRobot } from '@/lib/turnstile'
 import { inclurePrestations, prestationsDuRendezVous } from '@/lib/prestations'
 import { checkRateLimit, clientIpFrom } from '@/lib/rate-limit'
@@ -93,7 +94,7 @@ export async function POST(request: Request) {
 
   const rendezVous = await prisma.rendezVous.findFirst({
     where: { id, codeSuivi: codeSuivi.trim().toUpperCase() },
-    include: { coiffeur: { select: { prenom: true, nom: true } }, ...inclurePrestations },
+    include: { coiffeur: { select: { prenom: true, nom: true, email: true, actif: true } }, ...inclurePrestations },
   })
 
   if (!rendezVous) return NextResponse.json({ error: 'Rendez-vous introuvable' }, { status: 404 })
@@ -116,6 +117,9 @@ export async function POST(request: Request) {
     'Rendez-vous annulé par le client',
     `${rendezVous.clientNom} (${rendezVous.clientTelephone}) a annulé son rendez-vous du ${formaterDateLongue(rendezVous.date.toISOString().slice(0, 10))} à ${rendezVous.heureDebut} avec ${rendezVous.coiffeur.prenom} ${rendezVous.coiffeur.nom} (${prestationsDuRendezVous(rendezVous).nom}). Le créneau est de nouveau libre.`,
   )
+
+  // Le coiffeur choisi par le client est prévenu par email (en plus de l'alerte du salon).
+  await prevenirCoiffeur(rendezVous, 'annulation')
 
   if (rendezVous.clientEmail) {
     await envoyerAnnulationEmail({

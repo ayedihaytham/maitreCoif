@@ -92,11 +92,15 @@ Le contrôle d'accès est appliqué à la fois côté `proxy.ts` (redirection) e
 
 Aucun service payant n'est requis.
 
-- **Clients** : email de confirmation, de rappel J-1, de déplacement et d'annulation, via
-  [Resend](https://resend.com) (offre gratuite). Sans `RESEND_API_KEY`, les emails sont seulement affichés dans les
+- **Clients** : emails mis en page aux couleurs du salon, via [Resend](https://resend.com) (offre gratuite) :
+  confirmation avec **QR code** et bouton « Suivre mon rendez-vous » (le QR mène à `/suivi?code=…`, la page de
+  suivi), changement de statut décidé par le salon (confirmé, terminé, annulé), passage automatique en « Terminé »,
+  rappel J-1, déplacement et annulation. Sans `RESEND_API_KEY`, les emails sont seulement affichés dans les
   logs du serveur (`[email:stub]`). Pour écrire à n'importe quel client il faut un domaine vérifié chez Resend
   (enregistrements DNS SPF/DKIM) et `RESEND_FROM` sur ce domaine. Un client qui n'a pas renseigné d'email ne reçoit
   rien : son code de suivi s'affiche à l'écran après la réservation.
+- **Coiffeur choisi par le client** : il reçoit un email quand le client annule son rendez-vous ou demande à le
+  modifier (à l'adresse de sa fiche dans « Équipe » ; rien n'est envoyé à un coiffeur désactivé).
 - **Équipe du salon** : alertes gratuites lors d'une demande de modification ou d'une annulation client, par
   Telegram (`TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`) et/ou par email (`SALON_NOTIFY_EMAIL`).
 - **WhatsApp et SMS (Twilio)** : le code existe mais reste désactivé tant que les clés sont vides (WhatsApp Business

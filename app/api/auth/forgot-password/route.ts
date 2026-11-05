@@ -32,7 +32,8 @@ export async function POST(request: Request) {
 
     const origin = process.env.AUTH_URL || new URL(request.url).origin
     const resetUrl = `${origin}/reinitialiser-mot-de-passe?token=${token}`
-    await envoyerResetPasswordEmail(user.email, user.prenom, resetUrl)
+    // Un échec d'envoi est journalisé mais la réponse reste identique : sinon elle révélerait que le compte existe.
+    await envoyerResetPasswordEmail(user.email, user.prenom, resetUrl).catch((e) => console.error("Échec de l'email de réinitialisation :", e))
   }
 
   return NextResponse.json({ ok: true })

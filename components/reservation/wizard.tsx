@@ -272,7 +272,7 @@ export function ReservationWizard({
           </h2>
           <p className="lead" style={{ margin: '20px auto 0', maxWidth: 620 }}>
             Votre rendez-vous est confirmé, aucune validation supplémentaire n&apos;est nécessaire. Conservez votre code
-            de suivi pour le consulter, l&apos;annuler ou demander une modification à tout moment.
+            de suivi ou scannez le QR code pour le consulter, l&apos;annuler ou demander une modification à tout moment.
           </p>
         </div>
 
@@ -318,7 +318,17 @@ export function ReservationWizard({
               Code de suivi
             </div>
             <div className="code">{confirmation.codeSuivi}</div>
-            <div className="bars" aria-hidden="true" style={{ width: 180, marginTop: 26 }} />
+            {/* QR code : mène directement au suivi de ce rendez-vous (statut, annulation, modification) */}
+            <div className="qr-tile">
+              {/* eslint-disable-next-line @next/next/no-img-element -- image générée par /api/qr, déjà optimisée */}
+              <img
+                src={`/api/qr/${encodeURIComponent(confirmation.codeSuivi)}`}
+                width={168}
+                height={168}
+                alt={`QR code du rendez-vous ${confirmation.codeSuivi} : scannez-le pour suivre votre réservation`}
+              />
+            </div>
+            <p className="qr-hint">Scannez pour suivre votre rendez-vous</p>
           </div>
         </div>
 

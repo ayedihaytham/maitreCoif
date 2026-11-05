@@ -3,6 +3,8 @@ import { NextResponse } from 'next/server'
 import { alerterSalon } from '@/lib/alerte-salon'
 import { formaterDateLongue } from '@/lib/notifications'
 import { prisma } from '@/lib/prisma'
+import { inclurePrestations } from '@/lib/prestations'
+import { prevenirCoiffeur } from '@/lib/rdv-emails'
 import { checkRateLimit, clientIpFrom } from '@/lib/rate-limit'
 import { refuserSiRobot } from '@/lib/turnstile'
 import { demandeModificationSchema } from '@/lib/validators'
@@ -24,7 +26,7 @@ export async function POST(request: Request) {
 
   const rendezVous = await prisma.rendezVous.findFirst({
     where: { id, codeSuivi: codeSuivi.trim().toUpperCase() },
-    include: { coiffeur: { select: { prenom: true, nom: true } } },
+    include: { coiffeur: { select: { prenom: true, nom: true, email: true, actif: true } }, ...inclurePrestations },
   })
 
   if (!rendezVous) return NextResponse.json({ error: 'Rendez-vous introuvable' }, { status: 404 })
@@ -46,6 +48,9 @@ export async function POST(request: Request) {
     'Demande de modification de rendez-vous',
     `${rendezVous.clientNom} (${rendezVous.clientTelephone}) souhaite modifier son rendez-vous du ${formaterDateLongue(rendezVous.date.toISOString().slice(0, 10))} à ${rendezVous.heureDebut} avec ${rendezVous.coiffeur.prenom} ${rendezVous.coiffeur.nom}.\n\nMessage : ${message.trim()}\n\nÀ traiter depuis le planning (bouton Déplacer).`,
   )
+
+  // Le coiffeur choisi par le client est prévenu par email (en plus de l'alerte du salon).
+  await prevenirCoiffeur(rendezVous, 'modification', message.trim())
 
   return NextResponse.json({ statut: rendezVous.statut, demandeEnCours: true })
 }

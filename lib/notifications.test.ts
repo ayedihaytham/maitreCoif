@@ -48,3 +48,47 @@ describe('htmlEmail', () => {
     expect(htmlEmail('<script>alert(1)</script>')).not.toContain('<script>')
   })
 })
+
+import { envoyerConfirmationEmail, htmlRdv, texteRdv, type ContenuRdv } from './notifications'
+import { lienQr } from './liens'
+
+describe('email de rendez-vous', () => {
+  const contenu: ContenuRdv = {
+    apercu: 'Aperçu',
+    titre: 'Votre rendez-vous est confirmé',
+    intro: ['Bonjour Sami,'],
+    lignes: [['Prestation', 'Coupe + Barbe'], ['Coiffeur', 'ahmed kallel']],
+    codeSuivi: 'MC-ABC2345',
+    action: { libelle: 'Suivre mon rendez-vous', url: 'https://exemple.test/suivi?code=MC-ABC2345' },
+  }
+
+  it('contient le QR code, le code, le détail et le bouton de suivi', () => {
+    const html = htmlRdv(contenu)
+    expect(html).toContain(`src="${lienQr('MC-ABC2345')}"`)
+    expect(html).toContain('MC-ABC2345')
+    expect(html).toContain('Coupe + Barbe')
+    expect(html).toContain('href="https://exemple.test/suivi?code=MC-ABC2345"')
+    expect(html).toContain('Suivre mon rendez-vous')
+  })
+
+  it('sans code de suivi, pas de QR code', () => {
+    expect(htmlRdv({ ...contenu, codeSuivi: undefined })).not.toContain('/api/qr/')
+  })
+
+  it('échappe ce que le client a saisi', () => {
+    const html = htmlRdv({ ...contenu, lignes: [['Demande', '<img src=x onerror=alert(1)>']] })
+    expect(html).not.toContain('<img src=x')
+    expect(html).toContain('&lt;img')
+  })
+
+  it('a une version texte avec le lien', () => {
+    const texte = texteRdv(contenu)
+    expect(texte).toContain('https://exemple.test/suivi?code=MC-ABC2345')
+    expect(texte).toContain('MC-ABC2345')
+  })
+
+  it('part sans clé Resend en mode stub (journalisé, jamais d’exception)', async () => {
+    const r = await envoyerConfirmationEmail({ to: 'a@b.fr', clientNom: 'Sami', coiffeurNom: 'ahmed kallel', serviceNom: 'Coupe', date: '2099-01-05', heureDebut: '10:00', codeSuivi: 'MC-ABC2345' })
+    expect(r).toEqual({ sent: false, stub: true })
+  })
+})

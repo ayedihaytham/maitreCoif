@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server'
 
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-import { inclurePrestations, prestationsDuRendezVous } from '@/lib/prestations'
-import { envoyerAnnulationEmail } from '@/lib/notifications'
+import { inclurePrestations } from '@/lib/prestations'
+import { envoyerAnnulationEmail, envoyerConfirmationEmail, envoyerTermineEmail } from '@/lib/notifications'
+import { detailsEmailClient } from '@/lib/rdv-emails'
 import { rendezVousStatutSchema } from '@/lib/validators'
 
 const TRANSITIONS: Record<string, string[]> = {
@@ -43,17 +44,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const updated = await prisma.rendezVous.update({ where: { id }, data: { statut: parsed.data.statut } })
 
-  if (parsed.data.statut === 'ANNULE' && rendezVous.clientEmail) {
-    await envoyerAnnulationEmail({
-      to: rendezVous.clientEmail,
-      clientNom: rendezVous.clientNom,
-      coiffeurNom: `${rendezVous.coiffeur.prenom} ${rendezVous.coiffeur.nom}`,
-      serviceNom: prestationsDuRendezVous(rendezVous).nom,
-      date: rendezVous.date.toISOString().slice(0, 10),
-      heureDebut: rendezVous.heureDebut,
-      codeSuivi: rendezVous.codeSuivi,
-      parLeSalon: true,
-    }).catch((e) => console.error("Échec de l'email d'annulation :", e))
+  // Tout changement de statut décidé par le salon est notifié au client (s'il a laissé un email).
+  const details = detailsEmailClient(rendezVous)
+  if (details) {
+    const envoi =
+      parsed.data.statut === 'ANNULE'
+        ? envoyerAnnulationEmail({ ...details, parLeSalon: true })
+        : parsed.data.statut === 'CONFIRME'
+          ? envoyerConfirmationEmail(details)
+          : envoyerTermineEmail(details)
+    await envoi.catch((e) => console.error(`Échec de l'email de changement de statut (${parsed.data.statut}) :`, e))
   }
 
   return NextResponse.json(updated)
