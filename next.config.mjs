@@ -1,3 +1,5 @@
+const PRISMA_INUTILE = ['node_modules/.pnpm/@prisma+client*/node_modules/@prisma/client/runtime/*_bg.*']
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Les navigateurs réclament /favicon.ico : on les sert avec l'icône de l'application (évite un 404).
@@ -13,6 +15,16 @@ const nextConfig = {
       { source: '/ingest/array/:path*', destination: `${ressources}/array/:path*` },
       { source: '/ingest/:path*', destination: `${ingestion}/:path*` },
     ]
+  },
+  // Taille des fonctions serveur (Vercel « Functions Storage »). Chaque route embarquait ~58 Mo de modules
+  // WebAssembly de Prisma pour d'autres bases de données (MySQL, SQLite, SQL Server, CockroachDB...) et pour les
+  // environnements « edge » : inutiles ici, car le site utilise PostgreSQL avec le moteur natif de Prisma.
+  outputFileTracingExcludes: {
+    '/**': PRISMA_INUTILE,
+    '/proxy': PRISMA_INUTILE,
+    '/middleware': PRISMA_INUTILE,
+    middleware: PRISMA_INUTILE,
+    proxy: PRISMA_INUTILE,
   },
   // PostHog utilise des adresses terminées par « / » : Next.js ne doit pas les rediriger.
   skipTrailingSlashRedirect: true,
