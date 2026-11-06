@@ -105,6 +105,13 @@ export function SiteNav() {
   // rester identiques, sinon React reconstruit toute la page (erreur d'hydratation #418).
   const [monte, setMonte] = useState(false)
   useEffect(() => setMonte(true), [])
+  // Déjà sur l'accueil, un lien vers « / » ne change pas de page : Next.js ne fait alors rien. On remonte donc en haut.
+  const versLeHaut = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (href !== '/' || pathname !== '/' || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
+    e.preventDefault()
+    setOuvert(false)
+    window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
+  }
   const actif = (href: string) => monte && (href === '/' ? pathname === '/' : pathname.startsWith(href))
   const compteHref = estEquipe ? salonUrl('/planning') : '/compte'
   const compteLabel = estEquipe ? 'Back-office' : 'Mon compte'
@@ -114,14 +121,14 @@ export function SiteNav() {
     <>
       <header ref={entete} className={cn('nav', (defile || ouvert) && 'solid')}>
         <div className="nav-left">
-          <Link className="logo" href="/" aria-label="Maitre Coif, accueil">
+          <Link className="logo" href="/" aria-label="Maitre Coif, accueil" onClick={(e) => versLeHaut(e, "/")}>
             <ThemeLogo priority />
           </Link>
         </div>
 
         <nav className="nav-links" aria-label="Navigation principale">
           {NAV_LINKS.map((l, i) => (
-            <Link key={l.href} href={l.href} className={cn('nl', actif(l.href) && 'on')} aria-current={actif(l.href) ? 'page' : undefined}>
+            <Link key={l.href} href={l.href} className={cn('nl', actif(l.href) && 'on')} aria-current={actif(l.href) ? 'page' : undefined} onClick={(e) => versLeHaut(e, l.href)}>
               <sup aria-hidden="true">{String(i + 1).padStart(2, '0')}</sup>
               {l.label}
             </Link>
@@ -168,6 +175,7 @@ export function SiteNav() {
             key={l.href}
             href={l.href}
             className={cn('big', actif(l.href) && 'on')}
+            onClick={(e) => versLeHaut(e, l.href)}
             style={{ '--i': i } as CSSProperties}
             tabIndex={ouvert ? 0 : -1}
           >
