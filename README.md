@@ -106,6 +106,47 @@ Aucun service payant n'est requis.
 - **WhatsApp et SMS (Twilio)** : le code existe mais reste désactivé tant que les clés sont vides (WhatsApp Business
   est payant). Il n'est pas nécessaire au fonctionnement.
 
+## Analytique (PostHog)
+
+Le site public enregistre les visites et les interactions (pages vues, clics sur « Réserver », étapes du parcours de
+réservation, confirmations) avec [PostHog](https://posthog.com) ; la page **Analytique** du back-office (réservée au
+gérant) affiche les chiffres.
+
+**Ce qui est suivi, et ce qui ne l'est pas**
+- Sans cookie ni bannière de consentement (`cookieless_mode`) : pas d'identifiant stocké dans le navigateur.
+- Envoyé : pages vues, clics sur des boutons précis (repère `data-ph="…"` dans le code), étapes de la réservation,
+  réservation confirmée, annulation / demande de modification depuis le suivi, ouverture d'une photo de la galerie.
+- Jamais envoyé : noms, téléphones, emails, notes, code de suivi (les adresses sont nettoyées avant l'envoi, seuls
+  les paramètres `utm_*` sont gardés). Pas de capture automatique des clics, pas d'enregistrement d'écran.
+- Le back-office et l'espace équipe ne sont pas suivis ; les visites d'un membre de l'équipe connecté sur le site public
+  non plus (après sa première page vue).
+- Les envois passent par l'adresse `/ingest` du site (pas directement par posthog.com) : les bloqueurs de publicité
+  les laissent passer.
+
+**Configuration (une fois)**
+1. Créez un compte sur posthog.com, région **EU Cloud** (données en Europe), puis un projet « Maitre Coif ».
+2. *Project settings → General* : notez la **Project API key** (`phc_…`) et le **Project ID** (numéro). Réglez le fuseau
+   horaire du projet sur `Africa/Tunis` (sinon les jours sont découpés à l'heure UTC).
+3. *Project settings* → rubrique **Cookieless server hash mode** (ou « Web analytics → Cookieless ») : **activez-le**.
+   Sans cela, PostHog ignore tous les événements envoyés sans cookie.
+4. *Account settings → Personal API keys → Create personal API key* : étendue **Query → Read** (lecture seule, rien
+   d'autre), puis copiez la clé (`phx_…`). Elle ne s'affiche qu'une fois.
+5. Dans Vercel (*Settings → Environment Variables*, environnement **Production** seulement, pour ne pas compter vos essais) :
+   - `NEXT_PUBLIC_POSTHOG_KEY` = la Project API key (publique par nature : type « Config » dans Vercel) ;
+   - `POSTHOG_PERSONAL_API_KEY` = la clé personnelle (type **Secret**, ne jamais la publier) ;
+   - `POSTHOG_PROJECT_ID` = le numéro du projet.
+   Les adresses par défaut sont celles de la région UE ; pour la région US, voir `.env.example`.
+6. Redéployez. Visitez le site, puis ouvrez *Activity* dans PostHog : vos pages vues apparaissent en quelques secondes.
+   Le back-office → Analytique affiche les chiffres (mis à jour toutes les 5 minutes).
+
+**En cas de problème**
+- Rien dans PostHog : vérifiez l'étape 3, et que `NEXT_PUBLIC_POSTHOG_KEY` est bien en *Production* (un redéploiement est
+  nécessaire : la clé est intégrée au site lors du build). Ajoutez `NEXT_PUBLIC_POSTHOG_DEBUG=1` pour un journal détaillé
+  dans la console du navigateur.
+- « clé refusée » dans la page Analytique : la clé personnelle n'a pas la permission *Query read*, ou le numéro de projet est faux.
+- Navigateurs de test automatisés (Playwright, bots) : ignorés par PostHog, c'est normal.
+- Les visiteurs sont comptés **par jour** (le mode sans cookie ne reconnaît pas une même personne d'un jour à l'autre).
+
 ## Anti-bot (Cloudflare Turnstile)
 
 La réservation en ligne est protégée par trois barrières : un champ piège invisible (honeypot), une limite de tentatives par adresse IP

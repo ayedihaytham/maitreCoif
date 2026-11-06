@@ -34,6 +34,7 @@ export function ThemeToggle({ className, libelle }: { className?: string; libell
       type="button"
       className={`theme-toggle${className ? ` ${className}` : ''}`}
       onClick={basculer}
+      data-ph="theme"
       aria-label={theme === 'light' ? 'Passer au thème sombre' : 'Passer au thème clair'}
       title={theme === 'light' ? 'Thème sombre' : 'Thème clair'}
     >

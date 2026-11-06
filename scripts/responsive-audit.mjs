@@ -12,7 +12,7 @@ const SORTIE = process.argv[3]
 const LARGEURS = [320, 375, 768, 1024, 1440]
 
 const PUBLIQUES = ['/', '/services', '/equipe', '/galerie', '/suivi', '/reservation', '/connexion', '/inscription', '/mot-de-passe-oublie']
-const ADMIN = ['plan', 'stats', 'svc', 'eq', 'fer', 'gal', 'dlg'].map((v) => `/dev-preview?v=${v}`)
+const ADMIN = ['plan', 'stats', 'svc', 'eq', 'fer', 'gal', 'ana', 'ana0', 'dlg'].map((v) => `/dev-preview?v=${v}`)
 
 const FAUX = {
   rdv: (id, c, nom, d, f, statut) => ({ id, coiffeurId: c, clientNom: nom, clientTelephone: '20111222', heureDebut: d, heureFin: f, statut, notes: null, service: { id: 's', nom: 'Coupe', duree: 30, prix: 28 }, lignes: [], demandesModification: [] }),

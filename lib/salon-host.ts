@@ -13,7 +13,7 @@
  */
 export const SALON_HOST = (process.env.NEXT_PUBLIC_SALON_HOST ?? '').trim().toLowerCase()
 
-const PAGES_SALON = ['planning', 'equipe', 'fermetures', 'services', 'galerie', 'statistiques']
+const PAGES_SALON = ['planning', 'equipe', 'fermetures', 'services', 'galerie', 'statistiques', 'analytique']
 
 /** Adresse visible du sous-domaine -> route interne, ou null si elle n'existe pas. */
 export function versRouteInterne(pathname: string): string | null {

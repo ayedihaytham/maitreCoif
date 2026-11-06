@@ -3,6 +3,7 @@ import '../cinema-home.css'
 import '../cinema-chrome.css'
 import '../cinema-fixes.css'
 
+import { PostHogProvider } from '@/components/analytics/posthog-provider'
 import { Header } from '@/components/site/header'
 import { Footer } from '@/components/site/footer'
 import { SiteEffects } from '@/components/site/site-effects'
@@ -20,6 +21,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       <div className="flex-1">{children}</div>
       <Footer />
       <SiteEffects />
+      <PostHogProvider />
     </div>
   )
 }

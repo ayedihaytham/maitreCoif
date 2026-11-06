@@ -88,7 +88,7 @@ export default async function EquipePage() {
                     </div>
                   )}
                   {m.bio && <p>{m.bio}</p>}
-                  <Link className="tlink" href={`/reservation?coiffeurId=${m.id}`}>
+                  <Link className="tlink" href={`/reservation?coiffeurId=${m.id}`} data-ph="reserver-coiffeur">
                     Voir ses disponibilités <ArrowRight className="size-3.5" aria-hidden="true" />
                   </Link>
                 </Reveal>

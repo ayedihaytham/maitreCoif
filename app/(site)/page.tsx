@@ -123,7 +123,7 @@ export default async function AccueilPage() {
             détail.
           </p>
           <div className="h-cta">
-            <Link className="btn btn-gold" href="/reservation">
+            <Link className="btn btn-gold" href="/reservation" data-ph="reserver-accueil">
               Réserver un rendez-vous <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
             <Link className="btn btn-ghost" href="/equipe">
@@ -165,7 +165,7 @@ export default async function AccueilPage() {
                   Cinq gestes, <em>une signature.</em>
                 </h2>
               </div>
-              <Link className="tlink" href="/services">
+              <Link className="tlink" href="/services" data-ph="tous-les-services">
                 Tous nos services <ArrowRight className="size-3.5" aria-hidden="true" />
               </Link>
             </div>
@@ -187,7 +187,7 @@ export default async function AccueilPage() {
                       </span>
                       <b>{formatPrix(Number(s.prix))}</b>
                     </div>
-                    <Link className="tlink" href={`/reservation?serviceId=${s.id}`} style={{ marginTop: 18 }}>
+                    <Link className="tlink" href={`/reservation?serviceId=${s.id}`} style={{ marginTop: 18 }} data-ph="reserver-prestation">
                       Réserver <ArrowRight className="size-3.5" aria-hidden="true" />
                     </Link>
                   </div>
@@ -264,7 +264,7 @@ export default async function AccueilPage() {
                   Le salon <em>en images.</em>
                 </h2>
               </div>
-              <Link className="tlink" href="/galerie">
+              <Link className="tlink" href="/galerie" data-ph="toute-la-galerie">
                 Toute la galerie <ArrowRight className="size-3.5" aria-hidden="true" />
               </Link>
             </div>
@@ -295,7 +295,7 @@ export default async function AccueilPage() {
                 <div>
                   <h3>Toute la galerie</h3>
                   <p>Retrouvez toutes les photos du salon et de nos réalisations.</p>
-                  <Link className="btn btn-gold" href="/galerie" style={{ marginTop: 22 }}>
+                  <Link className="btn btn-gold" href="/galerie" style={{ marginTop: 22 }} data-ph="toute-la-galerie">
                     Voir toute la galerie <ArrowRight className="size-4" aria-hidden="true" />
                   </Link>
                 </div>
@@ -319,7 +319,7 @@ export default async function AccueilPage() {
                   Rencontrez <em>nos coiffeurs.</em>
                 </h2>
               </div>
-              <Link className="tlink" href="/equipe">
+              <Link className="tlink" href="/equipe" data-ph="toute-l-equipe">
                 Toute l&apos;équipe <ArrowRight className="size-3.5" aria-hidden="true" />
               </Link>
             </Reveal>
@@ -344,7 +344,7 @@ export default async function AccueilPage() {
                     </div>
                   )}
                   {c.bio && <p>{c.bio}</p>}
-                  <Link className="tlink" href={`/reservation?coiffeurId=${c.id}`}>
+                  <Link className="tlink" href={`/reservation?coiffeurId=${c.id}`} data-ph="reserver-coiffeur">
                     Réserver avec {c.prenom} <ArrowRight className="size-3.5" aria-hidden="true" />
                   </Link>
                 </Reveal>
@@ -395,7 +395,7 @@ export default async function AccueilPage() {
             Prêt à révéler <em>votre style ?</em>
           </Reveal>
           <Reveal delay={2} className="cta-final">
-            <Link className="btn btn-gold" href="/reservation" style={{ height: 62, padding: '0 44px', fontSize: 13 }}>
+            <Link className="btn btn-gold" href="/reservation" style={{ height: 62, padding: '0 44px', fontSize: 13 }} data-ph="reserver-fin">
               Réserver mon rendez-vous <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
           </Reveal>

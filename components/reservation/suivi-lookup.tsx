@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Check, Loader2, PencilLine, Search, X } from 'lucide-react'
 
 import { MESSAGE_ANTI_ROBOT, useAntiRobot } from '@/components/reservation/turnstile'
+import { suivre } from '@/lib/analytics'
 import { etatRendezVous } from '@/lib/compte-a-rebours'
 import { cn, formatPrix } from '@/lib/utils'
 
@@ -167,6 +168,7 @@ export function SuiviLookup({ initialCode = '' }: { initialCode?: string }) {
         return
       }
       setResults((prev) => prev?.map((r) => (r.id === rdv.id ? { ...r, statut: 'ANNULE' } : r)) ?? null)
+      suivre('suivi_annulation')
       setConfirmCancelId(null)
     } catch {
       setError('Impossible de contacter le serveur.')
@@ -201,6 +203,7 @@ export function SuiviLookup({ initialCode = '' }: { initialCode?: string }) {
       setResults((prev) => prev?.map((r) => (r.id === rdv.id ? { ...r, demandeEnCours: modifyMessage.trim() } : r)) ?? null)
       setModifyingId(null)
       setModifyMessage('')
+      suivre('suivi_modification_demandee')
     } catch {
       setError('Impossible de contacter le serveur.')
     } finally {

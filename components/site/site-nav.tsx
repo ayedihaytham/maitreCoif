@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation'
 import { LayoutDashboard, LogOut, Menu, User, X } from 'lucide-react'
 
 import { ThemeLogo } from '@/components/theme-logo'
+import { signalerSession } from '@/lib/analytics'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { salonUrl } from '@/lib/salon-host'
 import { cn } from '@/lib/utils'
@@ -38,7 +39,12 @@ export function SiteNav() {
     const lire = () =>
       fetch('/api/session', { cache: 'no-store' })
         .then((r) => (r.ok ? r.json() : null))
-        .then((d) => !annule && setUser(d?.user ?? null))
+        .then((d) => {
+          if (annule) return
+          setUser(d?.user ?? null)
+          // Les visites du personnel ne comptent pas dans l'audience.
+          signalerSession(d?.user?.role)
+        })
         .catch(() => {})
     lire()
     const surVisible = () => document.visibilityState === 'visible' && lire()
@@ -137,7 +143,7 @@ export function SiteNav() {
             </>
           )}
           <ThemeToggle />
-          <Link className="btn btn-gold btn-sm cta btn-ticket" href="/reservation" style={{ marginLeft: 10 }}>
+          <Link className="btn btn-gold btn-sm cta btn-ticket" href="/reservation" style={{ marginLeft: 10 }} data-ph="reserver-barre">
             Réserver
           </Link>
           <button
@@ -172,6 +178,7 @@ export function SiteNav() {
         <Link
           className="btn btn-gold btn-ticket"
           href="/reservation"
+          data-ph="reserver-menu"
           style={{ marginTop: 30, height: 60, '--i': NAV_LINKS.length } as CSSProperties}
           tabIndex={ouvert ? 0 : -1}
         >

@@ -6,6 +6,7 @@ import { Check, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 
 import { PortraitRond } from '@/components/site/portrait'
 import { TurnstileWidget } from '@/components/reservation/turnstile'
+import { suivre } from '@/lib/analytics'
 import { cn, formatPrix } from '@/lib/utils'
 import type { Portrait } from '@/lib/portraits'
 
@@ -36,6 +37,8 @@ type EtatJour = 'libre' | 'complet' | 'ferme'
 
 const MAX_PRESTATIONS = 5 // aligné sur lib/prestations.ts
 const STEPS = ['Coiffeur', 'Prestations', 'Créneau', 'Coordonnées'] as const
+// Noms des étapes envoyés au suivi d'audience (entonnoir de réservation du back-office).
+const ETAPES_SUIVI = ['coiffeur', 'prestations', 'creneau', 'coordonnees'] as const
 const JOURS_PROPOSES = 21
 const JOURS_PAR_PAGE = 7
 const JOURS_COURTS = ['DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN', 'SAM']
@@ -141,6 +144,11 @@ export function ReservationWizard({
   )
 
   // État (libre / complet / fermé) des prochains jours pour ce coiffeur et ce service.
+  // Entonnoir : une étape est comptée quand le visiteur l'atteint (l'étape « coiffeur » est la page elle-même).
+  useEffect(() => {
+    if (step > 0) suivre('reservation_etape', { etape: ETAPES_SUIVI[step] })
+  }, [step])
+
   useEffect(() => {
     if (!coiffeurId || !serviceId) {
       setEtats({})
@@ -253,6 +261,7 @@ export function ReservationWizard({
         return
       }
       setConfirmation({ codeSuivi: data.codeSuivi })
+      suivre('reservation_confirmee', { prestations: serviceIds.length })
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch {
       setSubmitError('Impossible de contacter le serveur, merci de réessayer.')

@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
 
+import { suivre } from '@/lib/analytics'
+
 export interface PhotoGalerie {
   id: string
   legende: string | null
@@ -53,6 +55,7 @@ export function GalerieGrille({ photos }: { photos: PhotoGalerie[] }) {
               onClick={(e) => {
                 declencheur.current = e.currentTarget
                 setOuverte(i)
+                suivre('galerie_photo_ouverte')
               }}
             >
               <Image src={src(p.id)} alt={p.legende || `Photo ${i + 1} du salon Maitre Coif`} fill sizes="(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 33vw" />

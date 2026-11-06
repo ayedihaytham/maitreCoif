@@ -285,3 +285,32 @@
   .ad .ad-actions .ad-seg button{flex:1;justify-content:center;padding:0 8px}
   .ad .ad-actions .ad-btn.gold{width:100%}
 }
+
+/* ───────────────────────── Analytique (audience du site) ───────────────────────── */
+.ad .an-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+@media (max-width:1100px){.ad .an-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.ad .an-kpis{grid-template-columns:minmax(0,1fr)}}
+.ad .an-kpi{padding:22px 22px 20px;display:flex;flex-direction:column;gap:12px}
+.ad .an-kpi .v{font:300 clamp(36px,3.6vw,54px)/1 var(--a-serif);font-variant-numeric:lining-nums tabular-nums;color:var(--a-ivory)}
+.ad .an-kpi .st-note{margin:0}
+.ad .an-box{padding:22px 24px}
+.ad .an-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:20px}
+@media (max-width:900px){.ad .an-cols{grid-template-columns:minmax(0,1fr)}}
+.ad .an-chart{position:relative;padding-left:44px}
+.ad .an-chart svg{display:block;width:100%;height:200px;overflow:visible}
+.ad .an-chart .g{stroke:var(--a-line);stroke-width:1}
+.ad .an-chart .aire{fill:rgba(212,175,55,.14);stroke:none}
+.ad .an-chart .ligne{fill:none;stroke:var(--a-gold-ink);stroke-width:2;stroke-linejoin:round}
+.ad .an-axis-y{position:absolute;left:0;top:0;bottom:24px;width:38px;display:flex;flex-direction:column;justify-content:space-between;font-size:11px;color:var(--a-muted);font-variant-numeric:tabular-nums;text-align:right}
+.ad .an-axis-x{display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--a-muted)}
+.ad .an-rank,.ad .an-funnel{list-style:none;margin:0;padding:0;display:grid;gap:16px}
+.ad .an-rank .top,.ad .an-funnel .top{display:flex;justify-content:space-between;align-items:baseline;gap:16px}
+.ad .an-rank .nm,.ad .an-funnel .nm{min-width:0;font-size:13.5px;color:var(--a-ivory);overflow-wrap:anywhere}
+.ad .an-rank .n,.ad .an-funnel .n{flex:none;font:600 14px/1 var(--a-sans);color:var(--a-gold-ink);font-variant-numeric:tabular-nums}
+.ad .an-funnel .n small{margin-left:10px;font:400 12px/1 var(--a-sans);color:var(--a-muted)}
+.ad .an-rank .track,.ad .an-funnel .track{margin-top:8px;height:8px;background:var(--c-0b0a09);border:1px solid var(--a-line);border-radius:2px;overflow:hidden}
+.ad .an-rank .track i,.ad .an-funnel .track i{display:block;height:100%;background:var(--a-gold)}
+.ad .an-funnel .perte{margin:6px 0 0;font-size:11.5px;color:var(--a-muted)}
+.ad .an-errs{margin:10px 0 0;padding-left:18px;font-size:12px;line-height:1.6;color:var(--a-muted);overflow-wrap:anywhere}
+.ad .an-vars{margin:0 0 14px;padding-left:18px;font-size:13.5px;line-height:1.9;color:var(--a-soft)}
+.ad .an-vars code,.ad .an-box .st-note code{padding:2px 6px;background:var(--a-panel2);border:1px solid var(--a-line);border-radius:3px;font-size:12px}

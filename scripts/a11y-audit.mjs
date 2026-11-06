@@ -81,7 +81,7 @@ async function main() {
     const previewPage = await previewContext.newPage()
     console.log(`
 === Back-office, données fictives (${BASE_URL}/dev-preview) ===`)
-    for (const v of ['plan', 'stats', 'svc', 'dlg', 'eq', 'fer', 'gal']) {
+    for (const v of ['plan', 'stats', 'svc', 'dlg', 'eq', 'fer', 'gal', 'ana', 'ana0']) {
       const violations = await auditPage(previewPage, `${BASE_URL}/dev-preview?v=${v}`, 2500)
       printViolations(`/dev-preview?v=${v}`, violations)
       totalViolations += violations.length

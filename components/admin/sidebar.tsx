@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useClerk } from '@clerk/nextjs'
-import { ArrowUpRight, BarChart3, CalendarOff, CalendarRange, Images, LogOut, Scissors, Users } from 'lucide-react'
+import { Activity, ArrowUpRight, BarChart3, CalendarOff, CalendarRange, Images, LogOut, Scissors, Users } from 'lucide-react'
 
 import { ThemeLogo } from '@/components/theme-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -24,7 +24,13 @@ const SECTIONS = [
       { href: '/fermetures', label: 'Fermetures', icon: CalendarOff, adminOnly: true },
     ],
   },
-  { titre: 'Analyse', liens: [{ href: '/statistiques', label: 'Statistiques', icon: BarChart3, adminOnly: true }] },
+  {
+    titre: 'Analyse',
+    liens: [
+      { href: '/statistiques', label: 'Statistiques', icon: BarChart3, adminOnly: true },
+      { href: '/analytique', label: 'Analytique', icon: Activity, adminOnly: true },
+    ],
+  },
 ]
 
 const FUSEAU = 'Africa/Tunis'

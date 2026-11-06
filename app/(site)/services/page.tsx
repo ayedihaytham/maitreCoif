@@ -60,7 +60,7 @@ export default async function ServicesPage() {
                           {s.duree} min
                         </div>
                         <div className="p">{formatPrix(Number(s.prix))}</div>
-                        <Link className="btn btn-ghost btn-sm" href={`/reservation?serviceId=${s.id}`}>
+                        <Link className="btn btn-ghost btn-sm" href={`/reservation?serviceId=${s.id}`} data-ph="reserver-prestation">
                           Réserver
                         </Link>
                       </Reveal>

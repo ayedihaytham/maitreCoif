@@ -5,13 +5,13 @@ import { ancienneVersSalon, estHoteSalon, salonUrl, versRouteInterne } from '@/l
 import { clerkConfigured, staffDepuisClerk, type StaffUser } from '@/lib/staff'
 
 // Routes internes réservées à l'administrateur (les coiffeurs n'ont que le planning).
-const ADMIN_ONLY = ['/admin/equipe', '/admin/services', '/admin/statistiques', '/admin/galerie', '/admin/fermetures']
+const ADMIN_ONLY = ['/admin/equipe', '/admin/services', '/admin/statistiques', '/admin/galerie', '/admin/fermetures', '/admin/analytique']
 
 // Clerk doit s'exécuter sur toutes les routes où `auth()` est appelé (pages,
 // API, en-tête du site) ; seuls les fichiers statiques sont exclus.
 export const config = {
   matcher: [
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    '/((?!_next|ingest|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     '/(api|trpc)(.*)',
   ],
 }
