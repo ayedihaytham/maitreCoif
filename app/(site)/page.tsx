@@ -4,11 +4,13 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, Clock } from 'lucide-react'
 
+import { BoutiqueAccueil } from '@/components/boutique/accueil'
 import { Cinema } from '@/components/site/cinema'
 import { Intro } from '@/components/site/intro'
 import { PortraitRond } from '@/components/site/portrait'
 import { Reveal } from '@/components/site/reveal'
 import { ReviewCarousel, type AvisAffiche } from '@/components/site/review-carousel'
+import { chargerCatalogue } from '@/lib/boutique'
 import { attribuerPortraits } from '@/lib/portraits'
 import { libelleJour, prochaineDisponibilite } from '@/lib/prochaine-disponibilite'
 import { prisma } from '@/lib/prisma'
@@ -26,7 +28,7 @@ export const metadata: Metadata = {
 export const revalidate = 60
 
 async function getAccueilData() {
-  const [tousLesServices, coiffeurs, avis, statsAvis, photosSalon, prochaine] = await Promise.all([
+  const [tousLesServices, coiffeurs, avis, statsAvis, photosSalon, prochaine, boutique] = await Promise.all([
     prisma.service.findMany({ where: { actif: true }, orderBy: { prix: 'asc' } }),
     prisma.user.findMany({
       where: { role: { in: ['COIFFEUR', 'ADMIN'] }, actif: true },
@@ -50,13 +52,19 @@ async function getAccueilData() {
     prisma.avis.aggregate({ _avg: { note: true }, _count: { _all: true } }),
     prisma.photoSalon.findMany({ orderBy: [{ ordre: 'asc' }, { dateCreation: 'asc' }], take: 5, select: { id: true, legende: true } }),
     prochaineDisponibilite().catch(() => null),
+    // La boutique ne doit jamais empêcher l'accueil de s'afficher.
+    chargerCatalogue().catch(() => ({ produits: [], packs: [] })),
   ])
 
-  return { tousLesServices, coiffeurs, avis, statsAvis, photosSalon, prochaine }
+  return { tousLesServices, coiffeurs, avis, statsAvis, photosSalon, prochaine, boutique }
 }
 
 export default async function AccueilPage() {
-  const { tousLesServices, coiffeurs, avis, statsAvis, photosSalon, prochaine } = await getAccueilData()
+  const { tousLesServices, coiffeurs, avis, statsAvis, photosSalon, prochaine, boutique } = await getAccueilData()
+
+  // Quelques produits disponibles d'abord, puis les packs du moment.
+  const produitsVedette = [...boutique.produits].sort((a, b) => Number(b.stock > 0) - Number(a.stock > 0)).slice(0, 4)
+  const packsVedette = boutique.packs.slice(0, 3)
 
   const services = tousLesServices.slice(0, 5)
   const equipe = attribuerPortraits(coiffeurs)
@@ -304,6 +312,9 @@ export default async function AccueilPage() {
           </div>
         </section>
       )}
+
+      {/* La boutique : produits et packs */}
+      <BoutiqueAccueil produits={produitsVedette} packs={packsVedette} />
 
       {/* L'équipe */}
       {equipe.length > 0 && (

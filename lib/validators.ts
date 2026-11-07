@@ -138,3 +138,86 @@ export const fermetureSchema = z
     message: 'La date de fin doit être égale ou postérieure à la date de début',
     path: ['dateFin'],
   })
+
+// ───────────────────────── Boutique ─────────────────────────
+
+export const produitSchema = z.object({
+  nom: z.string().trim().min(2, 'Nom requis').max(100),
+  description: z.string().max(500).optional().or(z.literal('')),
+  prix: z.number().positive('Le prix doit être supérieur à 0').max(100000),
+  categorie: z.string().max(50).optional().or(z.literal('')),
+  stock: z.number().int('Le stock doit être un nombre entier').min(0, 'Le stock ne peut pas être négatif').max(100000),
+  actif: z.boolean().optional(),
+  // data URI redimensionnée côté client ; null = retirer la photo, absent = ne pas y toucher
+  image: z.string().max(3_000_000).nullable().optional(),
+})
+
+const jourFacultatif = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date invalide').optional().or(z.literal('')).nullable()
+
+export const packSchema = z
+  .object({
+    nom: z.string().trim().min(2, 'Nom requis').max(100),
+    description: z.string().max(500).optional().or(z.literal('')),
+    remiseType: z.enum(['POURCENTAGE', 'PRIX_FIXE']),
+    remiseValeur: z.number().positive('La remise doit être supérieure à 0').max(100000),
+    debut: jourFacultatif,
+    fin: jourFacultatif,
+    actif: z.boolean().optional(),
+    lignes: z
+      .array(
+        z.object({
+          type: z.enum(['produit', 'service']),
+          id: z.string().uuid(),
+          quantite: z.number().int().min(1).max(20),
+        }),
+      )
+      .min(1, 'Choisissez au moins un élément')
+      .max(20, '20 éléments au maximum'),
+  })
+  .refine((p) => p.remiseType !== 'POURCENTAGE' || p.remiseValeur < 100, {
+    message: 'La remise doit être inférieure à 100 %',
+    path: ['remiseValeur'],
+  })
+  .refine((p) => !p.debut || !p.fin || p.fin >= p.debut, {
+    message: 'La date de fin doit être égale ou postérieure à la date de début',
+    path: ['fin'],
+  })
+
+const ligneDemandeeSchema = z.object({
+  type: z.enum(['produit', 'pack']),
+  id: z.string().uuid(),
+  quantite: z.number().int().min(1).max(10),
+})
+
+export const panierSchema = z.object({
+  lignes: z.array(ligneDemandeeSchema).max(30),
+})
+
+export const commandeSchema = z.object({
+  clientNom: z.string().trim().min(2, 'Nom requis').max(100),
+  clientTelephone: z
+    .string()
+    .min(6, 'Numéro de téléphone invalide')
+    .max(20)
+    .regex(/^[0-9+().\s-]+$/, 'Numéro de téléphone invalide'),
+  clientEmail: z.string().trim().email('Email invalide'),
+  retrait: z.enum(['SALON', 'RDV']),
+  jourSouhaite: z.string().max(100).optional().or(z.literal('')),
+  notes: z.string().max(300).optional().or(z.literal('')),
+  lignes: z.array(ligneDemandeeSchema).min(1, 'Votre panier est vide').max(30),
+  // Créneau de la prestation d'un pack (obligatoire quand le panier en contient une, vérifié par le serveur)
+  rendezVous: z
+    .object({
+      coiffeurId: z.string().uuid(),
+      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date invalide'),
+      heureDebut: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Heure invalide'),
+    })
+    .optional(),
+  // Honeypot anti-bot : un humain ne le remplit jamais ; la route répond alors par un faux succès.
+  website: z.string().max(500).optional(),
+  turnstileToken: z.string().max(2048).optional().or(z.literal('')),
+})
+
+export const statutCommandeSchema = z.object({
+  statut: z.enum(['PRETE', 'RETIREE', 'ANNULEE']),
+})

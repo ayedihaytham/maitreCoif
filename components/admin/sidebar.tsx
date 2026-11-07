@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useClerk } from '@clerk/nextjs'
-import { Activity, ArrowUpRight, BarChart3, CalendarOff, CalendarRange, Images, LogOut, Scissors, Users } from 'lucide-react'
+import { Activity, ArrowUpRight, BarChart3, CalendarOff, CalendarRange, Gift, Images, LogOut, Package, Scissors, ShoppingBag, Users } from 'lucide-react'
 
 import { ThemeLogo } from '@/components/theme-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -22,6 +22,14 @@ const SECTIONS = [
       { href: '/services', label: 'Services', icon: Scissors, adminOnly: true },
       { href: '/galerie', label: 'Galerie', icon: Images, adminOnly: true },
       { href: '/fermetures', label: 'Fermetures', icon: CalendarOff, adminOnly: true },
+    ],
+  },
+  {
+    titre: 'Boutique',
+    liens: [
+      { href: '/produits', label: 'Produits', icon: Package, adminOnly: true },
+      { href: '/packs', label: 'Packs', icon: Gift, adminOnly: true },
+      { href: '/commandes', label: 'Réservations produits', icon: ShoppingBag, adminOnly: false },
     ],
   },
   {
@@ -94,6 +102,8 @@ interface Props {
   prochain?: ProchainRdv | null
   /** Nombre de rendez-vous du jour (pastille sur « Planning »). */
   aujourdhui?: number
+  /** Réservations de produits à préparer (pastille sur « Réservations produits »). */
+  aPreparer?: number
   /** Fournie par le conteneur connecté à Clerk ; absente = bouton de déconnexion masqué. */
   onSignOut?: () => void
 }
@@ -107,7 +117,7 @@ const initiales = (nom: string) =>
     .join('') || 'É'
 
 // Présentation seule (aucune dépendance à Clerk) : testable et prévisualisable sans compte.
-export function AdminSidebar({ role, nom, prochain = null, aujourdhui = 0, onSignOut }: Props) {
+export function AdminSidebar({ role, nom, prochain = null, aujourdhui = 0, aPreparer = 0, onSignOut }: Props) {
   const pathname = usePathname()
   const isAdmin = role === 'ADMIN'
 
@@ -141,6 +151,12 @@ export function AdminSidebar({ role, nom, prochain = null, aujourdhui = 0, onSig
                       <span className="n">
                         <span aria-hidden="true">{aujourdhui}</span>
                         <span className="sr-only">{aujourdhui} rendez-vous aujourd&apos;hui</span>
+                      </span>
+                    )}
+                    {link.href === '/commandes' && aPreparer > 0 && (
+                      <span className="n">
+                        <span aria-hidden="true">{aPreparer}</span>
+                        <span className="sr-only">{aPreparer} réservation{aPreparer > 1 ? 's' : ''} de produits à préparer</span>
                       </span>
                     )}
                   </Link>

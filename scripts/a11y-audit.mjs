@@ -13,11 +13,11 @@ import AxeBuilder from '@axe-core/playwright'
 
 const BASE_URL = process.argv[2] || 'http://localhost:3001'
 
-const PUBLIC_PAGES = ['/', '/equipe', '/services', '/reservation', '/suivi', '/connexion', '/inscription', '/mot-de-passe-oublie']
+const PUBLIC_PAGES = ['/', '/equipe', '/services', '/boutique', '/boutique/panier', '/reservation', '/suivi', '/connexion', '/inscription', '/mot-de-passe-oublie']
 
 const ADMIN_STORAGE_STATE = process.env.A11Y_STORAGE_STATE
 const SALON_URL = process.env.A11Y_SALON_URL || 'http://salon.localhost:3001'
-const ADMIN_PAGES = ['/planning', '/equipe', '/services', '/galerie', '/fermetures', '/statistiques']
+const ADMIN_PAGES = ['/planning', '/equipe', '/services', '/galerie', '/produits', '/packs', '/commandes', '/fermetures', '/statistiques']
 
 async function auditPage(page, url, attente = 0) {
   await page.goto(url, { waitUntil: attente ? 'load' : 'networkidle' })
@@ -81,7 +81,7 @@ async function main() {
     const previewPage = await previewContext.newPage()
     console.log(`
 === Back-office, données fictives (${BASE_URL}/dev-preview) ===`)
-    for (const v of ['plan', 'stats', 'svc', 'dlg', 'eq', 'fer', 'gal', 'ana', 'ana0']) {
+    for (const v of ['plan', 'stats', 'svc', 'dlg', 'eq', 'fer', 'gal', 'ana', 'ana0', 'prod', 'pack', 'cmd']) {
       const violations = await auditPage(previewPage, `${BASE_URL}/dev-preview?v=${v}`, 2500)
       printViolations(`/dev-preview?v=${v}`, violations)
       totalViolations += violations.length

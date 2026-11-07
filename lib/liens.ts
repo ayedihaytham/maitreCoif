@@ -9,9 +9,19 @@ export function lienSuivi(codeSuivi: string): string {
   return `${SITE_URL}/suivi?code=${encodeURIComponent(codeSuivi)}`
 }
 
-/** Image PNG du QR code qui pointe vers le suivi du rendez-vous (cf. app/api/qr/[code]/route.ts). */
+/** Image PNG du QR code d'un rendez-vous (MC-...) ou d'une réservation de produits (PR-...) : cf. app/api/qr/[code]/route.ts. */
 export function lienQr(codeSuivi: string): string {
   return `${SITE_URL}/api/qr/${encodeURIComponent(codeSuivi)}`
+}
+
+/** Page d'une réservation de produits : le code est dans l'adresse. */
+export function lienCommande(code: string): string {
+  return `${SITE_URL}/boutique/commande/${encodeURIComponent(code)}`
+}
+
+/** Boutique du site (catalogue). */
+export function lienBoutique(vue?: 'packs'): string {
+  return `${SITE_URL}/boutique${vue ? `?vue=${vue}` : ''}`
 }
 
 /** Planning du back-office (absolu), ou null quand le sous-domaine du salon n'est pas configuré. */
@@ -22,3 +32,6 @@ export function lienPlanning(): string | null {
 
 /** Un code de suivi valide : « MC- » suivi de 4 à 12 caractères de l'alphabet des codes. */
 export const CODE_SUIVI_VALIDE = /^MC-[A-Z0-9]{4,12}$/
+
+/** Un code de réservation de produits valide : « PR- » suivi de 4 à 12 caractères. */
+export const CODE_COMMANDE_VALIDE = /^PR-[A-Z0-9]{4,12}$/

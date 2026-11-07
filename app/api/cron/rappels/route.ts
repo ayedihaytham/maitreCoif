@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 
+import { expirerCommandesEchues, rappelerCommandes } from '@/lib/boutique-expiration'
 import { envoyerRappelEmail } from '@/lib/notifications'
 import { prisma } from '@/lib/prisma'
 import { terminerRendezVousPasses } from '@/lib/terminer-passes'
@@ -16,6 +17,12 @@ export async function GET(request: Request) {
   }
 
   await terminerRendezVousPasses({ forcer: true })
+
+  // Réservations de produits non retirées à temps : elles expirent, le stock est remis en vente
+  // et le client est prévenu par email.
+  const commandesExpirees = await expirerCommandesEchues()
+  // Et rappel aux clients dont les articles expirent dans moins de 24 h.
+  const commandesRappelees = await rappelerCommandes()
 
   // Rendez-vous de demain (jour civil du salon), confirmés, pas encore rappelés.
   const { dateISO: aujourdhui } = maintenantSalon()
@@ -52,5 +59,5 @@ export async function GET(request: Request) {
     }
   }
 
-  return NextResponse.json({ date: demain.toISOString().slice(0, 10), candidats: rendezVous.length, envoyes })
+  return NextResponse.json({ date: demain.toISOString().slice(0, 10), candidats: rendezVous.length, envoyes, commandesExpirees, commandesRappelees })
 }

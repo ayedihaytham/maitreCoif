@@ -4,8 +4,9 @@ import type { CSSProperties } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, LogOut, Menu, User, X } from 'lucide-react'
+import { LayoutDashboard, LogOut, Menu, ShoppingBag, User, X } from 'lucide-react'
 
+import { usePanier } from '@/components/boutique/panier'
 import { ThemeLogo } from '@/components/theme-logo'
 import { signalerSession } from '@/lib/analytics'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -18,6 +19,7 @@ const NAV_LINKS = [
   { href: '/services', label: 'Services' },
   { href: '/equipe', label: 'Notre équipe' },
   { href: '/galerie', label: 'Galerie' },
+  { href: '/boutique', label: 'Boutique' },
   { href: '/suivi', label: 'Suivi de réservation' },
 ]
 
@@ -30,6 +32,7 @@ async function deconnecterClient() {
 
 export function SiteNav() {
   const pathname = usePathname()
+  const panier = usePanier()
   const [user, setUser] = useState<Utilisateur>(null)
 
   // La session est demandée au navigateur (pas au rendu serveur) : les pages publiques
@@ -149,6 +152,10 @@ export function SiteNav() {
               )}
             </>
           )}
+          <Link className="bq-bag" href="/boutique/panier" aria-label={panier.nombre > 0 ? `Mon panier, ${panier.nombre} article${panier.nombre > 1 ? 's' : ''}` : 'Mon panier'} data-ph="panier-barre">
+            <ShoppingBag className="size-4" aria-hidden="true" />
+            {panier.nombre > 0 && <em aria-hidden="true">{panier.nombre}</em>}
+          </Link>
           <ThemeToggle />
           <Link className="btn btn-gold btn-sm cta btn-ticket" href="/reservation" style={{ marginLeft: 10 }} data-ph="reserver-barre">
             Réserver
@@ -192,6 +199,11 @@ export function SiteNav() {
         >
           Réserver un rendez-vous
         </Link>
+        <div className="small" style={{ marginTop: 18 }}>
+          <Link href="/boutique/panier" tabIndex={ouvert ? 0 : -1}>
+            Mon panier{panier.nombre > 0 ? ` (${panier.nombre})` : ''}
+          </Link>
+        </div>
         {user && (
           <div className="small">
             <a href={compteHref} tabIndex={ouvert ? 0 : -1}>

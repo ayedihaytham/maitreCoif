@@ -1,6 +1,7 @@
 'use client'
 
 import '../cinema-admin.css'
+import '../cinema-admin-boutique.css'
 import '../cinema-fixes.css'
 
 import { useSearchParams } from 'next/navigation'
@@ -9,9 +10,12 @@ import { AdminSidebar } from '@/components/admin/sidebar'
 import { PlanningBoard } from '@/components/admin/planning-board'
 import { AnalytiqueNonConfigure, AnalytiqueView } from '@/components/admin/analytique-view'
 import { remplirSerie } from '@/lib/analytique'
+import { CommandesManager } from '@/components/admin/commandes-manager'
 import { EquipeManager } from '@/components/admin/equipe-manager'
 import { FermeturesManager } from '@/components/admin/fermetures-manager'
 import { GalerieManager } from '@/components/admin/galerie-manager'
+import { PacksManager } from '@/components/admin/packs-manager'
+import { ProduitsManager } from '@/components/admin/produits-manager'
 import { RdvDialog } from '@/components/admin/rdv-dialog'
 import { ServicesManager } from '@/components/admin/services-manager'
 import { StatistiquesView, type StatsAffichees } from '@/components/admin/statistiques-view'
@@ -99,7 +103,7 @@ export function PreviewClient() {
         prochain={{ heure: '16:30', client: 'Sami B.', prestations: 'Coupe + Barbe', coiffeur: 'houcem', jour: "aujourd'hui" }}
         onSignOut={() => {}}
       />
-      <main style={{ flex: 1, minWidth: 0 }} className={v === 'svc' || v === 'eq' || v === 'fer' || v === 'gal' || v === 'ana' || v === 'ana0' ? 'ad-body' : undefined}>
+      <main style={{ flex: 1, minWidth: 0 }} className={['svc', 'eq', 'fer', 'gal', 'ana', 'ana0', 'prod', 'pack', 'cmd'].includes(v) ? 'ad-body' : undefined}>
         {v === 'plan' && <PlanningBoard role="ADMIN" currentUserId="a" coiffeurs={coiffeurs} />}
         {v === 'stats' && <StatistiquesView periode="mois" stats={stats} />}
         {v === 'svc' && (
@@ -139,6 +143,66 @@ export function PreviewClient() {
         )}
         {v === 'ana' && <AnalytiqueView donnees={analytique} periode={30} erreurs={['entonnoir : PostHog a répondu 500 (exemple d’erreur affichée)']} />}
         {v === 'ana0' && <AnalytiqueNonConfigure />}
+        {v === 'prod' && (
+          <ProduitsManager
+            initial={[
+              { id: '1', nom: 'Huile à barbe', description: 'Nourrit et adoucit, parfum bois de cèdre.', prix: 24, categorie: 'Barbe', stock: 12, actif: true, image: null },
+              { id: '2', nom: 'Baume à barbe', description: null, prix: 18, categorie: 'Barbe', stock: 3, actif: true, image: null },
+              { id: '3', nom: 'Pommade brillante', description: 'Brillance classique.', prix: 20, categorie: 'Coiffage', stock: 0, actif: true, image: null },
+              { id: '4', nom: 'Peigne en bois', description: null, prix: 12, categorie: 'Accessoires', stock: 25, actif: false, image: null },
+            ]}
+          />
+        )}
+        {v === 'pack' && (
+          <PacksManager
+            initial={[
+              {
+                id: '1',
+                nom: 'Pack Barbier',
+                description: 'La taille au salon, l’huile et le baume pour la maison.',
+                remiseType: 'POURCENTAGE',
+                remiseValeur: 15,
+                debut: null,
+                fin: null,
+                actif: true,
+                lignes: [
+                  { type: 'service', id: 's1', nom: 'Taille de barbe', quantite: 1, prix: 18 },
+                  { type: 'produit', id: '1', nom: 'Huile à barbe', quantite: 1, prix: 24 },
+                  { type: 'produit', id: '2', nom: 'Baume à barbe', quantite: 1, prix: 18 },
+                ],
+                prix: { normal: 60, final: 51, economie: 9, pourcentage: 15 },
+                raison: null,
+              },
+              {
+                id: '2',
+                nom: 'Pack Gentleman',
+                description: null,
+                remiseType: 'PRIX_FIXE',
+                remiseValeur: 30,
+                debut: null,
+                fin: '2026-12-31',
+                actif: true,
+                lignes: [{ type: 'produit', id: '3', nom: 'Pommade brillante', quantite: 1, prix: 20 }, { type: 'produit', id: '4', nom: 'Peigne en bois', quantite: 1, prix: 12 }],
+                prix: { normal: 32, final: 30, economie: 2, pourcentage: 6 },
+                raison: 'rupture',
+              },
+            ]}
+            produits={[
+              { id: '1', nom: 'Huile à barbe', prix: 24, stock: 12, actif: true },
+              { id: '2', nom: 'Baume à barbe', prix: 18, stock: 3, actif: true },
+            ]}
+            services={[{ id: 's1', nom: 'Taille de barbe', prix: 18, duree: 20, actif: true }]}
+          />
+        )}
+        {v === 'cmd' && (
+          <CommandesManager
+            initial={[
+              { id: '1', code: 'PR-7K2M9QX', statut: 'A_PREPARER', clientNom: 'Sami Ben Ali', clientTelephone: '20 130 289', clientEmail: 'sami@exemple.com', retrait: 'SALON', jourSouhaite: 'samedi 8 novembre', notes: null, total: 60, economie: 0, expireLe: '2026-11-14T10:00:00.000Z', dateCreation: '2026-11-07T10:00:00.000Z', lignes: [{ nom: 'Huile à barbe', quantite: 1, type: 'PRODUIT', contenu: [] }, { nom: 'Baume à barbe', quantite: 2, type: 'PRODUIT', contenu: [] }], rendezVous: null },
+              { id: '2', code: 'PR-9XQ2LHV', statut: 'PRETE', clientNom: 'Walid Trabelsi', clientTelephone: '98 441 207', clientEmail: 'walid.trabelsi.adresse.longue@exemple.com', retrait: 'RDV', jourSouhaite: null, notes: null, total: 51, economie: 9, expireLe: '2026-11-14T10:00:00.000Z', dateCreation: '2026-11-06T10:00:00.000Z', lignes: [{ nom: 'Pack Barbier', quantite: 1, type: 'PACK', contenu: [{ type: 'service', nom: 'Taille de barbe', quantite: 1, prix: 18 }, { type: 'produit', nom: 'Huile à barbe', quantite: 1, prix: 24 }, { type: 'produit', nom: 'Baume à barbe', quantite: 1, prix: 18 }] }], rendezVous: { date: '2026-11-14', heureDebut: '10:00', coiffeur: 'houcem h', statut: 'CONFIRME' } },
+              { id: '3', code: 'PR-5HZV1TS', statut: 'RETIREE', clientNom: 'Yassine Mejri', clientTelephone: '50 118 733', clientEmail: 'y@exemple.com', retrait: 'SALON', jourSouhaite: null, notes: null, total: 28, economie: 0, expireLe: '2026-11-04T10:00:00.000Z', dateCreation: '2026-11-03T10:00:00.000Z', lignes: [{ nom: 'Spray texturisant', quantite: 1, type: 'PRODUIT', contenu: [] }], rendezVous: null },
+            ]}
+          />
+        )}
         {v === 'dlg' && (
           <RdvDialog open onOpenChange={() => {}} coiffeurs={coiffeurs} defaultCoiffeurId="a" defaultDate="2026-11-06" coiffeurFige={false} onDone={() => {}} />
         )}

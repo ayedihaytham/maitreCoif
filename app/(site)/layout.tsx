@@ -1,8 +1,10 @@
 import '../cinema.css'
 import '../cinema-home.css'
 import '../cinema-chrome.css'
+import '../cinema-boutique.css'
 import '../cinema-fixes.css'
 
+import { PanierProvider } from '@/components/boutique/panier'
 import { PostHogProvider } from '@/components/analytics/posthog-provider'
 import { Header } from '@/components/site/header'
 import { Footer } from '@/components/site/footer'
@@ -17,11 +19,13 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       <noscript>
         <style>{'.mc .rv{opacity:1!important;transform:none!important;filter:none!important}.mc .h-reel{height:auto}.mc .h-stage{position:static;height:auto;padding:90px 0}.mc .h-strip{transform:none;width:auto;overflow-x:auto}.mc .h-card{filter:none;transform:none}.mc .h-quote .w{opacity:1;transform:none;filter:none}.mc .h-hud,.mc .h-grain{display:none}'}</style>
       </noscript>
-      <Header />
-      <div className="flex-1">{children}</div>
-      <Footer />
-      <SiteEffects />
-      <PostHogProvider />
+      <PanierProvider>
+        <Header />
+        <div className="flex-1">{children}</div>
+        <Footer />
+        <SiteEffects />
+        <PostHogProvider />
+      </PanierProvider>
     </div>
   )
 }

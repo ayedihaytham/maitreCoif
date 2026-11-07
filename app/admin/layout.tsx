@@ -1,4 +1,5 @@
 import '../cinema-admin.css'
+import '../cinema-admin-boutique.css'
 import '../cinema-fixes.css'
 
 import type { Metadata } from 'next'
@@ -6,6 +7,7 @@ import type { Metadata } from 'next'
 import { auth } from '@/lib/auth'
 import { AdminSidebarClerk } from '@/components/admin/sidebar'
 import { ClerkSalonProvider } from '@/components/auth/clerk-salon-provider'
+import { nombreAPreparer } from '@/lib/boutique'
 import { resumeSalon } from '@/lib/prochain-rdv'
 
 export const metadata: Metadata = {
@@ -18,12 +20,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // défensif évite un crash si la page est rendue sans session.
   if (!session?.user) return null
 
-  const { prochain, aujourdhui } = await resumeSalon({ id: session.user.id, role: session.user.role })
+  const [{ prochain, aujourdhui }, aPreparer] = await Promise.all([
+    resumeSalon({ id: session.user.id, role: session.user.role }),
+    nombreAPreparer().catch(() => 0),
+  ])
 
   return (
     <ClerkSalonProvider>
     <div className="ad">
-      <AdminSidebarClerk role={session.user.role} nom={session.user.name ?? ''} prochain={prochain} aujourdhui={aujourdhui} />
+      <AdminSidebarClerk role={session.user.role} nom={session.user.name ?? ''} prochain={prochain} aujourdhui={aujourdhui} aPreparer={aPreparer} />
       <div className="ad-main">{children}</div>
     </div>
     </ClerkSalonProvider>

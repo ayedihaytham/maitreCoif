@@ -65,6 +65,7 @@ model Service {
 
   rendezVous RendezVous[]
   lignes     RendezVousService[]
+  lignesPack PackLigne[]
 }
 
 // Une prestation d'un rendez-vous. Un rendez-vous peut en contenir plusieurs
@@ -122,6 +123,7 @@ model RendezVous {
   lignes RendezVousService[]
   avis Avis?
   demandesModification DemandeModification[]
+  commande Commande?
 
   @@index([coiffeurId, date])
   @@index([clientUserId])
@@ -196,4 +198,137 @@ model DemandeModification {
   dateCreation DateTime   @default(now())
 
   @@index([rendezVousId, traitee])
+}
+
+// ───────────────────────── Boutique : produits, packs, réservations ─────────────────────────
+
+enum RemisePack {
+  POURCENTAGE
+  PRIX_FIXE
+}
+
+enum StatutCommande {
+  A_PREPARER
+  PRETE
+  RETIREE
+  ANNULEE
+  EXPIREE
+}
+
+enum TypeLigneCommande {
+  PRODUIT
+  PACK
+}
+
+// Produit vendu au salon, réservable en ligne puis retiré et réglé sur place.
+// `stock` est décompté à la réservation et rendu si elle est annulée ou expire.
+// L'image est une data URI (redimensionnée côté client), comme PhotoSalon.
+model Produit {
+  id           String   @id @default(uuid())
+  nom          String
+  description  String?
+  prix         Decimal  @db.Decimal(10, 2)
+  categorie    String?
+  image        String?  @db.Text
+  stock        Int      @default(0)
+  actif        Boolean  @default(true)
+  dateCreation DateTime @default(now())
+  miseAJour    DateTime @updatedAt
+
+  lignesPack     PackLigne[]
+  lignesCommande CommandeLigne[]
+
+  @@index([actif])
+}
+
+// Ensemble de prestations et de produits proposé à prix réduit. Le prix normal
+// est la somme des prix actuels des éléments ; le prix du pack en découle
+// (pourcentage de remise, ou prix fixe).
+model Pack {
+  id           String     @id @default(uuid())
+  nom          String
+  description  String?
+  remiseType   RemisePack @default(POURCENTAGE)
+  remiseValeur Decimal    @db.Decimal(10, 2)
+  // Période de validité facultative (jour civil, 00:00 UTC, bornes incluses).
+  debut        DateTime?
+  fin          DateTime?
+  actif        Boolean    @default(true)
+  dateCreation DateTime   @default(now())
+
+  lignes         PackLigne[]
+  lignesCommande CommandeLigne[]
+
+  @@index([actif])
+}
+
+// Un élément d'un pack : soit un produit, soit une prestation (jamais les deux).
+model PackLigne {
+  id        String   @id @default(uuid())
+  packId    String
+  pack      Pack     @relation(fields: [packId], references: [id], onDelete: Cascade)
+  produitId String?
+  produit   Produit? @relation(fields: [produitId], references: [id], onDelete: Restrict)
+  serviceId String?
+  service   Service? @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  quantite  Int      @default(1)
+  ordre     Int      @default(0)
+
+  @@index([packId])
+  @@index([produitId])
+  @@index([serviceId])
+}
+
+// Réservation de produits et/ou de packs faite sur le site. Aucun paiement en
+// ligne : le client retire et règle au salon avant `expireLe`.
+model Commande {
+  id              String         @id @default(uuid())
+  code            String         @unique
+  statut          StatutCommande @default(A_PREPARER)
+  clientNom       String
+  clientTelephone String
+  clientEmail     String
+  // 'SALON' (le client passe) ou 'RDV' (avec son prochain rendez-vous)
+  retrait         String         @default("SALON")
+  jourSouhaite    String?
+  notes           String?
+  total           Decimal        @db.Decimal(10, 2)
+  economie        Decimal        @default(0) @db.Decimal(10, 2)
+  expireLe        DateTime
+  preteLe         DateTime?
+  dateCreation    DateTime       @default(now())
+  miseAJour       DateTime       @updatedAt
+
+  // Rappel « plus que 24 h pour retirer » déjà envoyé (remis à zéro quand la commande passe à « prête »).
+  rappelEnvoye    Boolean        @default(false)
+  // Rendez-vous réservé en même temps (pack qui comprend une prestation).
+  rendezVousId    String?        @unique
+  rendezVous      RendezVous?    @relation(fields: [rendezVousId], references: [id], onDelete: SetNull)
+
+  lignes CommandeLigne[]
+
+  @@index([statut, dateCreation])
+}
+
+// Ligne figée au moment de la réservation (nom, prix, contenu du pack) : modifier
+// le catalogue plus tard ne change pas l'historique.
+model CommandeLigne {
+  id                 String            @id @default(uuid())
+  commandeId         String
+  commande           Commande          @relation(fields: [commandeId], references: [id], onDelete: Cascade)
+  type               TypeLigneCommande
+  produitId          String?
+  produit            Produit?          @relation(fields: [produitId], references: [id], onDelete: SetNull)
+  packId             String?
+  pack               Pack?             @relation(fields: [packId], references: [id], onDelete: SetNull)
+  nom                String
+  quantite           Int
+  prixUnitaire       Decimal           @db.Decimal(10, 2)
+  prixNormalUnitaire Decimal           @db.Decimal(10, 2)
+  // Contenu d'un pack : [{ type: 'produit' | 'service', produitId?, nom, quantite, prix }]
+  detail             Json?
+
+  @@index([commandeId])
+  @@index([produitId])
+  @@index([packId])
 }

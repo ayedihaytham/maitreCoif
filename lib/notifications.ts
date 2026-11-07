@@ -75,6 +75,9 @@ export interface ContenuRdv {
   lignes: [string, string][]
   /** Affiche le QR code et le code de suivi. */
   codeSuivi?: string
+  /** Libellés propres à une réservation de produits (par défaut : ceux d'un rendez-vous). */
+  libelleCode?: string
+  legendeQr?: string
   action?: { libelle: string; url: string }
   /** Petit texte sous le bouton. */
   note?: string
@@ -85,7 +88,7 @@ const COULEUR_OR = '#d4af37'
 /** Version texte : toujours jointe, pour les messageries qui n'affichent pas le HTML. */
 export function texteRdv(c: ContenuRdv): string {
   const parties = [c.titre, ...c.intro, c.lignes.map(([l, v]) => `- ${l} : ${v}`).join('\n')]
-  if (c.codeSuivi) parties.push(`Code de suivi : ${c.codeSuivi}`)
+  if (c.codeSuivi) parties.push(`${c.libelleCode ?? 'Code de suivi'} : ${c.codeSuivi}`)
   if (c.action) parties.push(`${c.action.libelle} :\n${c.action.url}`)
   if (c.note) parties.push(c.note)
   parties.push("L'équipe Maitre Coif")
@@ -105,7 +108,7 @@ export function htmlRdv(c: ContenuRdv): string {
     )
     .join('')
   const qr = c.codeSuivi
-    ? `<tr><td align="center" style="padding:26px 30px 6px"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:14px;background:#ffffff;border:1px solid #d9d3c4"><img src="${echapper(lienQr(c.codeSuivi))}" width="168" height="168" alt="QR code de votre rendez-vous ${echapper(c.codeSuivi)}" style="display:block;width:168px;height:168px;border:0"></td></tr></table><p style="margin:14px 0 4px;font-size:12px;color:#6a655a">Scannez ce code pour suivre votre rendez-vous</p><p style="margin:0;font-size:20px;font-weight:bold;letter-spacing:.2em;color:#1b1915;font-family:'Courier New',monospace">${echapper(c.codeSuivi)}</p></td></tr>`
+    ? `<tr><td align="center" style="padding:26px 30px 6px"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:14px;background:#ffffff;border:1px solid #d9d3c4"><img src="${echapper(lienQr(c.codeSuivi))}" width="168" height="168" alt="QR code de votre ${c.codeSuivi.startsWith('PR-') ? 'réservation' : 'rendez-vous'} ${echapper(c.codeSuivi)}" style="display:block;width:168px;height:168px;border:0"></td></tr></table><p style="margin:14px 0 4px;font-size:12px;color:#6a655a">${echapper(c.legendeQr ?? 'Scannez ce code pour suivre votre rendez-vous')}</p><p style="margin:0;font-size:20px;font-weight:bold;letter-spacing:.2em;color:#1b1915;font-family:'Courier New',monospace">${echapper(c.codeSuivi)}</p></td></tr>`
     : ''
   const action = c.action
     ? `<tr><td align="center" style="padding:24px 30px 6px"><a href="${echapper(c.action.url)}" style="display:inline-block;padding:16px 34px;background:${COULEUR_OR};color:#0a0a0a;text-decoration:none;font-weight:bold;font-size:13px;letter-spacing:.14em;text-transform:uppercase">${echapper(c.action.libelle)}</a><p style="margin:16px 0 0;font-size:12px;line-height:1.5;color:#6a655a;word-break:break-all">Le bouton ne s'affiche pas ? Copiez ce lien :<br><a href="${echapper(c.action.url)}" style="color:#7d5f08">${echapper(c.action.url)}</a></p></td></tr>`
@@ -118,6 +121,9 @@ export function htmlRdv(c: ContenuRdv): string {
 async function envoyerRdv(to: string, subject: string, contenu: ContenuRdv) {
   return expedier({ to, subject, text: texteRdv(contenu), html: htmlRdv(contenu) })
 }
+
+/** Envoie un email mis en page comme ceux des rendez-vous (utilisé par la boutique). */
+export const envoyerContenu = envoyerRdv
 
 // ───────────────────────── Emails au client ─────────────────────────
 

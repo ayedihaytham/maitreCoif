@@ -1,0 +1,144 @@
+/* =====================================================================
+   Back-office — boutique (produits, packs, réservations de produits).
+   Même langage que les autres listes de gestion (.ad-card, .ad-item, .ad-btn, .ad-tag).
+   Les classes .bo-* ne sont pas limitées à .ad : les fenêtres de dialogue sont rendues
+   hors de la régie (portail) mais utilisent les mêmes variables de thème (--a-*, --border…).
+   ===================================================================== */
+
+/* ───── Indicateurs ───── */
+.bo-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:22px}
+.bo-kpis.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.bo-kpi{display:flex;flex-direction:column;gap:12px;padding:18px 22px}
+.bo-kpi b{font:300 40px/1 var(--a-serif);font-variant-numeric:lining-nums tabular-nums;color:var(--a-ivory)}
+.bo-kpi b.warn{color:var(--a-gold-ink)}
+.bo-kpi b.bad{color:var(--a-red)}
+.bo-kpi b.money{padding-top:6px;font-size:28px;font-variant-numeric:tabular-nums}
+@media (max-width:900px){.bo-kpis.four{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:520px){.bo-kpis{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.bo-kpis>:last-child:nth-child(odd){grid-column:1 / -1}.bo-kpi b{font-size:34px}}
+
+/* ───── Barre d'outils ───── */
+.bo-tools{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px}
+.bo-search{position:relative;flex:1 1 260px;max-width:420px}
+.bo-search svg{position:absolute;left:14px;top:50%;width:16px;height:16px;margin-top:-8px;color:var(--a-muted);pointer-events:none}
+.bo-search input{width:100%;min-height:42px;padding:0 14px 0 40px;background:var(--a-panel2);border:1px solid var(--a-line);border-radius:2px;color:var(--a-ivory);font:400 14px var(--a-sans,inherit);outline:none;transition:border-color .2s,box-shadow .2s}
+.bo-search input:focus{border-color:var(--a-gold-ink);box-shadow:0 0 0 3px rgba(212,175,55,.2)}
+.bo-hint{margin:0;max-width:52ch;font-size:12.5px;line-height:1.55;color:var(--a-muted)}
+@media (max-width:640px){.bo-tools .ad-btn.gold{width:100%}.bo-search{max-width:none}.ad .ad-seg{flex-wrap:wrap}}
+
+/* ───── Produits ───── */
+.bo-item{gap:16px 24px}
+.bo-main{display:flex;align-items:center;gap:20px;min-width:0;flex:1 1 320px}
+.bo-thumb{display:grid;place-items:center;flex:none;width:76px;height:76px;overflow:hidden;background:linear-gradient(180deg,rgba(212,175,55,.1),transparent),var(--a-panel2);border:1px solid var(--a-line);border-radius:3px;color:var(--a-gold-ink)}
+.bo-thumb img{display:block;width:100%;height:100%;object-fit:cover}
+.bo-thumb svg{width:28px;height:28px;opacity:.85}
+.bo-thumb.lg{width:112px;height:112px}
+.bo-actions{display:flex;flex-wrap:wrap;gap:8px}
+.bo-photo{display:flex;align-items:center;gap:18px}
+.bo-photo-actions{display:grid;gap:10px}
+@media (max-width:640px){
+  .bo-main{flex-basis:100%}
+  .bo-actions{width:100%}
+  .bo-actions .ad-btn{flex:1 1 auto;justify-content:center}
+}
+
+/* ───── Packs : liste ───── */
+.bo-packs{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:18px;align-items:stretch}
+.bo-pack{display:flex;flex-direction:column}
+.bo-pack.off{opacity:.62}
+.bo-pack-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:24px 24px 14px}
+.bo-pack-top h2{margin:0;font:400 30px/1.05 var(--a-serif)}
+.bo-pack-top p{margin:8px 0 0;font-size:13px;line-height:1.55;color:var(--a-muted)}
+.bo-off{flex:none;padding:7px 11px;background:var(--a-gold);color:var(--mc-on-gold);font:700 12px/1 var(--a-sans);letter-spacing:.06em}
+.bo-incl{display:grid;gap:0;margin:0;padding:0 24px;list-style:none;border-top:1px solid var(--a-line)}
+.bo-incl li{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--a-line);font-size:13.5px;color:var(--a-soft)}
+.bo-incl li:last-child{border-bottom:0}
+.bo-incl svg{flex:none;width:15px;height:15px;color:var(--a-gold-ink)}
+.bo-incl li>span:nth-child(2){flex:1;min-width:0}
+.bo-incl li>span:last-child{flex:none;color:var(--a-muted);font-variant-numeric:tabular-nums}
+.bo-pack-prix{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:auto;padding:16px 24px;border-top:1px solid var(--a-line);background:var(--a-panel2)}
+.bo-pack-prix s{display:block;font-size:13px;color:var(--a-muted);font-variant-numeric:tabular-nums}
+.bo-pack-prix b{display:block;font:300 34px/1.1 var(--a-serif);color:var(--a-gold-ink);font-variant-numeric:lining-nums tabular-nums}
+.bo-pack-prix .econ{display:block;margin-top:4px;font-size:12.5px;color:var(--a-green)}
+.bo-periode{margin:0;padding:10px 24px 0;font-size:12px;color:var(--a-muted)}
+.bo-pack-actions{display:flex;gap:8px;padding:16px 24px 20px}
+.bo-pack-actions .ad-btn:first-child{flex:1}
+.bo-pack-vide{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:260px;padding:30px;border-style:dashed;text-align:center;color:var(--a-muted)}
+.bo-pack-vide svg{width:30px;height:30px;color:var(--a-gold-ink)}
+.bo-pack-vide b{color:var(--a-ivory)}
+
+/* ───── Packs : formulaire (fenêtre de dialogue) ───── */
+.bo-pack-form{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:24px;align-items:start}
+.bo-pack-form-main{min-width:0}
+.bo-pack-sum{position:sticky;top:0;padding:18px;background:var(--a-panel2);border:1px solid var(--a-line-gold);border-radius:4px}
+.bo-pack-sum dl{display:grid;gap:10px;margin:14px 0}
+.bo-pack-sum dl>div{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--a-soft)}
+.bo-pack-sum dt{min-width:0}
+.bo-pack-sum dd{margin:0;font-variant-numeric:tabular-nums}
+.bo-pack-sum .econ{color:var(--a-green)}
+.bo-pack-sum .big{align-items:baseline;padding-top:12px;border-top:1px solid var(--a-line)}
+.bo-pack-sum .big dt{font-size:14px;color:var(--a-ivory)}
+.bo-pack-sum .big dd{font:300 30px/1 var(--a-serif);color:var(--a-gold-ink)}
+.bo-pack-sum p{margin:0;font-size:12.5px;line-height:1.55;color:var(--a-muted)}
+.bo-pack-erreur,.bo-pack-footer{grid-column:1 / -1}
+@media (max-width:760px){
+  .bo-pack-form{grid-template-columns:minmax(0,1fr)}
+  .bo-pack-sum{position:static;order:2}
+}
+
+.bo-pick{margin:0;padding:0;border:0;min-width:0}
+.bo-pick legend{padding:0;margin-bottom:6px;font:600 11px/1.2 var(--a-sans);letter-spacing:.22em;text-transform:uppercase;color:var(--a-muted)}
+.bo-pick .lbl{margin:14px 0 4px;font:600 10.5px/1.2 var(--a-sans);letter-spacing:.3em;text-transform:uppercase;color:var(--a-gold-ink)}
+.bo-pick ul{margin:0;padding:0;list-style:none;border-top:1px solid var(--a-line)}
+.bo-pick li{display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--a-line);transition:background .2s}
+.bo-pick li.on{background:rgba(212,175,55,.07)}
+.bo-pick input[type='checkbox']{flex:none;width:20px;height:20px;margin:0;accent-color:var(--a-gold)}
+.bo-pick .t{flex:1;min-width:0;display:block;font-size:14px;color:var(--a-ivory);cursor:pointer}
+.bo-pick .t small{display:block;margin-top:2px;font-size:12px;color:var(--a-muted)}
+.bo-pick li>b{flex:none;min-width:84px;text-align:right;font:600 13px var(--a-sans);font-variant-numeric:tabular-nums;color:var(--a-soft)}
+.bo-pick .qty{display:inline-flex;align-items:center;flex:none;border:1px solid var(--a-line);border-radius:2px}
+.bo-pick .qty button{display:grid;place-items:center;width:32px;height:32px;background:transparent;border:0;color:var(--a-ivory)}
+.bo-pick .qty button:disabled{opacity:.35}
+.bo-pick .qty button svg{width:13px;height:13px}
+.bo-pick .qty span{min-width:26px;text-align:center;font:600 13px var(--a-sans)}
+@media (max-width:520px){.bo-pick li{flex-wrap:wrap}.bo-pick li>b{min-width:0;margin-left:auto}}
+
+.bo-remise{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px}
+.bo-remise>div:last-child{width:160px}
+.bo-remise .cap{display:block;margin-bottom:8px;font:500 14px var(--a-sans);color:var(--foreground)}
+.bo-remise .ad-seg{display:inline-flex}
+.bo-visible{display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border:1px solid var(--a-line);border-radius:3px;cursor:pointer}
+.bo-visible input{flex:none;width:20px;height:20px;margin-top:2px;accent-color:var(--a-gold)}
+.bo-visible b{display:block;font-size:14px}
+.bo-visible small{display:block;margin-top:2px;font-size:12.5px;color:var(--a-muted)}
+
+/* ───── Réservations de produits ───── */
+.bo-cmd{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1.6fr) 150px auto;gap:18px 22px;align-items:center;padding:18px 22px;transition:border-color .25s}
+.bo-cmd:hover{border-color:var(--a-line-gold)}
+.bo-cmd.off{opacity:.62}
+.bo-cmd-who{display:grid;gap:4px;min-width:0}
+.bo-cmd-who b{font-size:15px}
+.bo-cmd-who a{display:inline-flex;align-items:center;gap:8px;min-width:0;font-size:12.5px;color:var(--a-muted);overflow-wrap:anywhere}
+.bo-cmd-who a:hover{color:var(--a-gold-ink)}
+.bo-cmd-who svg{flex:none;width:13px;height:13px}
+.bo-cmd-art ul{display:grid;gap:6px;margin:0;padding:0;list-style:none;font-size:14px;line-height:1.5}
+.bo-cmd-art li em{font-style:normal;color:var(--a-gold-ink)}
+.bo-cmd-art li small{display:block;font-size:12px;color:var(--a-muted)}
+.bo-cmd-meta{margin-top:8px;font-size:12.5px;line-height:1.5;color:var(--a-muted)}
+.bo-cmd-total{display:grid;gap:6px;justify-items:start}
+.bo-cmd-total b{font:600 17px/1 var(--a-sans);font-variant-numeric:tabular-nums}
+.bo-cmd-total small{font-size:11.5px;color:var(--a-green)}
+.bo-cmd-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;align-items:center}
+@media (max-width:1180px){.bo-cmd{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr)}.bo-cmd-actions{grid-column:1 / -1;justify-content:flex-start}}
+@media (max-width:720px){.bo-cmd{grid-template-columns:minmax(0,1fr);padding:18px}.bo-cmd-actions .ad-btn{flex:1 1 auto;justify-content:center}}
+
+/* Le sélecteur segmenté du formulaire de pack vit dans une fenêtre de dialogue (hors de .ad) : mêmes règles que .ad .ad-seg */
+.bo-remise .ad-seg{display:inline-flex;border:1px solid rgb(var(--mc-fg-rgb) / .22);border-radius:2px;overflow:hidden}
+.bo-remise .ad-seg button{display:inline-flex;align-items:center;min-height:40px;padding:0 15px;background:transparent;border:0;border-right:1px solid rgb(var(--mc-fg-rgb) / .14);color:var(--a-soft);font:600 10.5px/1 var(--a-sans);letter-spacing:.14em;text-transform:uppercase;cursor:pointer}
+.bo-remise .ad-seg button:last-child{border-right:0}
+.bo-remise .ad-seg button.on{background:var(--a-gold);color:var(--mc-on-gold)}
+.bo-pick .lbl{display:block;background:none}
+.bo-pick li,.bo-pick ul{background:none}
+.bo-pick li.on{background:rgba(212,175,55,.07)}
+
+.bo-cmd-rdv{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12.5px;color:var(--a-gold-ink)}
+.bo-cmd-rdv svg{flex:none;width:14px;height:14px}
