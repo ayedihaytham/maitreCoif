@@ -58,7 +58,18 @@ export const coiffeurSchema = z.object({
   photo: z.string().max(3_000_000).optional().or(z.literal('')),
   // désactiver / réactiver un membre
   actif: z.boolean().optional(),
+  // pause déjeuner (les deux ou aucune ; '' = pas de pause), cf. erreurPause()
+  pauseDebut: heureSchema.optional().or(z.literal('')).nullable(),
+  pauseFin: heureSchema.optional().or(z.literal('')).nullable(),
 })
+
+/** Message d'erreur si la pause déjeuner est incohérente (une seule borne, fin avant début), sinon null. */
+export function erreurPause(debut: string | null | undefined, fin: string | null | undefined): string | null {
+  if (!debut && !fin) return null
+  if (!debut || !fin) return 'Indiquez le début et la fin de la pause déjeuner (ou laissez les deux vides).'
+  if (fin <= debut) return 'La pause déjeuner doit se terminer après son début.'
+  return null
+}
 
 export const photoSalonSchema = z.object({
   url: z.string().min(10).max(3_000_000),

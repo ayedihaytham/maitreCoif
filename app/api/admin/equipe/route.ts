@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { inviterMembre } from '@/lib/staff'
-import { coiffeurSchema } from '@/lib/validators'
+import { coiffeurSchema, erreurPause } from '@/lib/validators'
 
 async function requireAdmin() {
   const session = await auth()
@@ -29,6 +29,8 @@ export async function GET() {
       specialites: true,
       bio: true,
       actif: true,
+      pauseDebut: true,
+      pauseFin: true,
     },
   })
 
@@ -41,6 +43,9 @@ export async function POST(request: Request) {
   const body = await request.json()
   const parsed = coiffeurSchema.safeParse(body)
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+
+  const erreur = erreurPause(parsed.data.pauseDebut, parsed.data.pauseFin)
+  if (erreur) return NextResponse.json({ error: erreur }, { status: 400 })
 
   const existing = await prisma.user.findUnique({ where: { email: parsed.data.email } })
   if (existing) return NextResponse.json({ error: 'Un compte existe déjà avec cet email.' }, { status: 409 })
@@ -58,11 +63,13 @@ export async function POST(request: Request) {
       specialites: parsed.data.specialites ?? [],
       role: parsed.data.role ?? 'COIFFEUR',
       photo: parsed.data.photo || null,
+      pauseDebut: parsed.data.pauseDebut || null,
+      pauseFin: parsed.data.pauseFin || null,
       motDePasseHash,
     },
   })
 
   const { statut, detail } = await inviterMembre(coiffeur.email)
-  const { motDePasseHash: _hash, ...membre } = coiffeur
+  const { motDePasseHash: _hash, clerkId: _clerk, ...membre } = coiffeur
   return NextResponse.json({ ...membre, invitation: statut, invitationDetail: detail }, { status: 201 })
 }

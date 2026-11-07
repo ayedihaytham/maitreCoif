@@ -30,6 +30,8 @@ export default async function AdminEquipePage() {
       specialites: true,
       bio: true,
       actif: true,
+      pauseDebut: true,
+      pauseFin: true,
     },
   })
 

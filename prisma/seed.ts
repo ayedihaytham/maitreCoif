@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+import { randomBytes } from 'node:crypto'
 
 const prisma = new PrismaClient()
 
@@ -9,6 +10,9 @@ async function hash(password: string) {
 
 async function main() {
   console.log('Seed: suppression des données existantes...')
+  await prisma.commande.deleteMany()
+  await prisma.pack.deleteMany()
+  await prisma.produit.deleteMany()
   await prisma.avis.deleteMany()
   await prisma.rendezVous.deleteMany()
   await prisma.disponibilite.deleteMany()
@@ -42,6 +46,20 @@ async function main() {
     },
   })
 
+  console.log('Seed: création du second gérant (administrateur)...')
+  const gerant2 = await prisma.user.create({
+    data: {
+      nom: 'Coif',
+      prenom: 'Maitre',
+      email: 'maitrecoif@gmail.com',
+      motDePasseHash: await hash(randomBytes(32).toString('hex')), // connexion via Clerk : ce mot de passe n'est pas utilisable
+      role: 'ADMIN',
+      photo: '/maitre-coif-team.png',
+      specialites: ['Gestion du salon'],
+      bio: 'Compte gérant du salon.',
+    },
+  })
+
   console.log('Seed: création des coiffeurs...')
   const coiffeurs = await Promise.all([
     prisma.user.create({
@@ -72,7 +90,7 @@ async function main() {
     }),
   ])
 
-  const tousLesCoiffeurs = [gerant, ...coiffeurs]
+  const tousLesCoiffeurs = [gerant, gerant2, ...coiffeurs]
 
   console.log('Seed: création des disponibilités (mardi-samedi, 10h-19h30)...')
   for (const coiffeur of tousLesCoiffeurs) {
@@ -140,7 +158,7 @@ async function main() {
 
   console.log('Seed terminé.')
   console.log('  Client       : client@example.com / Client123!')
-  console.log('  Équipe (gerant@, julien@, lucas@ maitrecoif.fr) : connexion via Clerk, sans mot de passe en base.')
+  console.log('  Équipe (gerant@, julien@, lucas@ maitrecoif.fr, maitrecoif@gmail.com) : connexion via Clerk, sans mot de passe en base.')
   console.log('  Pour tester le back-office, créez dans Clerk un utilisateur avec l’email du gérant.')
 }
 

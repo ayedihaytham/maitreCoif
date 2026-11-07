@@ -44,6 +44,12 @@ model User {
   specialites  String[]  @default([])
   bio          String?
   actif        Boolean   @default(true)
+  // Compte Clerk lié à cette fiche (renseigné à la première connexion) : l'accès ne dépend plus de l'email,
+  // qu'on peut donc modifier sans couper l'accès du membre.
+  clerkId      String?   @unique
+  // Pause déjeuner (« 13:00 » – « 14:00 »), chaque jour travaillé : aucun créneau n'y est proposé.
+  pauseDebut   String?
+  pauseFin     String?
 
   disponibilites      Disponibilite[]
   rendezVousCoiffeur  RendezVous[]      @relation("RendezVousCoiffeur")

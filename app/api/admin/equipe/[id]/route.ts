@@ -5,7 +5,8 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { oublierPersonnel } from '@/lib/staff'
 import { apercuSuppression, messageRendezVousLies, prevenirClientsAnnulation, rendezVousDuCoiffeur } from '@/lib/suppression'
-import { coiffeurSchema } from '@/lib/validators'
+import { erreurPause, coiffeurSchema } from '@/lib/validators'
+import { inviterMembre } from '@/lib/staff'
 
 async function getAdminSession() {
   const session = await auth()
@@ -32,6 +33,22 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   const rest = parsed.data
 
+  // Pause déjeuner : les deux bornes ou aucune (on complète avec la valeur actuelle si une seule est envoyée).
+  if (rest.pauseDebut !== undefined || rest.pauseFin !== undefined) {
+    const erreur = erreurPause(rest.pauseDebut !== undefined ? rest.pauseDebut : cible.pauseDebut, rest.pauseFin !== undefined ? rest.pauseFin : cible.pauseFin)
+    if (erreur) return NextResponse.json({ error: erreur }, { status: 400 })
+  }
+
+  // Changement d'adresse email : un membre jamais connecté depuis la liaison au compte Clerk n'est pas encore lié,
+  // son accès repose sur l'email. On ne laisse pas l'administrateur se couper l'accès lui-même.
+  const emailChange = rest.email !== undefined && rest.email.toLowerCase() !== cible.email.toLowerCase()
+  if (emailChange && id === session.user.id && !cible.clerkId) {
+    return NextResponse.json(
+      { error: "Pour modifier votre propre email, déconnectez-vous puis reconnectez-vous une fois (cela lie votre compte), puis réessayez : sinon vous perdriez l'accès." },
+      { status: 400 },
+    )
+  }
+
   // On ne retire jamais le dernier administrateur actif (ni à soi-même, ni à un autre).
   if (rest.role && rest.role !== 'ADMIN' && cible.role === 'ADMIN' && (await autresAdminsActifs(id)) === 0) {
     return NextResponse.json({ error: 'Il doit rester au moins un administrateur actif.' }, { status: 400 })
@@ -52,11 +69,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         ...rest,
         telephone: rest.telephone === '' ? null : rest.telephone,
         bio: rest.bio === '' ? null : rest.bio,
+        ...(rest.pauseDebut !== undefined ? { pauseDebut: rest.pauseDebut || null } : {}),
+        ...(rest.pauseFin !== undefined ? { pauseFin: rest.pauseFin || null } : {}),
         ...(rest.photo !== undefined ? { photo: rest.photo === '' ? null : rest.photo } : {}),
       },
     })
-    const { motDePasseHash: _hash, ...membre } = coiffeur
+    const { motDePasseHash: _hash, clerkId: _clerk, ...membre } = coiffeur
     oublierPersonnel() // la désactivation / réactivation prend effet tout de suite sur cette instance
+    // Membre pas encore lié à un compte Clerk dont l'email change : il doit se reconnecter avec la nouvelle adresse, on l'invite.
+    if (emailChange && !cible.clerkId) {
+      const { statut, detail } = await inviterMembre(coiffeur.email)
+      return NextResponse.json({ ...membre, invitation: statut, invitationDetail: detail })
+    }
     return NextResponse.json(membre)
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {

@@ -23,6 +23,9 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
   })
   if (!membre) return NextResponse.json({ error: 'Membre introuvable' }, { status: 404 })
 
+  // Une nouvelle invitation peut servir à recréer un accès perdu : la fiche est déliée de l'ancien compte Clerk
+  // (elle se relie toute seule à la prochaine connexion, par l'email).
+  await prisma.user.update({ where: { id }, data: { clerkId: null } })
   const { statut, detail } = await inviterMembre(membre.email)
   return NextResponse.json({ invitation: statut, invitationDetail: detail })
 }

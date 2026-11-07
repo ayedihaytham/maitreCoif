@@ -33,6 +33,8 @@ interface Coiffeur {
   specialites: string[]
   bio: string | null
   actif: boolean
+  pauseDebut: string | null
+  pauseFin: string | null
 }
 
 interface Disponibilite {
@@ -60,6 +62,8 @@ const emptyForm = {
   specialites: '',
   role: 'COIFFEUR' as Role,
   photo: '',
+  pauseDebut: '',
+  pauseFin: '',
 }
 
 const MESSAGES_INVITATION: Record<string, string> = {
@@ -112,6 +116,8 @@ export function EquipeManager({ initial }: { initial: Coiffeur[] }) {
       specialites: c.specialites.join(', '),
       role: c.role,
       photo: c.photo ?? '',
+      pauseDebut: c.pauseDebut ?? '',
+      pauseFin: c.pauseFin ?? '',
     })
     setError(null)
     setOpen(true)
@@ -163,6 +169,8 @@ export function EquipeManager({ initial }: { initial: Coiffeur[] }) {
           .filter(Boolean),
         role: form.role,
         photo: form.photo,
+        pauseDebut: form.pauseDebut,
+        pauseFin: form.pauseFin,
       }
 
       const res = await fetch(editing ? `/api/admin/equipe/${editing.id}` : '/api/admin/equipe', {
@@ -187,7 +195,7 @@ export function EquipeManager({ initial }: { initial: Coiffeur[] }) {
         }),
       })
 
-      if (!editing) setNotice(messageInvitation(data.invitation, data.invitationDetail))
+      if (!editing || data.invitation) setNotice(messageInvitation(data.invitation, data.invitationDetail))
 
       const refreshed = await fetch('/api/admin/equipe').then((r) => r.json())
       setEquipe(refreshed)
@@ -293,6 +301,7 @@ export function EquipeManager({ initial }: { initial: Coiffeur[] }) {
                 <div className="sub" style={{ overflowWrap: 'anywhere' }}>
                   {c.email}
                   {c.telephone ? ` · ${c.telephone}` : ''}
+                  {c.pauseDebut && c.pauseFin ? ` · pause ${c.pauseDebut}–${c.pauseFin}` : ''}
                 </div>
                 <div className="meta">
                   {c.role === 'ADMIN' && (
@@ -419,9 +428,24 @@ export function EquipeManager({ initial }: { initial: Coiffeur[] }) {
             </div>
             <p className="text-[11px] leading-5 text-muted-foreground">
               {editing
-                ? "L'adresse email sert d'identifiant de connexion (Clerk) : la modifier ici sans la changer aussi dans Clerk coupe l'accès de la personne."
+                ? "Une fois la personne connectée, son accès est lié à son compte Clerk : vous pouvez corriger son email ici sans lui couper l'accès. Tant qu'elle ne s'est jamais connectée, changer son email lui envoie une nouvelle invitation."
                 : "Aucun mot de passe à définir : la personne reçoit une invitation par email pour créer son accès."}
             </p>
+
+            <div>
+              <Label>Pause déjeuner</Label>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <Input type="time" aria-label="Début de la pause déjeuner" value={form.pauseDebut} onChange={(e) => setForm((f) => ({ ...f, pauseDebut: e.target.value }))} className="w-32" />
+                <span className="text-xs text-muted-foreground">à</span>
+                <Input type="time" aria-label="Fin de la pause déjeuner" value={form.pauseFin} onChange={(e) => setForm((f) => ({ ...f, pauseFin: e.target.value }))} className="w-32" />
+                {(form.pauseDebut || form.pauseFin) && (
+                  <button type="button" className="text-xs text-muted-foreground underline" onClick={() => setForm((f) => ({ ...f, pauseDebut: '', pauseFin: '' }))}>
+                    Retirer
+                  </button>
+                )}
+              </div>
+              <p className="mt-1.5 text-[11px] leading-5 text-muted-foreground">Aucun rendez-vous n'est proposé pendant la pause, chaque jour travaillé. Laissez vide s'il n'y en a pas.</p>
+            </div>
 
             <div>
               <Label>Disponibilités hebdomadaires</Label>

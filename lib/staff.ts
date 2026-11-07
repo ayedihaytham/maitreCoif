@@ -67,14 +67,26 @@ export async function staffDepuisClerk(userId: string | null | undefined, claims
 
 async function resoudrePersonnel(userId: string, claims: Claims): Promise<StaffUser | null> {
   try {
-    const email = await emailVerifie(userId, claims)
-    if (!email) return null
+    const choix = { id: true, email: true, prenom: true, nom: true, role: true, clerkId: true } as const
+    const estEquipe = { in: ['COIFFEUR', 'ADMIN'] as Role[] }
 
-    const user = await prisma.user.findFirst({
-      where: { email: { equals: email, mode: 'insensitive' }, role: { in: ['COIFFEUR', 'ADMIN'] }, actif: true },
-      select: { id: true, email: true, prenom: true, nom: true, role: true },
-    })
-    if (!user || (user.role !== 'COIFFEUR' && user.role !== 'ADMIN')) return null
+    // 1. Fiche déjà liée à ce compte Clerk : l'accès ne dépend plus de l'email, qu'on peut donc modifier
+    //    dans « Équipe » sans couper l'accès de la personne.
+    let user = await prisma.user.findFirst({ where: { clerkId: userId, role: estEquipe, actif: true }, select: choix })
+
+    // 2. Première connexion : on rapproche l'email vérifié du compte Clerk de la fiche, puis on les lie.
+    if (!user) {
+      const email = await emailVerifie(userId, claims)
+      if (!email) return null
+      user = await prisma.user.findFirst({ where: { email: { equals: email, mode: 'insensitive' }, role: estEquipe, actif: true }, select: choix })
+      if (!user) return null
+      // Une fiche déjà liée à un autre compte Clerk n'est pas ouverte à qui reprendrait simplement son adresse.
+      if (user.clerkId && user.clerkId !== userId) return null
+      if (!user.clerkId) {
+        await prisma.user.updateMany({ where: { id: user.id, clerkId: null }, data: { clerkId: userId } }).catch((e) => console.error('[staff] Liaison du compte Clerk impossible', e))
+      }
+    }
+    if (user.role !== 'COIFFEUR' && user.role !== 'ADMIN') return null
 
     return { id: user.id, email: user.email, name: `${user.prenom} ${user.nom}`, role: user.role }
   } catch (error) {

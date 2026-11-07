@@ -92,6 +92,11 @@ interface Plage {
   heureFin: string
 }
 
+/** Pause déjeuner d'un coiffeur sous forme de plage occupée, ou null s'il n'en a pas. */
+export function plagePause(u: { pauseDebut: string | null; pauseFin: string | null } | null | undefined): Plage | null {
+  return u?.pauseDebut && u.pauseFin && u.pauseFin > u.pauseDebut ? { heureDebut: u.pauseDebut, heureFin: u.pauseFin } : null
+}
+
 export interface CreneauGrille {
   heure: string
   libre: boolean
@@ -149,16 +154,19 @@ export async function getGrilleJour(coiffeurId: string, serviceId: string | stri
   const date = new Date(`${dateISO}T00:00:00Z`)
   const jourSemaine = date.getUTCDay()
 
-  const [disponibilites, rendezVousExistants] = await Promise.all([
+  const [disponibilites, rendezVousExistants, coiffeur] = await Promise.all([
     prisma.disponibilite.findMany({ where: { coiffeurId, jourSemaine } }),
     prisma.rendezVous.findMany({
       where: { coiffeurId, date, statut: { not: 'ANNULE' } },
       select: { heureDebut: true, heureFin: true },
     }),
+    prisma.user.findUnique({ where: { id: coiffeurId }, select: { pauseDebut: true, pauseFin: true } }),
   ])
 
+  // La pause déjeuner compte comme un créneau occupé : aucun rendez-vous ne la chevauche.
+  const pause = plagePause(coiffeur)
   const { dateISO: aujourdhui, minutes } = maintenantSalon()
-  return construireGrille(disponibilites, rendezVousExistants, dureeTotale, dateISO === aujourdhui ? minutes : null)
+  return construireGrille(disponibilites, pause ? [...rendezVousExistants, pause] : rendezVousExistants, dureeTotale, dateISO === aujourdhui ? minutes : null)
 }
 
 export type EtatJour = 'libre' | 'complet' | 'ferme'
@@ -183,7 +191,7 @@ export async function getJoursDisponibles(
   const prestations = await chargerPrestations(serviceId)
   if (!prestations) return jours.map((d) => ({ date: iso(d), etat: 'ferme' as const }))
 
-  const [disponibilites, fermetures, rendezVous] = await Promise.all([
+  const [disponibilites, fermetures, rendezVous, coiffeur] = await Promise.all([
     prisma.disponibilite.findMany({ where: { coiffeurId } }),
     prisma.fermeture.findMany({
       where: { dateDebut: { lte: fin }, dateFin: { gte: debut }, OR: [{ coiffeurId: null }, { coiffeurId }] },
@@ -193,8 +201,10 @@ export async function getJoursDisponibles(
       where: { coiffeurId, date: { gte: debut, lte: fin }, statut: { not: 'ANNULE' } },
       select: { date: true, heureDebut: true, heureFin: true },
     }),
+    prisma.user.findUnique({ where: { id: coiffeurId }, select: { pauseDebut: true, pauseFin: true } }),
   ])
 
+  const pause = plagePause(coiffeur)
   const { dateISO: aujourdhui, minutes } = maintenantSalon()
 
   return jours.map((d) => {
@@ -205,7 +215,8 @@ export async function getJoursDisponibles(
     const dispos = disponibilites.filter((x) => x.jourSemaine === d.getUTCDay())
     if (dispos.length === 0) return { date: dateISO, etat: 'ferme' as const }
 
-    const existants = rendezVous.filter((r) => iso(r.date) === dateISO)
+    const existants: Plage[] = rendezVous.filter((r) => iso(r.date) === dateISO)
+    if (pause) existants.push(pause)
     const grille = construireGrille(dispos, existants, totaux(prestations).duree, dateISO === aujourdhui ? minutes : null)
     return { date: dateISO, etat: grille.some((c) => c.libre) ? ('libre' as const) : ('complet' as const) }
   })
@@ -240,6 +251,9 @@ export async function creneauEstLibre(
 
   const start = timeToMinutes(heureDebut)
   const end = timeToMinutes(heureFin)
+
+  const pause = plagePause(await db.user.findUnique({ where: { id: coiffeurId }, select: { pauseDebut: true, pauseFin: true } }))
+  if (pause && rangesOverlap(start, end, timeToMinutes(pause.heureDebut), timeToMinutes(pause.heureFin))) return false
 
   return !rendezVousExistants.some((rdv) =>
     rangesOverlap(start, end, timeToMinutes(rdv.heureDebut), timeToMinutes(rdv.heureFin)),

@@ -117,9 +117,9 @@ export function PreviewClient() {
         {v === 'eq' && (
           <EquipeManager
             initial={[
-              { id: 'a', nom: 'kallel', prenom: 'ahmed', email: 'ahmed.kallel.exemple@gmail.com', telephone: '20130289', role: 'ADMIN', photo: null, specialites: ['Coupe & barbe', 'Coloration'], bio: 'Fondateur du salon.', actif: true },
-              { id: 'b', nom: 'houcem', prenom: 'houcem', email: 'houcem@exemple.com', telephone: null, role: 'COIFFEUR', photo: null, specialites: [], bio: null, actif: true },
-              { id: 'c', nom: 'baklouti', prenom: 'wassim', email: 'wassim.baklouti.tres.long.exemple@gmail.com', telephone: null, role: 'COIFFEUR', photo: null, specialites: ['Dégradé'], bio: null, actif: false },
+              { id: 'a', nom: 'kallel', prenom: 'ahmed', email: 'ahmed.kallel.exemple@gmail.com', telephone: '20130289', role: 'ADMIN', photo: null, specialites: ['Coupe & barbe', 'Coloration'], bio: 'Fondateur du salon.', actif: true, pauseDebut: '13:00', pauseFin: '14:00' },
+              { id: 'b', nom: 'houcem', prenom: 'houcem', email: 'houcem@exemple.com', telephone: null, role: 'COIFFEUR', photo: null, specialites: [], bio: null, actif: true, pauseDebut: null, pauseFin: null },
+              { id: 'c', nom: 'baklouti', prenom: 'wassim', email: 'wassim.baklouti.tres.long.exemple@gmail.com', telephone: null, role: 'COIFFEUR', photo: null, specialites: ['Dégradé'], bio: null, actif: false, pauseDebut: null, pauseFin: null },
             ]}
           />
         )}
