@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { oublierPersonnel } from '@/lib/staff'
+import { apercuSuppression, messageRendezVousLies, prevenirClientsAnnulation, rendezVousDuCoiffeur } from '@/lib/suppression'
 import { coiffeurSchema } from '@/lib/validators'
 
 async function getAdminSession() {
@@ -65,8 +66,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 }
 
-/** Suppression définitive. Impossible tant que le membre a des rendez-vous : on le désactive alors. */
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+/**
+ * Suppression définitive. Si le membre a des rendez-vous, elle est refusée (409) avec le détail de ce qui serait
+ * effacé ; avec `?cascade=1` ses rendez-vous sont supprimés aussi et les clients à venir sont prévenus par email.
+ */
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await getAdminSession()
   if (!session) return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
 
@@ -82,16 +86,19 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     return NextResponse.json({ error: 'Il doit rester au moins un administrateur actif.' }, { status: 400 })
   }
 
-  const rendezVous = await prisma.rendezVous.count({ where: { coiffeurId: id } })
-  if (rendezVous > 0) {
-    return NextResponse.json(
-      { error: `Suppression impossible : ${rendezVous} rendez-vous sont à son nom (historique). Désactivez-le plutôt, vous pourrez le réactiver.` },
-      { status: 409 },
-    )
+  const cascade = new URL(request.url).searchParams.get('cascade') === '1'
+  const where = rendezVousDuCoiffeur(id)
+  const apercu = await apercuSuppression(where)
+  if (apercu.total > 0 && !cascade) {
+    return NextResponse.json({ error: messageRendezVousLies(`${cible.prenom} ${cible.nom}`, apercu), rendezVous: apercu }, { status: 409 })
   }
 
-  // Horaires, fermetures personnelles et jetons de mot de passe partent avec le membre (suppression en cascade).
-  await prisma.user.delete({ where: { id } })
+  // Les clients ayant un rendez-vous à venir sont prévenus avant que tout ne disparaisse.
+  const clientsPrevenus = apercu.total > 0 ? await prevenirClientsAnnulation(where) : 0
+
+  // Prestations, avis et demandes de modification partent avec les rendez-vous ; horaires, fermetures
+  // personnelles et jetons de mot de passe partent avec le membre (suppression en cascade en base).
+  await prisma.$transaction([prisma.rendezVous.deleteMany({ where }), prisma.user.delete({ where: { id } })])
   oublierPersonnel()
-  return NextResponse.json({ supprime: true })
+  return NextResponse.json({ supprime: true, rendezVousSupprimes: apercu.total, clientsPrevenus })
 }

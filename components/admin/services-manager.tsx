@@ -110,13 +110,37 @@ export function ServicesManager({ initial }: { initial: Service[] }) {
   async function supprimer(s: Service) {
     setMessage(null)
     if (!confirm(`Supprimer définitivement « ${s.nom} » ? Cette action est irréversible.`)) return
-    const res = await fetch(`/api/services/${s.id}`, { method: 'DELETE' })
-    const data = await res.json().catch(() => ({}))
+
+    let res = await fetch(`/api/services/${s.id}`, { method: 'DELETE' })
+    let data = await res.json().catch(() => ({}))
+
+    // Des rendez-vous contiennent ce service : on montre ce qui disparaîtrait et on demande une 2e confirmation.
+    if (res.status === 409 && data.rendezVous) {
+      const { total, aVenir, passes } = data.rendezVous as { total: number; aVenir: number; passes: number }
+      const detail = [
+        passes > 0 ? `${passes} rendez-vous terminé${passes > 1 ? 's' : ''} ou annulé${passes > 1 ? 's' : ''} (leur historique et le chiffre d'affaires associé seront effacés)` : '',
+        aVenir > 0 ? `${aVenir} rendez-vous à venir (les clients qui ont laissé un email seront prévenus de l'annulation)` : '',
+      ]
+        .filter(Boolean)
+        .join('\n- ')
+      if (
+        !confirm(
+          `« ${s.nom} » figure dans ${total} rendez-vous :\n- ${detail}\n\nCes rendez-vous seront supprimés en entier, même s'ils contiennent d'autres prestations. Les supprimer avec ce service, définitivement ?\n\nPour garder l'historique, annulez ici et choisissez plutôt « Désactiver ».`,
+        )
+      )
+        return
+      res = await fetch(`/api/services/${s.id}?cascade=1`, { method: 'DELETE' })
+      data = await res.json().catch(() => ({}))
+    }
+
     if (!res.ok) {
       setMessage(data.error ?? 'Suppression impossible.')
       return
     }
     setServices((prev) => prev.filter((p) => p.id !== s.id))
+    if (data.rendezVousSupprimes) {
+      setMessage(`« ${s.nom} » a été supprimé avec ${data.rendezVousSupprimes} rendez-vous${data.clientsPrevenus ? ` ; ${data.clientsPrevenus} client${data.clientsPrevenus > 1 ? 's' : ''} prévenu${data.clientsPrevenus > 1 ? 's' : ''} par email` : ''}.`)
+    }
   }
 
   return (

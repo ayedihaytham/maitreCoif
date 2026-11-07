@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { apercuSuppression, messageRendezVousLies, prevenirClientsAnnulation, rendezVousDuService } from '@/lib/suppression'
 import { serviceSchema } from '@/lib/validators'
 
 async function requireAdmin() {
@@ -21,23 +22,26 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   return NextResponse.json(service)
 }
 
-/** Suppression définitive. Impossible si le service figure dans des rendez-vous : on le désactive alors. */
-export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+/**
+ * Suppression définitive. Si le service figure dans des rendez-vous, elle est refusée (409) avec le détail de ce
+ * qui serait effacé ; avec `?cascade=1` ces rendez-vous sont supprimés aussi (en entier, même s'ils contiennent
+ * d'autres prestations) et les clients à venir sont prévenus par email.
+ */
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!(await requireAdmin())) return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
 
   const { id } = await params
-  const existe = await prisma.service.findUnique({ where: { id }, select: { id: true } })
-  if (!existe) return NextResponse.json({ error: 'Service introuvable' }, { status: 404 })
+  const service = await prisma.service.findUnique({ where: { id }, select: { id: true, nom: true } })
+  if (!service) return NextResponse.json({ error: 'Service introuvable' }, { status: 404 })
 
-  const [direct, lignes] = await Promise.all([prisma.rendezVous.count({ where: { serviceId: id } }), prisma.rendezVousService.count({ where: { serviceId: id } })])
-  const utilisations = Math.max(direct, lignes)
-  if (utilisations > 0) {
-    return NextResponse.json(
-      { error: `Suppression impossible : ce service figure dans ${utilisations} rendez-vous (historique). Désactivez-le plutôt, vous pourrez le réactiver.` },
-      { status: 409 },
-    )
+  const cascade = new URL(request.url).searchParams.get('cascade') === '1'
+  const where = rendezVousDuService(id)
+  const apercu = await apercuSuppression(where)
+  if (apercu.total > 0 && !cascade) {
+    return NextResponse.json({ error: messageRendezVousLies(`« ${service.nom} »`, apercu), rendezVous: apercu }, { status: 409 })
   }
 
-  await prisma.service.delete({ where: { id } })
-  return NextResponse.json({ supprime: true })
+  const clientsPrevenus = apercu.total > 0 ? await prevenirClientsAnnulation(where) : 0
+  await prisma.$transaction([prisma.rendezVous.deleteMany({ where }), prisma.service.delete({ where: { id } })])
+  return NextResponse.json({ supprime: true, rendezVousSupprimes: apercu.total, clientsPrevenus })
 }

@@ -230,15 +230,41 @@ export function EquipeManager({ initial }: { initial: Coiffeur[] }) {
 
   async function supprimer(c: Coiffeur) {
     setNotice(null)
-    if (!confirm(`Supprimer définitivement ${c.prenom} ${c.nom} ? Ses horaires seront effacés. Cette action est irréversible.`)) return
-    const res = await fetch(`/api/admin/equipe/${c.id}`, { method: 'DELETE' })
-    const data = await res.json().catch(() => ({}))
+    const nom = `${c.prenom} ${c.nom}`
+    if (!confirm(`Supprimer définitivement ${nom} ? Ses horaires seront effacés. Cette action est irréversible.`)) return
+
+    let res = await fetch(`/api/admin/equipe/${c.id}`, { method: 'DELETE' })
+    let data = await res.json().catch(() => ({}))
+
+    // Des rendez-vous sont à son nom : on montre ce qui disparaîtrait et on demande une 2e confirmation.
+    if (res.status === 409 && data.rendezVous) {
+      const { total, aVenir, passes } = data.rendezVous as { total: number; aVenir: number; passes: number }
+      const detail = [
+        passes > 0 ? `${passes} rendez-vous terminé${passes > 1 ? 's' : ''} ou annulé${passes > 1 ? 's' : ''} (leur historique et le chiffre d'affaires associé seront effacés)` : '',
+        aVenir > 0 ? `${aVenir} rendez-vous à venir (les clients qui ont laissé un email seront prévenus de l'annulation)` : '',
+      ]
+        .filter(Boolean)
+        .join('\n- ')
+      if (
+        !confirm(
+          `${nom} a ${total} rendez-vous :\n- ${detail}\n\nLes supprimer avec lui, définitivement ?\n\nPour garder l'historique, annulez ici et choisissez plutôt « Désactiver ».`,
+        )
+      )
+        return
+      res = await fetch(`/api/admin/equipe/${c.id}?cascade=1`, { method: 'DELETE' })
+      data = await res.json().catch(() => ({}))
+    }
+
     if (!res.ok) {
       setNotice(data.error ?? 'Suppression impossible.')
       return
     }
     setEquipe((prev) => prev.filter((e) => e.id !== c.id))
-    setNotice(`${c.prenom} ${c.nom} a été supprimé.`)
+    setNotice(
+      data.rendezVousSupprimes
+        ? `${nom} a été supprimé avec ${data.rendezVousSupprimes} rendez-vous${data.clientsPrevenus ? ` ; ${data.clientsPrevenus} client${data.clientsPrevenus > 1 ? 's' : ''} prévenu${data.clientsPrevenus > 1 ? 's' : ''} par email` : ''}.`
+        : `${nom} a été supprimé.`,
+    )
   }
 
   return (
