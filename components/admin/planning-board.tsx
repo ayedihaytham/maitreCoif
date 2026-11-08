@@ -151,6 +151,8 @@ export function PlanningBoard({ role, currentUserId, coiffeurs }: { role: Role; 
   const actifs = rendezVous.filter((r) => r.statut !== 'ANNULE')
   const aConfirmer = actifs.filter((r) => r.statut === 'EN_ATTENTE').length
   const demandes = actifs.filter((r) => r.demandesModification.length > 0).length
+  // Les montants sont réservés au gérant ; l'API ne les envoie d'ailleurs pas aux coiffeurs.
+  const voitLesMontants = role === 'ADMIN'
   const chiffre = actifs.reduce((somme, r) => somme + prestationsDuRendezVous(r).prix, 0)
   const selected = rendezVous.find((r) => r.id === selectedId) ?? null
 
@@ -261,9 +263,11 @@ export function PlanningBoard({ role, currentUserId, coiffeurs }: { role: Role; 
               <b>{demandes}</b> {demandes > 1 ? 'demandes' : 'demande'} de modification
             </span>
           )}
-          <span className="gold">
-            <b>{formatPrix(chiffre)}</b> prévus
-          </span>
+          {voitLesMontants && (
+            <span className="gold">
+              <b>{formatPrix(chiffre)}</b> prévus
+            </span>
+          )}
         </div>
       )}
 
@@ -398,12 +402,12 @@ export function PlanningBoard({ role, currentUserId, coiffeurs }: { role: Role; 
                     <small>{selected.lignes.length > 1 ? 'Prestations' : 'Prestation'}</small>
                     {(selected.lignes.length > 0 ? selected.lignes : [selected.service]).map((l) => (
                       <div key={l.nom}>
-                        {l.nom} · {l.duree} min · {formatPrix(Number(l.prix))}
+                        {l.nom} · {l.duree} min{voitLesMontants && ` · ${formatPrix(Number(l.prix))}`}
                       </div>
                     ))}
                     {selected.lignes.length > 1 && (
                       <strong>
-                        Total : {prestationsDuRendezVous(selected).duree} min · {formatPrix(prestationsDuRendezVous(selected).prix)}
+                        Total : {prestationsDuRendezVous(selected).duree} min{voitLesMontants && ` · ${formatPrix(prestationsDuRendezVous(selected).prix)}`}
                       </strong>
                     )}
                   </div>

@@ -131,7 +131,8 @@
 .mc .h-facts{display:flex;gap:clamp(20px,4vw,56px);flex-wrap:wrap;margin-top:44px}
 .mc .h-facts div{max-width:220px;padding-top:14px;border-top:1px solid rgb(var(--mc-fg-rgb) / .32);font-size:13.5px;line-height:1.55;color:var(--mc-soft)}
 .mc .h-facts .lbl{display:block;margin-bottom:8px;font-size:10px}
-@media (max-width:760px){.mc .h-pip{top:96px;width:44vw}.mc .h-ghost{top:12vh}.mc .h-uni-copy .h2{max-width:none}}
+/* Mobile : le texte démarre sous la vignette (hauteur = 16/10 de sa largeur) au lieu de passer dessous. */
+@media (max-width:760px){.mc .h-pip{top:96px;width:44vw}.mc .h-ghost{top:12vh}.mc .h-uni-copy{padding-top:calc(96px + 44vw * .625 + 32px)}.mc .h-uni-copy .h2{max-width:none}}
 
 /* ───────────────────────── Plan 4 · Le casting (essais caméra) ───────────────────────── */
 .mc .h-cast{position:relative;min-height:100svh;overflow:hidden;isolation:isolate;background:var(--mc-ink);padding:clamp(100px,14vh,150px) 0 clamp(110px,14vh,150px)}

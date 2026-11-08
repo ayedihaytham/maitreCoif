@@ -3,6 +3,7 @@ import '../cinema-home.css'
 import '../cinema-chrome.css'
 import '../cinema-boutique.css'
 import '../cinema-localisation.css'
+import '../cinema-packs.css'
 import '../cinema-fixes.css'
 
 import { PanierProvider } from '@/components/boutique/panier'

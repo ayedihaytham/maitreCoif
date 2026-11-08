@@ -6,10 +6,10 @@ import { versCommandeAdmin } from '@/lib/boutique-admin'
 import { notifierAnnulationCommande, notifierCommandePrete } from '@/lib/boutique-emails'
 import { statutCommandeSchema } from '@/lib/validators'
 
-// Les coiffeurs préparent aussi les commandes au salon : tout le personnel peut changer un statut.
+// Les réservations de produits (avec leurs montants) sont réservées au gérant.
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth()
-  if (session?.user.role !== 'ADMIN' && session?.user.role !== 'COIFFEUR') {
+  if (session?.user.role !== 'ADMIN') {
     return NextResponse.json({ error: 'Accès refusé' }, { status: 403 })
   }
   const { id } = await params

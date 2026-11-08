@@ -7,6 +7,7 @@ import { ArrowRight, Clock } from 'lucide-react'
 import { BoutiqueAccueil } from '@/components/boutique/accueil'
 import { Cinema } from '@/components/site/cinema'
 import { Intro } from '@/components/site/intro'
+import { PacksAccueil } from '@/components/site/packs-accueil'
 import { Localisation } from '@/components/site/localisation'
 import { PortraitRond } from '@/components/site/portrait'
 import { Reveal } from '@/components/site/reveal'
@@ -63,9 +64,8 @@ async function getAccueilData() {
 export default async function AccueilPage() {
   const { tousLesServices, coiffeurs, avis, statsAvis, photosSalon, prochaine, boutique } = await getAccueilData()
 
-  // Quelques produits disponibles d'abord, puis les packs du moment.
+  // Quelques produits, ceux en stock d'abord.
   const produitsVedette = [...boutique.produits].sort((a, b) => Number(b.stock > 0) - Number(a.stock > 0)).slice(0, 4)
-  const packsVedette = boutique.packs.slice(0, 3)
 
   const services = tousLesServices
   const equipe = attribuerPortraits(coiffeurs)
@@ -162,6 +162,9 @@ export default async function AccueilPage() {
           </div>
         </div>
       )}
+
+      {/* Les packs : même pellicule que les prestations, défilant dans l'autre sens */}
+      <PacksAccueil packs={boutique.packs} />
 
       {/* Prestations */}
       {services.length > 0 && (
@@ -315,7 +318,7 @@ export default async function AccueilPage() {
       )}
 
       {/* La boutique : produits et packs */}
-      <BoutiqueAccueil produits={produitsVedette} packs={packsVedette} />
+      <BoutiqueAccueil produits={produitsVedette} />
 
       {/* L'équipe */}
       {equipe.length > 0 && (

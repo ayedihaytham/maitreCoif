@@ -1,17 +1,17 @@
 import Link from 'next/link'
-import { ArrowRight, Package, Scissors } from 'lucide-react'
+import { ArrowRight, Package } from 'lucide-react'
 
 import { Reveal } from '@/components/site/reveal'
-import type { PackPublic, ProduitPublic } from '@/lib/boutique'
+import type { ProduitPublic } from '@/lib/boutique'
 import { SEUIL_STOCK_BAS } from '@/lib/boutique-constantes'
 import { formatPrix } from '@/lib/utils'
 
 /**
- * Section « boutique » de l'accueil : quelques produits et les packs du moment. Les achats se font sur la
- * page boutique ; ici, tout est un lien (aucun script côté navigateur).
+ * Section « boutique » de l'accueil : quelques produits. Les achats se font sur la page boutique ; ici,
+ * tout est un lien (aucun script côté navigateur). Les packs ont leur propre section, avant les prestations.
  */
-export function BoutiqueAccueil({ produits, packs }: { produits: ProduitPublic[]; packs: PackPublic[] }) {
-  if (produits.length === 0 && packs.length === 0) return null
+export function BoutiqueAccueil({ produits }: { produits: ProduitPublic[] }) {
+  if (produits.length === 0) return null
 
   return (
     <section className="bq-home" data-scene="7" aria-labelledby="t-boutique">
@@ -29,8 +29,7 @@ export function BoutiqueAccueil({ produits, packs }: { produits: ProduitPublic[]
           </Link>
         </Reveal>
 
-        {produits.length > 0 && (
-          <div className="bq-grid">
+        <div className="bq-grid">
             {produits.map((p, i) => (
               <Reveal as="article" key={p.id} delay={i % 4} className={`bq-card${p.stock < 1 ? ' out' : ''}`}>
                 <Link href="/boutique" className="bq-im" tabIndex={-1} aria-hidden="true">
@@ -57,58 +56,6 @@ export function BoutiqueAccueil({ produits, packs }: { produits: ProduitPublic[]
               </Reveal>
             ))}
           </div>
-        )}
-
-        {packs.length > 0 && (
-          <>
-            <Reveal className="bq-sous">
-              <h3>
-                Nos <em>packs.</em>
-              </h3>
-              <Link className="tlink" href="/boutique?vue=packs" data-ph="tous-les-packs">
-                Tous les packs <ArrowRight className="size-3.5" aria-hidden="true" />
-              </Link>
-            </Reveal>
-            <div className="bq-packs">
-              {packs.map((k, i) => (
-                <Reveal as="article" key={k.id} delay={i} className="bq-pack">
-                  <div className="bq-pack-top">
-                    <div style={{ minWidth: 0 }}>
-                      <h3>{k.nom}</h3>
-                      {k.description && <p>{k.description}</p>}
-                    </div>
-                    {k.pourcentage > 0 && <span className="bq-off">−{k.pourcentage} %</span>}
-                  </div>
-                  <ul className="bq-incl">
-                    {k.elements.map((e) => (
-                      <li key={`${e.type}${e.id}`}>
-                        {e.type === 'service' ? <Scissors aria-hidden="true" /> : <Package aria-hidden="true" />}
-                        <span>
-                          {e.nom}
-                          {e.quantite > 1 ? ` ×${e.quantite}` : ''}
-                          {e.type === 'service' ? <em> · prestation</em> : null}
-                        </span>
-                        <span>{formatPrix(e.prix * e.quantite)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="bq-pack-prix">
-                    <div>
-                      {k.economie > 0 && <s>{formatPrix(k.normal)}</s>}
-                      <b>{formatPrix(k.final)}</b>
-                      {k.economie > 0 && <span className="econ">Vous économisez {formatPrix(k.economie)}</span>}
-                    </div>
-                  </div>
-                  <div className="bq-pack-cta">
-                    <Link className="btn btn-gold" href="/boutique?vue=packs" data-ph="accueil-pack">
-                      Réserver ce pack
-                    </Link>
-                  </div>
-                </Reveal>
-              ))}
-            </div>
-          </>
-        )}
       </div>
     </section>
   )

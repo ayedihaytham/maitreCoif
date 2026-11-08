@@ -265,11 +265,13 @@ describe('statuts et emails (back-office)', () => {
     expect(await stock('huile')).toBe(10)
   })
 
-  it('réservé au personnel', async () => {
+  it('réservé au gérant : ni les clients ni les coiffeurs', async () => {
     const c = await reserver([{ type: 'produit', id: ids.huile, quantite: 1 }])
     m.role.valeur = 'CLIENT'
     expect((await routeStatut.PATCH(requete({ statut: 'PRETE' }, 'PATCH'), ctxId(c.id))).status).toBe(403)
     m.role.valeur = 'COIFFEUR'
+    expect((await routeStatut.PATCH(requete({ statut: 'PRETE' }, 'PATCH'), ctxId(c.id))).status).toBe(403)
+    m.role.valeur = 'ADMIN'
     expect((await routeStatut.PATCH(requete({ statut: 'PRETE' }, 'PATCH'), ctxId(c.id))).status).toBe(200)
   })
 

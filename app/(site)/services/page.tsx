@@ -2,9 +2,12 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Clock } from 'lucide-react'
 
+import { ListePacks } from '@/components/boutique/catalogue'
 import { Cinema } from '@/components/site/cinema'
 import { PageHero } from '@/components/site/page-hero'
 import { Reveal } from '@/components/site/reveal'
+import { ServicesOnglets } from '@/components/site/services-onglets'
+import { chargerCatalogue } from '@/lib/boutique'
 import { prisma } from '@/lib/prisma'
 import { formatPrix } from '@/lib/utils'
 
@@ -13,10 +16,15 @@ export const metadata: Metadata = {
   description: 'Découvrez les prestations proposées par Maitre Coif : coupe, barbe, coloration, soins.',
 }
 
-export const revalidate = 60
+// Les places restantes d'un pack changent avec les réservations : régénération assez fréquente.
+export const revalidate = 30
 
 export default async function ServicesPage() {
-  const services = await prisma.service.findMany({ where: { actif: true }, orderBy: [{ categorie: 'asc' }, { prix: 'asc' }] })
+  const [services, { packs }] = await Promise.all([
+    prisma.service.findMany({ where: { actif: true }, orderBy: [{ categorie: 'asc' }, { prix: 'asc' }] }),
+    // Les packs ne doivent jamais empêcher la liste des services de s'afficher.
+    chargerCatalogue().catch(() => ({ produits: [], packs: [] })),
+  ])
 
   const categories = Array.from(new Set(services.map((s) => s.categorie || 'Autres')))
   let numero = 0
@@ -28,9 +36,14 @@ export default async function ServicesPage() {
         etiquette="Nos prestations"
         image="/maitre-coif-interieur.jpg"
         lignes={[{ t: 'Nos' }, { t: 'services.', or: true }]}
-        texte="Des prestations pensées pour chaque style, réalisées avec des produits professionnels et un savoir-faire exigeant. Tarifs en dinars tunisiens (DT), à régler au salon."
+        texte="Des prestations pensées pour chaque style, à l'unité ou réunies en packs, réalisées avec des produits professionnels et un savoir-faire exigeant. Tarifs en dinars tunisiens (DT), à régler au salon."
       />
       <div className="wrap s-page sec">
+        <ServicesOnglets
+          nbServices={services.length}
+          nbPacks={packs.length}
+          services={
+            <>
         {services.length === 0 ? (
           <p className="empty-state" style={{ marginTop: 56 }}>
             Aucun service disponible pour le moment.
@@ -70,6 +83,10 @@ export default async function ServicesPage() {
             ))}
           </div>
         )}
+            </>
+          }
+          packs={<ListePacks packs={packs} />}
+        />
       </div>
     </main>
   )

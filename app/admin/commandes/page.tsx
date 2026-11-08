@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
+import { redirect } from 'next/navigation'
 
+import { auth } from '@/lib/auth'
 import { AdminPageHead } from '@/components/admin/page-head'
 import { CommandesManager } from '@/components/admin/commandes-manager'
 import { listerCommandesAdmin } from '@/lib/boutique-admin'
@@ -11,9 +13,10 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic'
 
-// Ouverte à tout le personnel (le contrôle d'accès est fait par le proxy et le layout) : les coiffeurs
-// préparent et remettent aussi les commandes au salon.
+// Réservée au gérant (le proxy l'impose ; le contrôle est répété ici car la page affiche des montants).
 export default async function AdminCommandesPage() {
+  const session = await auth()
+  if (session?.user.role !== 'ADMIN') redirect('/planning')
   // Les réservations dont le délai est dépassé expirent maintenant (stock remis en vente) plutôt qu'à la prochaine tâche quotidienne.
   await expirerCommandesEchues().catch((e) => console.error('Expiration des réservations impossible :', e))
   return (

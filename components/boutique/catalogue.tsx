@@ -11,8 +11,6 @@ import type { PackPublic, ProduitPublic } from '@/lib/boutique'
 import { QUANTITE_MAX, SEUIL_STOCK_BAS } from '@/lib/boutique-constantes'
 import { cn, formatPrix } from '@/lib/utils'
 
-type Vue = 'produits' | 'packs'
-
 const jourCourt = (iso: string) => iso.split('-').reverse().join('/')
 
 /** Photo du produit, ou un emplacement sobre quand le salon n'en a pas encore mis. */
@@ -83,7 +81,7 @@ function CartePanier({ produit }: { produit: ProduitPublic }) {
   )
 }
 
-function CartePack({ pack }: { pack: PackPublic }) {
+export function CartePack({ pack }: { pack: PackPublic }) {
   const panier = usePanier()
   const router = useRouter()
   const quantite = panier.quantiteDe('pack', pack.id)
@@ -151,9 +149,22 @@ function CartePack({ pack }: { pack: PackPublic }) {
   )
 }
 
-export function Catalogue({ produits, packs, vueInitiale = 'produits' }: { produits: ProduitPublic[]; packs: PackPublic[]; vueInitiale?: Vue }) {
+/** Les packs : une grille de cartes (page « Nos services »). */
+export function ListePacks({ packs }: { packs: PackPublic[] }) {
+  return packs.length === 0 ? (
+    <p className="empty-state">Aucun pack disponible pour le moment.</p>
+  ) : (
+    <div className="bq-packs">
+      {packs.map((k) => (
+        <CartePack key={k.id} pack={k} />
+      ))}
+    </div>
+  )
+}
+
+/** Les produits de la boutique. `packs` ne sert qu'à chiffrer le panier (les packs se choisissent dans « Nos services »). */
+export function Catalogue({ produits, packs }: { produits: ProduitPublic[]; packs: PackPublic[] }) {
   const panier = usePanier()
-  const [vue, setVue] = useState<Vue>(vueInitiale === 'packs' && packs.length > 0 ? 'packs' : 'produits')
   const [categorie, setCategorie] = useState('Tous')
 
   const categories = useMemo(() => ['Tous', ...Array.from(new Set(produits.map((p) => p.categorie).filter((c): c is string => Boolean(c))))], [produits])
@@ -167,16 +178,8 @@ export function Catalogue({ produits, packs, vueInitiale = 'produits' }: { produ
 
   return (
     <div className={cn(panier.nombre > 0 && 'has-bar')}>
-      <div className="bq-toolbar">
-        <div className="bq-seg" role="tablist" aria-label="Boutique">
-          <button type="button" role="tab" aria-selected={vue === 'produits'} className={cn(vue === 'produits' && 'on')} onClick={() => setVue('produits')}>
-            Produits <small>{produits.length}</small>
-          </button>
-          <button type="button" role="tab" aria-selected={vue === 'packs'} className={cn(vue === 'packs' && 'on')} onClick={() => setVue('packs')}>
-            Packs <small>{packs.length}</small>
-          </button>
-        </div>
-        {vue === 'produits' && categories.length > 2 && (
+      {categories.length > 2 && (
+        <div className="bq-toolbar">
           <div className="bq-filters" role="group" aria-label="Filtrer par catégorie">
             {categories.map((c) => (
               <button key={c} type="button" className={cn(c === categorie && 'on')} aria-pressed={c === categorie} onClick={() => setCategorie(c)}>
@@ -184,25 +187,15 @@ export function Catalogue({ produits, packs, vueInitiale = 'produits' }: { produ
               </button>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      {vue === 'produits' ? (
-        visibles.length === 0 ? (
-          <p className="empty-state">Aucun produit disponible pour le moment.</p>
-        ) : (
-          <div className="bq-grid" role="tabpanel">
-            {visibles.map((p) => (
-              <CartePanier key={p.id} produit={p} />
-            ))}
-          </div>
-        )
-      ) : packs.length === 0 ? (
-        <p className="empty-state">Aucun pack disponible pour le moment.</p>
+      {visibles.length === 0 ? (
+        <p className="empty-state">Aucun produit disponible pour le moment.</p>
       ) : (
-        <div className="bq-packs" role="tabpanel">
-          {packs.map((k) => (
-            <CartePack key={k.id} pack={k} />
+        <div className="bq-grid">
+          {visibles.map((p) => (
+            <CartePanier key={p.id} produit={p} />
           ))}
         </div>
       )}

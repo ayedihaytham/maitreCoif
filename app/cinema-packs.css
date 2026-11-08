@@ -1,0 +1,6 @@
+/* Packs à l'accueil : pellicule inversée (cartes de droite à gauche, défilement vers la droite). */
+.mc .h-reel.rev .h-strip{flex-direction:row-reverse}
+.mc .pk-off{position:absolute;z-index:2;right:22px;top:40px;padding:7px 12px;font:700 11px/1 var(--mc-sans);letter-spacing:.12em;background:var(--mc-gold);color:var(--mc-on-gold);border-radius:2px}
+.mc .pk-incl{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.mc .pk-old{color:var(--mc-muted)}
+.mc .pk-old s{text-decoration-thickness:1px}

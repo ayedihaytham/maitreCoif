@@ -112,5 +112,16 @@ export async function GET(request: Request) {
     },
   })
 
+  // Un coiffeur voit son planning sans aucun montant : les prix ne quittent pas le serveur.
+  if (session.user.role === 'COIFFEUR') {
+    return NextResponse.json(
+      rendezVous.map((r) => ({
+        ...r,
+        service: { ...r.service, prix: 0 },
+        lignes: r.lignes.map((l) => ({ ...l, prix: 0 })),
+      })),
+    )
+  }
+
   return NextResponse.json(rendezVous)
 }

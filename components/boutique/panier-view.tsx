@@ -158,7 +158,7 @@ export function PanierView() {
           <Link className="btn btn-gold" href="/boutique">
             Voir les produits
           </Link>
-          <Link className="btn btn-ghost" href="/boutique?vue=packs">
+          <Link className="btn btn-ghost" href="/services?vue=packs">
             Voir les packs
           </Link>
         </div>

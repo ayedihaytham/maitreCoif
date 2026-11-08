@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 
 import { borner } from '@/lib/utils'
 
-const SCENES = ['Ouverture', 'Prestations', 'Le salon', 'Galerie', "L'équipe", 'Avis', 'Fin', 'Boutique', 'Accès']
+const SCENES = ['Ouverture', 'Prestations', 'Le salon', 'Galerie', "L'équipe", 'Avis', 'Fin', 'Boutique', 'Accès', 'Packs']
 
 const tous = (sel: string) => Array.from(document.querySelectorAll<HTMLElement>(sel))
 
@@ -112,7 +112,8 @@ export function Cinema({ hud: avecLecteur = true }: { hud?: boolean }) {
           const fp = borner(-r.top / Math.max(1, r.height - vh))
           const p = pellicules.find((x) => x.reel === el)
           if (!p) continue
-          const tx = -Math.max(0, p.largeur - vw) * fp
+          // data-dir="rev" : la pellicule part du bout et revient vers le début (sens inverse).
+          const tx = -Math.max(0, p.largeur - vw) * (el.dataset.dir === 'rev' ? 1 - fp : fp)
           p.strip.style.transform = `translate3d(${tx.toFixed(2)}px,0,0)`
           for (const c of p.cartes) {
             const ad = Math.min(1.5, Math.abs((tx + c.centre - vw / 2) / (vw / 2)))

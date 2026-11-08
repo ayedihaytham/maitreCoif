@@ -29,7 +29,7 @@ const SECTIONS = [
     liens: [
       { href: '/produits', label: 'Produits', icon: Package, adminOnly: true },
       { href: '/packs', label: 'Packs', icon: Gift, adminOnly: true },
-      { href: '/commandes', label: 'Réservations produits', icon: ShoppingBag, adminOnly: false },
+      { href: '/commandes', label: 'Réservations produits', icon: ShoppingBag, adminOnly: true },
     ],
   },
   {
