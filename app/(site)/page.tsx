@@ -67,7 +67,7 @@ export default async function AccueilPage() {
   const produitsVedette = [...boutique.produits].sort((a, b) => Number(b.stock > 0) - Number(a.stock > 0)).slice(0, 4)
   const packsVedette = boutique.packs.slice(0, 3)
 
-  const services = tousLesServices.slice(0, 5)
+  const services = tousLesServices
   const equipe = attribuerPortraits(coiffeurs)
   const avisAffiches: AvisAffiche[] = avis.map((a) => ({
     id: a.id,
@@ -171,7 +171,7 @@ export default async function AccueilPage() {
               <div>
                 <div className="lbl">Nos prestations</div>
                 <h2 className="h2" id="t-serv">
-                  Cinq gestes, <em>une signature.</em>
+                  Tous nos gestes, <em>une signature.</em>
                 </h2>
               </div>
               <Link className="tlink" href="/services" data-ph="tous-les-services">

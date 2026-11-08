@@ -158,7 +158,10 @@
 .mc .pulse{width:8px;height:8px;border-radius:50%;background:var(--a-green);box-shadow:0 0 0 0 rgba(123,216,143,.6);animation:mc-ping 2s ease-out infinite}
 .mc .foot{background:var(--mc-foot);border-top:1px solid var(--mc-line-gold);text-align:center;padding:64px 0 36px}
 .mc .foot .logo-f{height:104px;width:auto;margin:0 auto;opacity:.95}
-.mc .cred{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px;margin-top:44px}
+.mc .cred{display:grid;grid-template-columns:repeat(var(--cols,3),minmax(0,1fr));gap:40px;margin-top:44px}
+.mc .cred p a{color:inherit;text-decoration:none}
+.mc .cred p a:hover{color:var(--mc-gold-ink)}
+.mc .cred>div>small{margin-top:14px}
 .mc .cred .lbl{font-size:10.5px}
 .mc .cred p{margin:14px 0 0;font:400 24px/1.35 var(--mc-serif);color:var(--c-e9e6df)}
 .mc .cred small{display:block;margin-top:6px;font:400 13px/1.5 var(--mc-sans);color:var(--mc-muted)}

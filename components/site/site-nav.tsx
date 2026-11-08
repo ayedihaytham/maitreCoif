@@ -30,7 +30,7 @@ async function deconnecterClient() {
   signOut({ callbackUrl: '/' })
 }
 
-export function SiteNav() {
+export function SiteNav({ horaires = [] }: { horaires?: { jours: string; heures: string }[] }) {
   const pathname = usePathname()
   const panier = usePanier()
   const [user, setUser] = useState<Utilisateur>(null)
@@ -220,7 +220,8 @@ export function SiteNav() {
           <ThemeToggle />
           Route Afran Km 5, Sfax
           <br />
-          Mardi — Samedi · 10h00 — 20h30 · Sur rendez-vous
+          {horaires.map((h) => `${h.jours} · ${h.heures}`).join(' · ')}
+          {horaires.length > 0 && ' · '}Sur rendez-vous
         </div>
       </div>
 

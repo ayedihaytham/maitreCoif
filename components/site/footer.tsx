@@ -1,5 +1,6 @@
 import { ThemeLogo } from '@/components/theme-logo'
 
+import { getHorairesSalon } from '@/lib/horaires'
 import { prisma } from '@/lib/prisma'
 
 function InstagramIcon(props: React.SVGProps<SVGSVGElement>) {
@@ -22,20 +23,31 @@ function FacebookIcon(props: React.SVGProps<SVGSVGElement>) {
 
 // Pied de page en « générique de fin ».
 export async function Footer() {
-  const equipe = await prisma.user.findMany({
-    where: { role: { in: ['COIFFEUR', 'ADMIN'] }, actif: true },
-    orderBy: { dateCreation: 'asc' },
-    select: { prenom: true, nom: true },
-    take: 6,
-  })
+  const [equipe, gerants, horaires] = await Promise.all([
+    prisma.user.findMany({
+      where: { role: { in: ['COIFFEUR', 'ADMIN'] }, actif: true },
+      orderBy: { dateCreation: 'asc' },
+      select: { prenom: true, nom: true },
+      take: 6,
+    }),
+    // Seuls les gérants affichent leur numéro : pas celui des autres coiffeurs.
+    prisma.user.findMany({
+      where: { role: 'ADMIN', actif: true, telephone: { not: null } },
+      orderBy: { dateCreation: 'asc' },
+      select: { prenom: true, nom: true, telephone: true },
+    }),
+    getHorairesSalon(),
+  ])
   const [premier, ...autres] = equipe.map((m) => `${m.prenom} ${m.nom}`)
+  const contacts = gerants.filter((g) => g.telephone?.trim())
+  const colonnes = 2 + (contacts.length > 0 ? 1 : 0) + (premier ? 1 : 0)
 
   return (
     <footer className="foot">
       <div className="wrap">
         <ThemeLogo className="logo-f" />
 
-        <div className="cred" style={premier ? undefined : { gridTemplateColumns: 'repeat(2,minmax(0,1fr))' }}>
+        <div className="cred" style={{ '--cols': colonnes } as React.CSSProperties}>
           <div>
             <div className="lbl">L&apos;adresse</div>
             <p>
@@ -44,10 +56,31 @@ export async function Footer() {
           </div>
           <div>
             <div className="lbl">Horaires</div>
-            <p>
-              Mardi — Samedi<small>10h00 — 20h30 · Sur rendez-vous uniquement</small>
-            </p>
+            {horaires.length > 0 ? (
+              horaires.map((h) => (
+                <p key={h.jours}>
+                  {h.jours}
+                  <small>{h.heures}</small>
+                </p>
+              ))
+            ) : (
+              <p>Sur rendez-vous</p>
+            )}
+            <small>Sur rendez-vous uniquement</small>
           </div>
+          {contacts.length > 0 && (
+            <div>
+              <div className="lbl">{contacts.length > 1 ? 'Contacts' : 'Contact'}</div>
+              {contacts.map((g) => (
+                <p key={g.telephone}>
+                  <a href={`tel:${g.telephone!.replace(/[^\d+]/g, '')}`}>{g.telephone}</a>
+                  <small>
+                    {g.prenom} {g.nom} · Gérant
+                  </small>
+                </p>
+              ))}
+            </div>
+          )}
           {premier && (
             <div>
               <div className="lbl">L&apos;équipe</div>
