@@ -24,8 +24,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Vérification anti-robot échouée, merci de réessayer.' }, { status: 400 })
   }
 
-  const { clientNom, clientTelephone, clientEmail, retrait, jourSouhaite, notes, lignes, rendezVous } = parsed.data
-  const resultat = await creerCommande({ clientNom, clientTelephone, clientEmail, retrait, jourSouhaite: jourSouhaite || null, notes: notes || null, lignes, rendezVous })
+  const { clientNom, clientTelephone, clientEmail, retrait, jourSouhaite, notes, lignes } = parsed.data
+  const resultat = await creerCommande({ clientNom, clientTelephone, clientEmail, retrait, jourSouhaite: jourSouhaite || null, notes: notes || null, lignes })
   if (!resultat.ok) {
     return NextResponse.json({ error: resultat.problemes[0], problemes: resultat.problemes }, { status: 409 })
   }

@@ -18,7 +18,7 @@ export default async function BoutiquePage({ searchParams }: { searchParams: Pro
   const { vue } = await searchParams
   // Les packs vivent désormais dans « Nos services » : les anciens liens y mènent.
   if (vue === 'packs') redirect('/services?vue=packs')
-  const { produits, packs } = await chargerCatalogue()
+  const { produits } = await chargerCatalogue()
 
   return (
     <main>
@@ -31,7 +31,7 @@ export default async function BoutiquePage({ searchParams }: { searchParams: Pro
         courte
       />
       <div className="wrap sec" style={{ paddingTop: 'clamp(40px,5vw,64px)' }}>
-        <Catalogue produits={produits} packs={packs} />
+        <Catalogue produits={produits} />
       </div>
     </main>
   )

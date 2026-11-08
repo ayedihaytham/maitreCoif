@@ -152,37 +152,34 @@ describe('panier', () => {
 
 describe('réservation (route publique)', () => {
   it('crée la réservation, décompte le stock, prévient le client et alerte le salon', async () => {
-    const r = await routeCommandes.POST(requete({ ...client, lignes: [{ type: 'produit', id: ids.huile, quantite: 2 }, { type: 'pack', id: ids.pack, quantite: 1 }] }))
+    const r = await routeCommandes.POST(requete({ ...client, lignes: [{ type: 'produit', id: ids.huile, quantite: 2 }, { type: 'produit', id: ids.baume, quantite: 1 }] }))
     expect(r.status).toBe(201)
     const { code } = await r.json()
     expect(code).toMatch(/^PR-[A-Z0-9]{7}$/)
 
-    // 2 huiles seules + 1 huile et 1 baume dans le pack
-    expect(await stock('huile')).toBe(10 - 3)
+    expect(await stock('huile')).toBe(10 - 2)
     expect(await stock('baume')).toBe(5 - 1)
 
     const commande = await prisma.commande.findUniqueOrThrow({ where: { code }, include: { lignes: true } })
-    expect(Number(commande.total)).toBe(99)
-    expect(Number(commande.economie)).toBe(9)
+    expect(Number(commande.total)).toBe(66) // 2 x 24 + 18
     expect(commande.statut).toBe('A_PREPARER')
     expect(commande.expireLe.getTime()).toBeGreaterThan(Date.now() + 6.9 * 24 * 3600 * 1000)
     expect(commande.lignes).toHaveLength(2)
 
-    // Email de confirmation au client (avec le code), et alerte au salon qui mentionne le pack
+    // Email de confirmation au client (avec le code), et alerte au salon
     expect(m.contenu).toHaveBeenCalledTimes(1)
     const [to, sujet, contenu] = m.contenu.mock.calls[0] as [string, string, { codeSuivi: string; titre: string }]
     expect(to).toBe(client.clientEmail)
     expect(sujet).toContain(code)
     expect(contenu.codeSuivi).toBe(code)
-    expect(contenu.titre).toMatch(/pack est réservé/)
+    expect(contenu.titre).toMatch(/réservation est enregistrée/)
     expect(m.alerte).toHaveBeenCalledTimes(1)
-    expect(String(m.alerte.mock.calls[0][0])).toMatch(/pack/i)
   })
 
-  it("le sujet nomme le pack quand c'est la seule chose réservée", async () => {
+  it('le panier ne contient que des produits : un pack est refusé (il se réserve comme une prestation)', async () => {
     const r = await routeCommandes.POST(requete({ ...client, lignes: [{ type: 'pack', id: ids.pack, quantite: 1 }] }))
-    expect(r.status).toBe(201)
-    expect(String(m.contenu.mock.calls[0][1])).toContain(`Pack Barbier test ${suffixe}`)
+    expect(r.status).toBe(400)
+    expect(m.contenu).not.toHaveBeenCalled()
   })
 
   it('refuse sans email : le client doit recevoir sa confirmation', async () => {
@@ -347,22 +344,32 @@ describe('catalogue (back-office)', () => {
     expect(ligne.produitId).toBeNull()
   })
 
-  it('crée un pack, refuse un prix fixe supérieur au prix normal, puis le supprime', async () => {
-    const lignes = [{ type: 'produit', id: ids.huile, quantite: 1 }, { type: 'produit', id: ids.baume, quantite: 1 }]
-    const trop = await routePacks.POST(requete({ nom: `Cher test ${suffixe}`, remiseType: 'PRIX_FIXE', remiseValeur: 50, lignes }))
-    expect(trop.status).toBe(400)
-    expect((await trop.json()).error).toMatch(/inférieur au prix normal/)
+  it('crée un pack de prestations, refuse un prix fixe trop haut, les produits et les doublons, puis le supprime', async () => {
+    const coupe = await prisma.service.create({ data: { nom: `Coupe pack test ${suffixe}`, prix: 25, duree: 30 } })
+    const barbe = await prisma.service.create({ data: { nom: `Barbe pack test ${suffixe}`, prix: 17, duree: 20 } })
+    try {
+      const lignes = [{ type: 'service', id: coupe.id, quantite: 1 }, { type: 'service', id: barbe.id, quantite: 1 }]
+      const trop = await routePacks.POST(requete({ nom: `Cher test ${suffixe}`, remiseType: 'PRIX_FIXE', remiseValeur: 50, lignes }))
+      expect(trop.status).toBe(400)
+      expect((await trop.json()).error).toMatch(/inférieur au prix normal/)
 
-    const ok = await routePacks.POST(requete({ nom: `Duo test ${suffixe}`, remiseType: 'PRIX_FIXE', remiseValeur: 36, lignes }))
-    expect(ok.status).toBe(201)
-    const pack = await ok.json()
-    expect(pack.prix).toMatchObject({ normal: 42, final: 36, economie: 6, pourcentage: 14 })
+      const ok = await routePacks.POST(requete({ nom: `Duo test ${suffixe}`, remiseType: 'PRIX_FIXE', remiseValeur: 36, lignes }))
+      expect(ok.status).toBe(201)
+      const pack = await ok.json()
+      expect(pack.prix).toMatchObject({ normal: 42, final: 36, economie: 6, pourcentage: 14 })
 
-    const doublon = await routePacks.POST(requete({ nom: `Doublon test ${suffixe}`, remiseType: 'POURCENTAGE', remiseValeur: 10, lignes: [lignes[0], lignes[0]] }))
-    expect(doublon.status).toBe(400)
+      // Un pack est un lot de prestations : un produit est refusé, une prestation en double aussi
+      const avecProduit = await routePacks.POST(requete({ nom: `Produit test ${suffixe}`, remiseType: 'POURCENTAGE', remiseValeur: 10, lignes: [lignes[0], { type: 'produit', id: ids.huile, quantite: 1 }] }))
+      expect(avecProduit.status).toBe(400)
+      const doublon = await routePacks.POST(requete({ nom: `Doublon test ${suffixe}`, remiseType: 'POURCENTAGE', remiseValeur: 10, lignes: [lignes[0], lignes[0]] }))
+      expect(doublon.status).toBe(400)
 
-    const off = await routePack.PATCH(requete({ actif: false }, 'PATCH'), ctxId(pack.id))
-    expect((await off.json()).actif).toBe(false)
-    expect((await routePack.DELETE(requete({}, 'DELETE'), ctxId(pack.id))).status).toBe(200)
+      const off = await routePack.PATCH(requete({ actif: false }, 'PATCH'), ctxId(pack.id))
+      expect((await off.json()).actif).toBe(false)
+      expect((await routePack.DELETE(requete({}, 'DELETE'), ctxId(pack.id))).status).toBe(200)
+    } finally {
+      await prisma.pack.deleteMany({ where: { nom: { contains: String(suffixe) } } })
+      await prisma.service.deleteMany({ where: { id: { in: [coupe.id, barbe.id] } } })
+    }
   })
 })

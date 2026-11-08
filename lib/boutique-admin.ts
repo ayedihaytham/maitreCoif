@@ -159,21 +159,16 @@ export async function preparerPack(d: DonneesPack): Promise<PackPrepare> {
     if (cles.has(cle)) return { ok: false, erreur: 'Un élément est présent deux fois : augmentez plutôt sa quantité.' }
     cles.add(cle)
   }
-  const prestations = d.lignes.filter((l) => l.type === 'service')
-  if (prestations.length > 5) return { ok: false, erreur: 'Un pack peut comprendre 5 prestations au maximum (elles forment un seul rendez-vous).' }
-  if (prestations.some((l) => l.quantite !== 1)) return { ok: false, erreur: 'Une prestation ne peut être comprise qu’une seule fois dans un pack.' }
-  const idsProduits = d.lignes.filter((l) => l.type === 'produit').map((l) => l.id)
-  const idsServices = d.lignes.filter((l) => l.type === 'service').map((l) => l.id)
-  const [produits, services] = await Promise.all([
-    idsProduits.length ? prisma.produit.findMany({ where: { id: { in: idsProduits } }, select: { id: true, prix: true } }) : [],
-    idsServices.length ? prisma.service.findMany({ where: { id: { in: idsServices } }, select: { id: true, prix: true } }) : [],
-  ])
-  if (produits.length !== idsProduits.length || services.length !== idsServices.length) return { ok: false, erreur: 'Un des éléments du pack est introuvable.' }
+  // Un pack est un lot de prestations : elles forment un seul rendez-vous, une fois chacune.
+  if (d.lignes.length > 5) return { ok: false, erreur: 'Un pack peut comprendre 5 prestations au maximum (elles forment un seul rendez-vous).' }
+  const idsServices = d.lignes.map((l) => l.id)
+  const services = await prisma.service.findMany({ where: { id: { in: idsServices } }, select: { id: true, prix: true } })
+  if (services.length !== idsServices.length) return { ok: false, erreur: 'Une des prestations du pack est introuvable.' }
 
-  const prix = new Map<string, number>([...produits, ...services].map((e) => [e.id, Number(e.prix)]))
+  const prix = new Map<string, number>(services.map((e) => [e.id, Number(e.prix)]))
   const normal = prixPack(d.lignes.map((l) => ({ quantite: l.quantite, prix: prix.get(l.id) ?? 0 })), 'POURCENTAGE', 0).normal
   if (d.remiseType === 'PRIX_FIXE' && d.remiseValeur >= normal) {
-    return { ok: false, erreur: `Le prix du pack (${formatPrix(d.remiseValeur)}) doit être inférieur au prix normal de ses éléments (${formatPrix(normal)}).` }
+    return { ok: false, erreur: `Le prix du pack (${formatPrix(d.remiseValeur)}) doit être inférieur au prix normal de ses prestations (${formatPrix(normal)}).` }
   }
 
   return {
@@ -190,8 +185,8 @@ export async function preparerPack(d: DonneesPack): Promise<PackPrepare> {
     lignes: d.lignes.map((l, ordre) => ({
       ordre,
       quantite: l.quantite,
-      produitId: l.type === 'produit' ? l.id : null,
-      serviceId: l.type === 'service' ? l.id : null,
+      produitId: null,
+      serviceId: l.id,
     })),
   }
 }

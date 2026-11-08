@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 
 import { auth } from '@/lib/auth'
 import { creerRendezVousConfirme, notifierConfirmation } from '@/lib/booking'
+import { arrondir } from '@/lib/boutique-constantes'
+import { resoudrePackReservable } from '@/lib/boutique'
 import { chargerPrestations, inclurePrestations, totaux } from '@/lib/prestations'
 import { prisma } from '@/lib/prisma'
 import { terminerRendezVousPasses } from '@/lib/terminer-passes'
@@ -30,12 +32,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Vérification anti-robot échouée, merci de réessayer.' }, { status: 400 })
   }
 
-  const { coiffeurId, serviceIds, date, heureDebut, clientNom, clientTelephone, clientEmail, notes } = parsed.data
+  const { coiffeurId, packId, date, heureDebut, clientNom, clientTelephone, clientEmail } = parsed.data
+  let { serviceIds, notes } = parsed.data
 
-  const [coiffeur, prestations] = await Promise.all([
+  // Un pack se réserve comme une prestation : ses prestations forment le rendez-vous, au prix remisé.
+  let pack: Awaited<ReturnType<typeof resoudrePackReservable>> = null
+  if (packId) {
+    pack = await resoudrePackReservable(packId)
+    if (!pack) return NextResponse.json({ error: "Ce pack n'est plus disponible." }, { status: 409 })
+    serviceIds = pack.serviceIds
+    notes = [`Pack « ${pack.nom} »`, notes].filter(Boolean).join(' — ')
+  }
+
+  const [coiffeur, prestationsBrutes] = await Promise.all([
     prisma.user.findFirst({ where: { id: coiffeurId, role: { in: ['COIFFEUR', 'ADMIN'] }, actif: true } }),
     chargerPrestations(serviceIds),
   ])
+  const prestations = pack && prestationsBrutes ? prestationsBrutes.map((p) => ({ ...p, prix: arrondir(p.prix * pack.ratio) })) : prestationsBrutes
 
   if (!coiffeur || !prestations || prestations.length !== new Set(serviceIds).size) {
     return NextResponse.json({ error: 'Coiffeur ou service introuvable' }, { status: 404 })
@@ -70,7 +83,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Ce créneau vient d'être réservé, merci d'en choisir un autre." }, { status: 409 })
   }
 
-  await notifierConfirmation(rendezVous, { coiffeurNom: `${coiffeur.prenom} ${coiffeur.nom}`, serviceNom: totaux(prestations).nom })
+  await notifierConfirmation(rendezVous, { coiffeurNom: `${coiffeur.prenom} ${coiffeur.nom}`, serviceNom: pack ? `Pack « ${pack.nom} » (${totaux(prestations).nom})` : totaux(prestations).nom })
 
   return NextResponse.json({ id: rendezVous.id, codeSuivi: rendezVous.codeSuivi }, { status: 201 })
 }

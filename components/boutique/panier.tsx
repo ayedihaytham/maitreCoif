@@ -35,7 +35,7 @@ function lire(): LignePanierLocale[] {
     const brut = JSON.parse(localStorage.getItem(CLE) ?? '[]')
     if (!Array.isArray(brut)) return []
     return brut.flatMap((l) => {
-      const ok = l && (l.type === 'produit' || l.type === 'pack') && typeof l.id === 'string' && Number.isInteger(l.quantite) && l.quantite > 0
+      const ok = l && l.type === 'produit' && typeof l.id === 'string' && Number.isInteger(l.quantite) && l.quantite > 0
       return ok ? [{ type: l.type, id: l.id, quantite: Math.min(QUANTITE_MAX, l.quantite) } as LignePanierLocale] : []
     })
   } catch {

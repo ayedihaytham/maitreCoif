@@ -7,9 +7,12 @@ export const loginSchema = z.object({
   password: z.string().min(1, 'Mot de passe requis'),
 })
 
-export const guestBookingSchema = z.object({
+export const guestBookingSchema = z
+  .object({
   coiffeurId: z.string().uuid(),
-  serviceIds: z.array(z.string().uuid()).min(1, 'Choisissez au moins une prestation').max(5, '5 prestations au maximum'),
+  // Prestations choisies, ou un pack de prestations (jamais les deux) : le pack se réserve comme une prestation.
+  serviceIds: z.array(z.string().uuid()).max(5, '5 prestations au maximum').default([]),
+  packId: z.string().uuid().optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date invalide'),
   heureDebut: heureSchema,
   clientNom: z.string().min(2, 'Nom requis').max(100),
@@ -24,7 +27,11 @@ export const guestBookingSchema = z.object({
   website: z.string().max(0).optional().or(z.literal('')),
   // Jeton Cloudflare Turnstile (requis seulement si TURNSTILE_SECRET_KEY est défini)
   turnstileToken: z.string().max(2048).optional().or(z.literal('')),
-})
+  })
+  .refine((b) => (b.packId ? b.serviceIds.length === 0 : b.serviceIds.length > 0), {
+    message: 'Choisissez au moins une prestation, ou un pack',
+    path: ['serviceIds'],
+  })
 
 export const suiviSchema = z.object({
   codeSuivi: z.string().min(4).optional(),
@@ -177,13 +184,13 @@ export const packSchema = z
     lignes: z
       .array(
         z.object({
-          type: z.enum(['produit', 'service']),
+          type: z.literal('service'), // un pack est un lot de prestations
           id: z.string().uuid(),
-          quantite: z.number().int().min(1).max(20),
+          quantite: z.literal(1),
         }),
       )
-      .min(1, 'Choisissez au moins un élément')
-      .max(20, '20 éléments au maximum'),
+      .min(1, 'Choisissez au moins une prestation')
+      .max(5, '5 prestations au maximum'),
   })
   .refine((p) => p.remiseType !== 'POURCENTAGE' || p.remiseValeur < 100, {
     message: 'La remise doit être inférieure à 100 %',
@@ -195,7 +202,7 @@ export const packSchema = z
   })
 
 const ligneDemandeeSchema = z.object({
-  type: z.enum(['produit', 'pack']),
+  type: z.literal('produit'), // le panier ne contient que des produits : les packs se réservent comme des prestations
   id: z.string().uuid(),
   quantite: z.number().int().min(1).max(10),
 })
@@ -216,14 +223,6 @@ export const commandeSchema = z.object({
   jourSouhaite: z.string().max(100).optional().or(z.literal('')),
   notes: z.string().max(300).optional().or(z.literal('')),
   lignes: z.array(ligneDemandeeSchema).min(1, 'Votre panier est vide').max(30),
-  // Créneau de la prestation d'un pack (obligatoire quand le panier en contient une, vérifié par le serveur)
-  rendezVous: z
-    .object({
-      coiffeurId: z.string().uuid(),
-      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date invalide'),
-      heureDebut: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Heure invalide'),
-    })
-    .optional(),
   // Honeypot anti-bot : un humain ne le remplit jamais ; la route répond alors par un faux succès.
   website: z.string().max(500).optional(),
   turnstileToken: z.string().max(2048).optional().or(z.literal('')),

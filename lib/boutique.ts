@@ -192,6 +192,42 @@ export async function chargerCatalogue(): Promise<{ produits: ProduitPublic[]; p
   }
 }
 
+// ───────────────────────── Packs de prestations ─────────────────────────
+// Un pack est un lot de prestations à prix remisé : il se réserve comme une prestation (même assistant de
+// réservation, même rendez-vous), sans panier ni stock.
+
+const MAX_PRESTATIONS_PACK = 5 // aligné sur lib/prestations.ts : un pack forme un seul rendez-vous
+
+/** Pack composé uniquement de prestations (une fois chacune) : seul type réservable comme une prestation. */
+const estPackDePrestations = (elements: ElementPackPublic[]) =>
+  elements.length > 0 && elements.length <= MAX_PRESTATIONS_PACK && elements.every((e) => e.type === 'service' && e.quantite === 1)
+
+/** Packs proposés sur le site : prestations seules, actifs, dans leur période de validité. */
+export async function chargerPacksPrestations(): Promise<PackPublic[]> {
+  const jour = maintenantSalon().dateISO
+  const packs = await prisma.pack.findMany({ where: { actif: true }, orderBy: { dateCreation: 'asc' }, include: INCLURE_PACK })
+  return packs.flatMap((p) => {
+    const ev = evaluerPack(p, jour)
+    return ev.raison || !estPackDePrestations(ev.elements) ? [] : [versPackPublic(p, ev)]
+  })
+}
+
+export interface PackReservable {
+  nom: string
+  serviceIds: string[]
+  /** Prix du pack / prix normal : appliqué à chaque prestation pour que le rendez-vous porte le prix remisé. */
+  ratio: number
+}
+
+/** Revalide un pack choisi pour une réservation ; null s'il n'est plus réservable (désactivé, hors période...). */
+export async function resoudrePackReservable(packId: string): Promise<PackReservable | null> {
+  const pack = await prisma.pack.findUnique({ where: { id: packId }, include: INCLURE_PACK })
+  if (!pack) return null
+  const ev = evaluerPack(pack, maintenantSalon().dateISO)
+  if (ev.raison || !estPackDePrestations(ev.elements)) return null
+  return { nom: pack.nom, serviceIds: ev.elements.map((e) => e.id), ratio: ev.prix.normal > 0 ? ev.prix.final / ev.prix.normal : 1 }
+}
+
 // ───────────────────────── Panier et réservation ─────────────────────────
 
 export interface LigneDemandee {

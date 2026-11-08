@@ -28,6 +28,19 @@ interface Service {
   categorie: string | null
 }
 
+/** Pack de prestations : se choisit comme une prestation (une seule fois), au prix remisé. */
+interface Pack {
+  id: string
+  nom: string
+  description: string | null
+  serviceIds: string[]
+  prestations: string[]
+  duree: number
+  normal: number
+  prix: number
+  pourcentage: number
+}
+
 interface CreneauGrille {
   heure: string
   libre: boolean
@@ -78,26 +91,36 @@ function dateLongue(iso: string) {
 export function ReservationWizard({
   coiffeurs,
   services,
+  packs = [],
   preselectedCoiffeurId,
   preselectedServiceId,
+  preselectedPackId,
   todayISO,
 }: {
   coiffeurs: Coiffeur[]
   services: Service[]
+  packs?: Pack[]
   preselectedCoiffeurId?: string
   preselectedServiceId?: string
+  preselectedPackId?: string
   /** Jour courant dans le fuseau du salon (calculé côté serveur). */
   todayISO: string
 }) {
   const coiffeurInitial = coiffeurs.some((c) => c.id === preselectedCoiffeurId) ? preselectedCoiffeurId! : ''
-  const serviceInitial = services.some((s) => s.id === preselectedServiceId) ? [preselectedServiceId!] : []
+  const packInitial = packs.some((k) => k.id === preselectedPackId) ? preselectedPackId! : ''
+  const serviceInitial = !packInitial && services.some((s) => s.id === preselectedServiceId) ? [preselectedServiceId!] : []
 
   // On démarre à la première étape dont la réponse manque.
-  const [step, setStep] = useState(!coiffeurInitial ? 0 : serviceInitial.length === 0 ? 1 : 2)
+  const [step, setStep] = useState(!coiffeurInitial ? 0 : serviceInitial.length === 0 && !packInitial ? 1 : 2)
   const [coiffeurId, setCoiffeurId] = useState(coiffeurInitial)
   const [serviceIds, setServiceIds] = useState<string[]>(serviceInitial)
-  // Les appels d'API reçoivent les prestations séparées par des virgules.
-  const serviceId = serviceIds.join(',')
+  // Un pack remplace les prestations choisies une à une (et inversement) : l'un ou l'autre.
+  const [packId, setPackId] = useState(packInitial)
+  // Onglet de l'étape « Prestations » : les packs d'abord quand il y en a ; sinon seulement les prestations.
+  const [onglet, setOnglet] = useState<'packs' | 'services'>(packs.length > 0 && serviceInitial.length === 0 ? 'packs' : 'services')
+  const pack = packs.find((k) => k.id === packId)
+  // Les appels d'API reçoivent les prestations séparées par des virgules (celles du pack, le cas échéant).
+  const serviceId = pack ? pack.serviceIds.join(',') : serviceIds.join(',')
   const [date, setDate] = useState('')
   const [heureDebut, setHeureDebut] = useState('')
   const [page, setPage] = useState(0)
@@ -123,8 +146,9 @@ export function ReservationWizard({
   const coiffeur = coiffeurs.find((c) => c.id === coiffeurId)
   // « service » regroupe les prestations choisies : libellé, durée et prix cumulés.
   const choisies = serviceIds.map((id) => services.find((s) => s.id === id)).filter((s): s is Service => Boolean(s))
-  const service =
-    choisies.length > 0
+  const service = pack
+    ? { nom: pack.nom, duree: pack.duree, prix: pack.prix }
+    : choisies.length > 0
       ? { nom: choisies.map((s) => s.nom).join(' + '), duree: choisies.reduce((t, s) => t + s.duree, 0), prix: choisies.reduce((t, s) => t + s.prix, 0) }
       : undefined
   const heureFin = service && heureDebut ? ajouterMinutes(heureDebut, service.duree) : ''
@@ -205,10 +229,18 @@ export function ReservationWizard({
       setDate('')
       setHeureDebut('')
     }
-    setStep(serviceIds.length > 0 ? 2 : 1)
+    setStep(serviceIds.length > 0 || packId ? 2 : 1)
+  }
+
+  function choisirPack(id: string) {
+    setPackId((actuel) => (actuel === id ? '' : id))
+    setServiceIds([])
+    setDate('')
+    setHeureDebut('')
   }
 
   function choisirService(id: string) {
+    setPackId('')
     // Bascule : on peut cumuler jusqu'à MAX_PRESTATIONS prestations.
     setServiceIds((actuels) => (actuels.includes(id) ? actuels.filter((x) => x !== id) : actuels.length >= MAX_PRESTATIONS ? actuels : [...actuels, id]))
     setDate('')
@@ -242,7 +274,7 @@ export function ReservationWizard({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           coiffeurId,
-          serviceIds,
+          ...(pack ? { packId: pack.id } : { serviceIds }),
           date,
           heureDebut,
           clientNom: clientNom.trim(),
@@ -261,7 +293,7 @@ export function ReservationWizard({
         return
       }
       setConfirmation({ codeSuivi: data.codeSuivi })
-      suivre('reservation_confirmee', { prestations: serviceIds.length })
+      suivre('reservation_confirmee', pack ? { pack: true } : { prestations: serviceIds.length })
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch {
       setSubmitError('Impossible de contacter le serveur, merci de réessayer.')
@@ -420,33 +452,75 @@ export function ReservationWizard({
               <h2 className="sec-t">
                 <b>Choisissez vos prestations</b>
               </h2>
-              <p className="hint" style={{ margin: '-6px 0 18px' }}>
-                Vous pouvez en cumuler plusieurs (jusqu&apos;à {MAX_PRESTATIONS}) : la durée et le prix s&apos;additionnent.
-              </p>
-              <div className="choices">
-                {services.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    className={cn('choice', serviceIds.includes(s.id) && 'sel')}
-                    aria-pressed={serviceIds.includes(s.id)}
-                    onClick={() => choisirService(s.id)}
-                  >
-                    <span className="ct">
-                      <div className="nm">{s.nom}</div>
-                      <div className="sb">
-                        {s.description ? `${s.description} · ` : ''}
-                        {s.duree} min
-                      </div>
-                    </span>
-                    <span className="pr">{formatPrix(s.prix)}</span>
-                  </button>
-                ))}
-              </div>
+              {packs.length > 0 && (
+                <div className="bq-toolbar" style={{ marginBottom: 22 }}>
+                  <div className="bq-seg" role="tablist" aria-label="Packs et services">
+                    <button type="button" role="tab" aria-selected={onglet === 'packs'} className={cn(onglet === 'packs' && 'on')} onClick={() => setOnglet('packs')}>
+                      Packs <small>{packs.length}</small>
+                    </button>
+                    <button type="button" role="tab" aria-selected={onglet === 'services'} className={cn(onglet === 'services' && 'on')} onClick={() => setOnglet('services')}>
+                      Services <small>{services.length}</small>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {packs.length > 0 && onglet === 'packs' ? (
+                <>
+                  <p className="hint" style={{ margin: '-6px 0 18px' }}>
+                    Un pack réunit plusieurs prestations à prix réduit : un seul rendez-vous, au créneau de votre choix.
+                  </p>
+                  <div className="choices" role="tabpanel">
+                    {packs.map((k) => (
+                      <button key={k.id} type="button" className={cn('choice', packId === k.id && 'sel')} aria-pressed={packId === k.id} onClick={() => choisirPack(k.id)}>
+                        <span className="ct">
+                          <div className="nm">
+                            {k.nom}
+                            {k.pourcentage > 0 && <span className="pk-off-inline"> −{k.pourcentage} %</span>}
+                          </div>
+                          <div className="sb">
+                            {k.prestations.join(' + ')} · {k.duree} min
+                          </div>
+                        </span>
+                        <span className="pr">
+                          {k.prix < k.normal && <s style={{ marginRight: 8, opacity: 0.6, fontWeight: 400 }}>{formatPrix(k.normal)}</s>}
+                          {formatPrix(k.prix)}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="hint" style={{ margin: '-6px 0 18px' }}>
+                    Vous pouvez en cumuler plusieurs (jusqu&apos;à {MAX_PRESTATIONS}) : la durée et le prix s&apos;additionnent.
+                  </p>
+                  <div className="choices" role={packs.length > 0 ? 'tabpanel' : undefined}>
+                    {services.map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        className={cn('choice', serviceIds.includes(s.id) && 'sel')}
+                        aria-pressed={serviceIds.includes(s.id)}
+                        onClick={() => choisirService(s.id)}
+                      >
+                        <span className="ct">
+                          <div className="nm">{s.nom}</div>
+                          <div className="sb">
+                            {s.description ? `${s.description} · ` : ''}
+                            {s.duree} min
+                          </div>
+                        </span>
+                        <span className="pr">{formatPrix(s.prix)}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
               {service && (
                 <div className="svc-total" aria-live="polite">
                   <span>
-                    {choisies.length} prestation{choisies.length > 1 ? 's' : ''} · {service.duree} min
+                    {pack ? `Pack « ${pack.nom} »` : `${choisies.length} prestation${choisies.length > 1 ? 's' : ''}`} · {service.duree} min
                   </span>
                   <strong>{formatPrix(service.prix)}</strong>
                 </div>
@@ -475,7 +549,7 @@ export function ReservationWizard({
                 </div>
                 <div className="rc">
                   <span>
-                    <small>{choisies.length > 1 ? 'Prestations' : 'Service'}</small>
+                    <small>{pack ? 'Pack' : choisies.length > 1 ? 'Prestations' : 'Service'}</small>
                     {service.nom} · {service.duree} min · {formatPrix(service.prix)}
                   </span>
                 </div>
@@ -606,7 +680,7 @@ export function ReservationWizard({
                 </div>
                 <div className="rc">
                   <span>
-                    <small>{choisies.length > 1 ? 'Prestations' : 'Service'}</small>
+                    <small>{pack ? 'Pack' : choisies.length > 1 ? 'Prestations' : 'Service'}</small>
                     {service.nom} · {service.duree} min · {formatPrix(service.prix)}
                   </span>
                 </div>

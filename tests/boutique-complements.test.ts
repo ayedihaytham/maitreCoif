@@ -25,8 +25,8 @@ vi.mock('@/lib/alerte-salon', () => ({ alerterSalon: m.alerte }))
 
 import * as routeProduit from '@/app/api/admin/produits/[id]/route'
 import * as routePacks from '@/app/api/admin/packs/route'
-import * as routeCommandes from '@/app/api/boutique/commandes/route'
-import { changerStatutCommande, creerCommande, resoudrePanier } from '@/lib/boutique'
+import * as routeRdv from '@/app/api/rendez-vous/route'
+import { changerStatutCommande, chargerPacksPrestations, creerCommande, resoudrePanier } from '@/lib/boutique'
 import { expirerCommandesEchues, rappelerCommandes } from '@/lib/boutique-expiration'
 
 const suffixe = Date.now()
@@ -47,6 +47,7 @@ beforeAll(async () => {
   const coiffeur = await prisma.user.create({ data: { nom: 'Test', prenom: 'Pack', email: `coiffeur-pack-${suffixe}@example.com`, motDePasseHash: 'x', role: 'COIFFEUR' } })
   await prisma.disponibilite.create({ data: { coiffeurId: coiffeur.id, jourSemaine: new Date(`${DATE}T00:00:00Z`).getUTCDay(), heureDebut: '09:00', heureFin: '18:00' } })
   const service = await prisma.service.create({ data: { nom: `Taille c ${suffixe}`, prix: 20, duree: 30 } })
+  const service2 = await prisma.service.create({ data: { nom: `Barbe c ${suffixe}`, prix: 30, duree: 30 } })
   const huile = await prisma.produit.create({ data: { nom: `Huile c ${suffixe}`, prix: 40, stock: 10 } })
   const pack = await prisma.pack.create({
     data: {
@@ -56,13 +57,17 @@ beforeAll(async () => {
       lignes: { create: [{ serviceId: service.id, quantite: 1, ordre: 0 }, { produitId: huile.id, quantite: 1, ordre: 1 }] },
     },
   })
-  Object.assign(ids, { coiffeur: coiffeur.id, service: service.id, huile: huile.id, pack: pack.id })
+  // Pack de prestations : se réserve comme une prestation (50 DT -> 37,5 DT)
+  const packPrestations = await prisma.pack.create({
+    data: { nom: `Duo prestations c ${suffixe}`, remiseType: 'POURCENTAGE', remiseValeur: 25, lignes: { create: [{ serviceId: service.id, quantite: 1, ordre: 0 }, { serviceId: service2.id, quantite: 1, ordre: 1 }] } },
+  })
+  Object.assign(ids, { coiffeur: coiffeur.id, service: service.id, service2: service2.id, huile: huile.id, pack: pack.id, packPrestations: packPrestations.id })
 })
 
 beforeEach(async () => {
   for (const f of Object.values(m)) f.mockClear()
   await prisma.produit.updateMany({ where: { id: ids.huile }, data: { stock: 10, actif: true } })
-  await prisma.pack.updateMany({ where: { id: ids.pack }, data: { actif: true } })
+  await prisma.pack.updateMany({ where: { id: { in: [ids.pack, ids.packPrestations] } }, data: { actif: true } })
 })
 
 afterAll(async () => {
@@ -140,27 +145,58 @@ describe('pack avec prestation', () => {
     expect((await prisma.rendezVous.findUniqueOrThrow({ where: { id: b.rendezVous!.id } })).statut).toBe('CONFIRME')
   })
 
-  it('route : confirmation de la réservation (avec le rendez-vous) et du rendez-vous', async () => {
-    const r = await routeCommandes.POST(requete({ ...corpsClient, lignes: lignesPack(), rendezVous: creneau('09:00') }))
+  const reservationPack = (extra: Record<string, unknown> = {}) => ({
+    coiffeurId: ids.coiffeur,
+    packId: ids.packPrestations,
+    date: DATE,
+    heureDebut: '09:00',
+    clientNom: client.clientNom,
+    clientTelephone: client.clientTelephone,
+    clientEmail: client.clientEmail,
+    ...extra,
+  })
+
+  it('la liste des packs réservables ne garde que les packs de prestations', async () => {
+    const noms = (await chargerPacksPrestations()).map((p) => p.nom)
+    expect(noms).toContain(`Duo prestations c ${suffixe}`)
+    expect(noms).not.toContain(`Pack Barbier c ${suffixe}`) // contient un produit
+  })
+
+  it('route : un pack se réserve comme une prestation (même route, même rendez-vous, prix remisé)', async () => {
+    const commandesAvant = await prisma.commande.count({ where: { clientEmail: client.clientEmail } })
+    const r = await routeRdv.POST(requete(reservationPack()))
     expect(r.status).toBe(201)
-    const [to, , contenu] = m.contenu.mock.calls[0] as [string, string, { intro: string[]; lignes: [string, string][] }]
-    expect(to).toBe(client.clientEmail)
-    expect(contenu.intro.join(' ')).toMatch(/Votre rendez-vous est confirmé/)
-    expect(contenu.lignes.some(([l]) => l === 'Rendez-vous')).toBe(true)
-    expect(m.confirmation).toHaveBeenCalledTimes(1) // email de suivi du rendez-vous
-    expect(String(m.alerte.mock.calls[0][1])).toMatch(/Rendez-vous :/)
+    const { id, codeSuivi } = await r.json()
+    expect(codeSuivi).toMatch(/^MC-/)
+
+    const rdv = await prisma.rendezVous.findUniqueOrThrow({ where: { id }, include: { lignes: { orderBy: { ordre: 'asc' } } } })
+    expect(rdv.statut).toBe('CONFIRME')
+    expect(rdv.heureDebut).toBe('09:00')
+    expect(rdv.heureFin).toBe('10:00') // 30 + 30 min
+    expect(rdv.lignes.map((l) => Number(l.prix))).toEqual([15, 22.5]) // x 37,5 / 50
+    expect(rdv.notes).toMatch(/^Pack « Duo prestations/)
+    expect(m.confirmation).toHaveBeenCalledTimes(1) // email de suivi, comme pour une prestation
+    // Aucun stock, aucune commande : un pack n'a rien à voir avec les produits
+    expect(await prisma.commande.count({ where: { clientEmail: client.clientEmail } })).toBe(commandesAvant)
+    expect(await stock()).toBe(10)
   })
 
-  it('route : sans créneau, 409 et message clair', async () => {
-    const r = await routeCommandes.POST(requete({ ...corpsClient, lignes: lignesPack() }))
-    expect(r.status).toBe(409)
-    expect((await r.json()).error).toMatch(/Choisissez le créneau/)
+  it('route : créneau déjà pris refusé ; pack avec produit, inconnu ou désactivé non réservable', async () => {
+    expect((await routeRdv.POST(requete(reservationPack({ heureDebut: '12:30' })))).status).toBe(201)
+    expect((await routeRdv.POST(requete(reservationPack({ heureDebut: '12:30' })))).status).toBe(409)
+    expect((await routeRdv.POST(requete(reservationPack({ packId: ids.pack, heureDebut: '14:00' })))).status).toBe(409) // contient un produit
+    await prisma.pack.update({ where: { id: ids.packPrestations }, data: { actif: false } })
+    expect((await routeRdv.POST(requete(reservationPack({ heureDebut: '15:00' })))).status).toBe(409) // désactivé
   })
 
-  it('un pack ne peut comprendre qu’une seule fois chaque prestation, 5 au plus', async () => {
-    const doublePrestation = await routePacks.POST(requete({ nom: `X ${suffixe}`, remiseType: 'POURCENTAGE', remiseValeur: 10, lignes: [{ type: 'service', id: ids.service, quantite: 2 }, { type: 'produit', id: ids.huile, quantite: 1 }] }))
+  it('route : un pack ou des prestations, jamais les deux ni aucun', async () => {
+    expect((await routeRdv.POST(requete(reservationPack({ serviceIds: [ids.service] })))).status).toBe(400)
+    expect((await routeRdv.POST(requete(reservationPack({ packId: undefined })))).status).toBe(400)
+  })
+
+  it('un pack ne peut comprendre qu’une seule fois chaque prestation', async () => {
+    const doublePrestation = await routePacks.POST(requete({ nom: `X ${suffixe}`, remiseType: 'POURCENTAGE', remiseValeur: 10, lignes: [{ type: 'service', id: ids.service, quantite: 2 }] }))
     expect(doublePrestation.status).toBe(400)
-    expect((await doublePrestation.json()).error).toMatch(/qu’une seule fois/)
   })
 })
 

@@ -2,12 +2,12 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Clock } from 'lucide-react'
 
-import { ListePacks } from '@/components/boutique/catalogue'
 import { Cinema } from '@/components/site/cinema'
+import { PacksListe } from '@/components/site/packs-liste'
 import { PageHero } from '@/components/site/page-hero'
 import { Reveal } from '@/components/site/reveal'
 import { ServicesOnglets } from '@/components/site/services-onglets'
-import { chargerCatalogue } from '@/lib/boutique'
+import { chargerPacksPrestations } from '@/lib/boutique'
 import { prisma } from '@/lib/prisma'
 import { formatPrix } from '@/lib/utils'
 
@@ -20,10 +20,10 @@ export const metadata: Metadata = {
 export const revalidate = 30
 
 export default async function ServicesPage() {
-  const [services, { packs }] = await Promise.all([
+  const [services, packs] = await Promise.all([
     prisma.service.findMany({ where: { actif: true }, orderBy: [{ categorie: 'asc' }, { prix: 'asc' }] }),
     // Les packs ne doivent jamais empêcher la liste des services de s'afficher.
-    chargerCatalogue().catch(() => ({ produits: [], packs: [] })),
+    chargerPacksPrestations().catch(() => []),
   ])
 
   const categories = Array.from(new Set(services.map((s) => s.categorie || 'Autres')))
@@ -85,7 +85,7 @@ export default async function ServicesPage() {
         )}
             </>
           }
-          packs={<ListePacks packs={packs} />}
+          packs={<PacksListe packs={packs} />}
         />
       </div>
     </main>

@@ -12,7 +12,7 @@ import { Localisation } from '@/components/site/localisation'
 import { PortraitRond } from '@/components/site/portrait'
 import { Reveal } from '@/components/site/reveal'
 import { ReviewCarousel, type AvisAffiche } from '@/components/site/review-carousel'
-import { chargerCatalogue } from '@/lib/boutique'
+import { chargerCatalogue, chargerPacksPrestations } from '@/lib/boutique'
 import { attribuerPortraits } from '@/lib/portraits'
 import { libelleJour, prochaineDisponibilite } from '@/lib/prochaine-disponibilite'
 import { prisma } from '@/lib/prisma'
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 export const revalidate = 60
 
 async function getAccueilData() {
-  const [tousLesServices, coiffeurs, avis, statsAvis, photosSalon, prochaine, boutique] = await Promise.all([
+  const [tousLesServices, coiffeurs, avis, statsAvis, photosSalon, prochaine, boutique, packs] = await Promise.all([
     prisma.service.findMany({ where: { actif: true }, orderBy: { prix: 'asc' } }),
     prisma.user.findMany({
       where: { role: { in: ['COIFFEUR', 'ADMIN'] }, actif: true },
@@ -56,13 +56,14 @@ async function getAccueilData() {
     prochaineDisponibilite().catch(() => null),
     // La boutique ne doit jamais empêcher l'accueil de s'afficher.
     chargerCatalogue().catch(() => ({ produits: [], packs: [] })),
+    chargerPacksPrestations().catch(() => []),
   ])
 
-  return { tousLesServices, coiffeurs, avis, statsAvis, photosSalon, prochaine, boutique }
+  return { tousLesServices, coiffeurs, avis, statsAvis, photosSalon, prochaine, boutique, packs }
 }
 
 export default async function AccueilPage() {
-  const { tousLesServices, coiffeurs, avis, statsAvis, photosSalon, prochaine, boutique } = await getAccueilData()
+  const { tousLesServices, coiffeurs, avis, statsAvis, photosSalon, prochaine, boutique, packs } = await getAccueilData()
 
   // Quelques produits, ceux en stock d'abord.
   const produitsVedette = [...boutique.produits].sort((a, b) => Number(b.stock > 0) - Number(a.stock > 0)).slice(0, 4)
@@ -164,7 +165,7 @@ export default async function AccueilPage() {
       )}
 
       {/* Les packs : même pellicule que les prestations, défilant dans l'autre sens */}
-      <PacksAccueil packs={boutique.packs} />
+      <PacksAccueil packs={packs} />
 
       {/* Prestations */}
       {services.length > 0 && (

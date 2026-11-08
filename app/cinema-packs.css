@@ -4,3 +4,4 @@
 .mc .pk-incl{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
 .mc .pk-old{color:var(--mc-muted)}
 .mc .pk-old s{text-decoration-thickness:1px}
+.mc .pk-off-inline{margin-left:6px;font:700 11px/1 var(--mc-sans);letter-spacing:.08em;color:var(--mc-gold-ink);white-space:nowrap}

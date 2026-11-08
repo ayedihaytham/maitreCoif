@@ -7,7 +7,7 @@ import { ArrowRight, Check, Minus, Package, Plus, Scissors } from 'lucide-react'
 
 import { usePanier } from '@/components/boutique/panier'
 import { suivre } from '@/lib/analytics'
-import type { PackPublic, ProduitPublic } from '@/lib/boutique'
+import type { ProduitPublic } from '@/lib/boutique'
 import { QUANTITE_MAX, SEUIL_STOCK_BAS } from '@/lib/boutique-constantes'
 import { cn, formatPrix } from '@/lib/utils'
 
@@ -81,89 +81,8 @@ function CartePanier({ produit }: { produit: ProduitPublic }) {
   )
 }
 
-export function CartePack({ pack }: { pack: PackPublic }) {
-  const panier = usePanier()
-  const router = useRouter()
-  const quantite = panier.quantiteDe('pack', pack.id)
-  const prestations = pack.elements.filter((e) => e.type === 'service')
-  const max = Math.min(QUANTITE_MAX, pack.disponibles)
-
-  return (
-    <article className="bq-pack">
-      <div className="bq-pack-top">
-        <div style={{ minWidth: 0 }}>
-          <h3>{pack.nom}</h3>
-          {pack.description && <p>{pack.description}</p>}
-        </div>
-        {pack.pourcentage > 0 && <span className="bq-off">−{pack.pourcentage} %</span>}
-      </div>
-      <ul className="bq-incl">
-        {pack.elements.map((e) => (
-          <li key={`${e.type}${e.id}`}>
-            {e.type === 'service' ? <Scissors aria-hidden="true" /> : <Package aria-hidden="true" />}
-            <span>
-              {e.nom}
-              {e.quantite > 1 ? ` ×${e.quantite}` : ''}
-              {e.type === 'service' ? <em> · prestation</em> : null}
-            </span>
-            <span>{formatPrix(e.prix * e.quantite)}</span>
-          </li>
-        ))}
-      </ul>
-      <div className="bq-pack-prix">
-        <div>
-          {pack.economie > 0 && <s>{formatPrix(pack.normal)}</s>}
-          <b>{formatPrix(pack.final)}</b>
-          {pack.economie > 0 && <span className="econ">Vous économisez {formatPrix(pack.economie)}</span>}
-        </div>
-        {pack.disponibles <= SEUIL_STOCK_BAS && pack.disponibles < QUANTITE_MAX && <span className="bq-badge static">Plus que {pack.disponibles}</span>}
-      </div>
-      <div className="bq-pack-cta">
-        {quantite > 0 ? (
-          <>
-            <Quantite nom={`pack ${pack.nom}`} valeur={quantite} max={max} onChange={(v) => panier.regler('pack', pack.id, v)} />
-            <Link className="btn btn-gold btn-sm" href="/boutique/panier">
-              Voir mon panier <ArrowRight className="size-4" aria-hidden="true" />
-            </Link>
-          </>
-        ) : (
-          <button
-            type="button"
-            className="btn btn-gold"
-            data-ph="boutique-reserver-pack"
-            onClick={() => {
-              panier.regler('pack', pack.id, 1)
-              suivre('boutique_ajout', { type: 'pack' })
-              router.push('/boutique/panier')
-            }}
-          >
-            Réserver ce pack
-          </button>
-        )}
-        <p className="bq-note">
-          {prestations.length > 0 ? 'Les produits se retirent au salon ; la prestation se réserve séparément. ' : 'À retirer et à régler au salon. '}
-          {pack.fin ? `Valable jusqu’au ${jourCourt(pack.fin)}.` : ''}
-        </p>
-      </div>
-    </article>
-  )
-}
-
-/** Les packs : une grille de cartes (page « Nos services »). */
-export function ListePacks({ packs }: { packs: PackPublic[] }) {
-  return packs.length === 0 ? (
-    <p className="empty-state">Aucun pack disponible pour le moment.</p>
-  ) : (
-    <div className="bq-packs">
-      {packs.map((k) => (
-        <CartePack key={k.id} pack={k} />
-      ))}
-    </div>
-  )
-}
-
-/** Les produits de la boutique. `packs` ne sert qu'à chiffrer le panier (les packs se choisissent dans « Nos services »). */
-export function Catalogue({ produits, packs }: { produits: ProduitPublic[]; packs: PackPublic[] }) {
+/** Les produits de la boutique (les packs de prestations se réservent comme des prestations, dans « Nos services »). */
+export function Catalogue({ produits }: { produits: ProduitPublic[] }) {
   const panier = usePanier()
   const [categorie, setCategorie] = useState('Tous')
 
@@ -172,8 +91,7 @@ export function Catalogue({ produits, packs }: { produits: ProduitPublic[]; pack
 
   // Total du panier d'après le catalogue affiché (le serveur recalcule le vrai total à la confirmation).
   const total = panier.lignes.reduce((s, l) => {
-    const prix = l.type === 'produit' ? produits.find((p) => p.id === l.id)?.prix : packs.find((p) => p.id === l.id)?.final
-    return s + (prix ?? 0) * l.quantite
+    return s + (produits.find((p) => p.id === l.id)?.prix ?? 0) * l.quantite
   }, 0)
 
   return (

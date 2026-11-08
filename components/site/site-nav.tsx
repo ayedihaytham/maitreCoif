@@ -14,7 +14,7 @@ import { salonUrl } from '@/lib/salon-host'
 import { cn } from '@/lib/utils'
 import type { Role } from '@prisma/client'
 
-const NAV_LINKS = [
+const TOUS_LES_LIENS = [
   { href: '/', label: 'Accueil' },
   { href: '/services', label: 'Services' },
   { href: '/equipe', label: 'Notre équipe' },
@@ -30,7 +30,9 @@ async function deconnecterClient() {
   signOut({ callbackUrl: '/' })
 }
 
-export function SiteNav({ horaires = [] }: { horaires?: { jours: string; heures: string }[] }) {
+export function SiteNav({ horaires = [], boutique = true }: { horaires?: { jours: string; heures: string }[]; boutique?: boolean }) {
+  // Sans produit en ligne, ni l'onglet Boutique ni le panier n'ont lieu d'être.
+  const NAV_LINKS = boutique ? TOUS_LES_LIENS : TOUS_LES_LIENS.filter((l) => l.href !== '/boutique')
   const pathname = usePathname()
   const panier = usePanier()
   const [user, setUser] = useState<Utilisateur>(null)
@@ -152,10 +154,12 @@ export function SiteNav({ horaires = [] }: { horaires?: { jours: string; heures:
               )}
             </>
           )}
-          <Link className="bq-bag" href="/boutique/panier" aria-label={panier.nombre > 0 ? `Mon panier, ${panier.nombre} article${panier.nombre > 1 ? 's' : ''}` : 'Mon panier'} data-ph="panier-barre">
-            <ShoppingBag className="size-4" aria-hidden="true" />
-            {panier.nombre > 0 && <em aria-hidden="true">{panier.nombre}</em>}
-          </Link>
+          {boutique && (
+            <Link className="bq-bag" href="/boutique/panier" aria-label={panier.nombre > 0 ? `Mon panier, ${panier.nombre} article${panier.nombre > 1 ? 's' : ''}` : 'Mon panier'} data-ph="panier-barre">
+              <ShoppingBag className="size-4" aria-hidden="true" />
+              {panier.nombre > 0 && <em aria-hidden="true">{panier.nombre}</em>}
+            </Link>
+          )}
           <ThemeToggle />
           <Link className="btn btn-gold btn-sm cta btn-ticket" href="/reservation" style={{ marginLeft: 10 }} data-ph="reserver-barre">
             Réserver
@@ -199,11 +203,13 @@ export function SiteNav({ horaires = [] }: { horaires?: { jours: string; heures:
         >
           Réserver un rendez-vous
         </Link>
-        <div className="small" style={{ marginTop: 18 }}>
-          <Link href="/boutique/panier" tabIndex={ouvert ? 0 : -1}>
-            Mon panier{panier.nombre > 0 ? ` (${panier.nombre})` : ''}
-          </Link>
-        </div>
+        {boutique && (
+          <div className="small" style={{ marginTop: 18 }}>
+            <Link href="/boutique/panier" tabIndex={ouvert ? 0 : -1}>
+              Mon panier{panier.nombre > 0 ? ` (${panier.nombre})` : ''}
+            </Link>
+          </div>
+        )}
         {user && (
           <div className="small">
             <a href={compteHref} tabIndex={ouvert ? 0 : -1}>

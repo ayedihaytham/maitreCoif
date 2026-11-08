@@ -20,6 +20,7 @@ const SECTIONS = [
     liens: [
       { href: '/equipe', label: 'Équipe', icon: Users, adminOnly: true },
       { href: '/services', label: 'Services', icon: Scissors, adminOnly: true },
+      { href: '/packs', label: 'Packs', icon: Gift, adminOnly: true },
       { href: '/galerie', label: 'Galerie', icon: Images, adminOnly: true },
       { href: '/fermetures', label: 'Fermetures', icon: CalendarOff, adminOnly: true },
     ],
@@ -28,7 +29,6 @@ const SECTIONS = [
     titre: 'Boutique',
     liens: [
       { href: '/produits', label: 'Produits', icon: Package, adminOnly: true },
-      { href: '/packs', label: 'Packs', icon: Gift, adminOnly: true },
       { href: '/commandes', label: 'Réservations produits', icon: ShoppingBag, adminOnly: true },
     ],
   },

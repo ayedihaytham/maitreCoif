@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { Gift, Loader2, Minus, Package, Pencil, Plus, Power, Scissors, Trash2 } from 'lucide-react'
+import { Gift, Loader2, Pencil, Plus, Power, Scissors, Trash2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -12,13 +12,6 @@ import type { PackAdmin } from '@/lib/boutique-admin'
 import { prixPack, type TypeRemise } from '@/lib/boutique-constantes'
 import { cn, formatPrix } from '@/lib/utils'
 
-export interface ChoixProduit {
-  id: string
-  nom: string
-  prix: number
-  stock: number
-  actif: boolean
-}
 export interface ChoixService {
   id: string
   nom: string
@@ -32,13 +25,13 @@ const vide = { nom: '', description: '', remiseType: 'POURCENTAGE' as TypeRemise
 const RAISONS: Record<string, string> = {
   desactive: 'Désactivé',
   periode: 'Hors de sa période de validité',
-  'element-inactif': 'Masqué : un élément est désactivé',
-  rupture: 'Masqué : un produit est en rupture',
+  'element-inactif': 'Masqué : une prestation est désactivée',
+  rupture: 'Masqué',
 }
 
 const cle = (type: 'produit' | 'service', id: string) => `${type}:${id}`
 
-export function PacksManager({ initial, produits, services }: { initial: PackAdmin[]; produits: ChoixProduit[]; services: ChoixService[] }) {
+export function PacksManager({ initial, services }: { initial: PackAdmin[]; services: ChoixService[] }) {
   const [packs, setPacks] = useState(initial)
   const [message, setMessage] = useState<string | null>(null)
 
@@ -52,10 +45,9 @@ export function PacksManager({ initial, produits, services }: { initial: PackAdm
 
   const prixDe = useMemo(() => {
     const m = new Map<string, number>()
-    for (const p of produits) m.set(cle('produit', p.id), p.prix)
     for (const s of services) m.set(cle('service', s.id), s.prix)
     return m
-  }, [produits, services])
+  }, [services])
 
   const elements = Object.entries(choix).map(([k, quantite]) => ({ quantite, prix: prixDe.get(k) ?? 0 }))
   const valeur = Number(form.remiseValeur.replace(',', '.'))
@@ -95,14 +87,10 @@ export function PacksManager({ initial, produits, services }: { initial: PackAdm
     })
   }
 
-  function quantite(k: string, delta: number) {
-    setChoix((c) => (k in c ? { ...c, [k]: Math.min(20, Math.max(1, c[k] + delta)) } : c))
-  }
-
   async function enregistrer(e: React.FormEvent) {
     e.preventDefault()
     setErreur(null)
-    if (nbElements === 0) return setErreur('Cochez au moins un produit ou une prestation.')
+    if (nbElements === 0) return setErreur('Cochez au moins une prestation.')
     setChargement(true)
     try {
       const corps = {
@@ -200,12 +188,8 @@ export function PacksManager({ initial, produits, services }: { initial: PackAdm
             <ul className="bo-incl">
               {p.lignes.map((l) => (
                 <li key={`${l.type}${l.id}`}>
-                  {l.type === 'service' ? <Scissors aria-hidden="true" /> : <Package aria-hidden="true" />}
-                  <span>
-                    {l.nom}
-                    {l.quantite > 1 ? ` ×${l.quantite}` : ''}
-                    {l.type === 'service' ? ' (prestation)' : ''}
-                  </span>
+                  <Scissors aria-hidden="true" />
+                  <span>{l.nom}</span>
                   <span>{formatPrix(l.prix * l.quantite)}</span>
                 </li>
               ))}
@@ -242,7 +226,7 @@ export function PacksManager({ initial, produits, services }: { initial: PackAdm
           <div className="ad-card bo-pack-vide">
             <Gift aria-hidden="true" />
             <b>Aucun pack pour le moment</b>
-            <span>Par exemple : une taille de barbe, une huile et un baume à prix réduit.</span>
+            <span>Par exemple : coupe + barbe + soin à prix réduit.</span>
           </div>
         )}
       </div>
@@ -251,7 +235,7 @@ export function PacksManager({ initial, produits, services }: { initial: PackAdm
         <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle>{edition ? 'Modifier le pack' : 'Créer un pack'}</DialogTitle>
-            <DialogDescription>Cochez les prestations et les produits du pack, choisissez la remise : le prix se calcule tout seul.</DialogDescription>
+            <DialogDescription>Cochez les prestations du pack, choisissez la remise : le prix se calcule tout seul. Le client le réserve comme une prestation, en choisissant son créneau.</DialogDescription>
           </DialogHeader>
 
           <form onSubmit={enregistrer} className="bo-pack-form">
@@ -272,22 +256,12 @@ export function PacksManager({ initial, produits, services }: { initial: PackAdm
                     <div className="lbl">Prestations</div>
                     <ul>
                       {services.map((s) => (
-                        <LigneChoix key={s.id} k={cle('service', s.id)} nom={s.nom} sous={`${s.duree} min${s.actif ? '' : ' · désactivée'}`} prix={s.prix} choix={choix} cocher={cocher} quantite={quantite} />
+                        <LigneChoix key={s.id} k={cle('service', s.id)} nom={s.nom} sous={`${s.duree} min${s.actif ? '' : ' · désactivée'}`} prix={s.prix} choix={choix} cocher={cocher} />
                       ))}
                     </ul>
                   </>
                 )}
-                {produits.length > 0 && (
-                  <>
-                    <div className="lbl">Produits</div>
-                    <ul>
-                      {produits.map((p) => (
-                        <LigneChoix key={p.id} k={cle('produit', p.id)} nom={p.nom} sous={p.actif ? (p.stock > 0 ? `${p.stock} en stock` : 'Rupture de stock') : 'Masqué'} prix={p.prix} choix={choix} cocher={cocher} quantite={quantite} />
-                      ))}
-                    </ul>
-                  </>
-                )}
-                {produits.length === 0 && services.length === 0 && <p className="ad-empty">Créez d’abord des produits ou des services.</p>}
+                {services.length === 0 && <p className="ad-empty">Créez d’abord des services.</p>}
               </fieldset>
 
               <div className="bo-remise">
@@ -323,7 +297,7 @@ export function PacksManager({ initial, produits, services }: { initial: PackAdm
                 <input type="checkbox" checked={form.actif} onChange={(e) => setForm((f) => ({ ...f, actif: e.target.checked }))} />
                 <span>
                   <b>Visible sur le site</b>
-                  <small>Un pack dont un produit est en rupture est automatiquement masqué.</small>
+                  <small>Un pack dont une prestation est désactivée est automatiquement masqué.</small>
                 </span>
               </label>
             </div>
@@ -332,7 +306,7 @@ export function PacksManager({ initial, produits, services }: { initial: PackAdm
               <div className="lbl">Récapitulatif</div>
               <dl>
                 <div>
-                  <dt>Prix normal ({nbElements} élément{nbElements > 1 ? 's' : ''})</dt>
+                  <dt>Prix normal ({nbElements} prestation{nbElements > 1 ? 's' : ''})</dt>
                   <dd>{formatPrix(calcul.normal)}</dd>
                 </div>
                 <div>
@@ -373,7 +347,6 @@ function LigneChoix({
   prix,
   choix,
   cocher,
-  quantite,
 }: {
   k: string
   nom: string
@@ -381,7 +354,6 @@ function LigneChoix({
   prix: number
   choix: Record<string, number>
   cocher: (k: string, coche: boolean) => void
-  quantite: (k: string, delta: number) => void
 }) {
   const coche = k in choix
   return (
@@ -391,17 +363,6 @@ function LigneChoix({
         {nom}
         <small>{sous}</small>
       </label>
-      {coche && (
-        <span className="qty" role="group" aria-label={`Quantité de ${nom}`}>
-          <button type="button" onClick={() => quantite(k, -1)} disabled={choix[k] <= 1} aria-label="Moins">
-            <Minus aria-hidden="true" />
-          </button>
-          <span aria-live="polite">{choix[k]}</span>
-          <button type="button" onClick={() => quantite(k, 1)} aria-label="Plus">
-            <Plus aria-hidden="true" />
-          </button>
-        </span>
-      )}
       <b>{formatPrix(prix)}</b>
     </li>
   )

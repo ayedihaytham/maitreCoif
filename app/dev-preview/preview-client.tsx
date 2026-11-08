@@ -159,7 +159,7 @@ export function PreviewClient() {
               {
                 id: '1',
                 nom: 'Pack Barbier',
-                description: 'La taille au salon, l’huile et le baume pour la maison.',
+                description: 'La taille de barbe et la coupe, au prix du pack.',
                 remiseType: 'POURCENTAGE',
                 remiseValeur: 15,
                 debut: null,
@@ -167,10 +167,9 @@ export function PreviewClient() {
                 actif: true,
                 lignes: [
                   { type: 'service', id: 's1', nom: 'Taille de barbe', quantite: 1, prix: 18 },
-                  { type: 'produit', id: '1', nom: 'Huile à barbe', quantite: 1, prix: 24 },
-                  { type: 'produit', id: '2', nom: 'Baume à barbe', quantite: 1, prix: 18 },
+                  { type: 'service', id: 's2', nom: 'Coupe de cheveux', quantite: 1, prix: 25 },
                 ],
-                prix: { normal: 60, final: 51, economie: 9, pourcentage: 15 },
+                prix: { normal: 43, final: 36.55, economie: 6.45, pourcentage: 15 },
                 raison: null,
               },
               {
@@ -182,16 +181,16 @@ export function PreviewClient() {
                 debut: null,
                 fin: '2026-12-31',
                 actif: true,
-                lignes: [{ type: 'produit', id: '3', nom: 'Pommade brillante', quantite: 1, prix: 20 }, { type: 'produit', id: '4', nom: 'Peigne en bois', quantite: 1, prix: 12 }],
-                prix: { normal: 32, final: 30, economie: 2, pourcentage: 6 },
-                raison: 'rupture',
+                lignes: [{ type: 'service', id: 's2', nom: 'Coupe de cheveux', quantite: 1, prix: 25 }, { type: 'service', id: 's3', nom: 'Soin du visage', quantite: 1, prix: 20 }],
+                prix: { normal: 45, final: 40, economie: 5, pourcentage: 11 },
+                raison: 'periode',
               },
             ]}
-            produits={[
-              { id: '1', nom: 'Huile à barbe', prix: 24, stock: 12, actif: true },
-              { id: '2', nom: 'Baume à barbe', prix: 18, stock: 3, actif: true },
+            services={[
+              { id: 's1', nom: 'Taille de barbe', prix: 18, duree: 20, actif: true },
+              { id: 's2', nom: 'Coupe de cheveux', prix: 25, duree: 30, actif: true },
+              { id: 's3', nom: 'Soin du visage', prix: 20, duree: 25, actif: true },
             ]}
-            services={[{ id: 's1', nom: 'Taille de barbe', prix: 18, duree: 20, actif: true }]}
           />
         )}
         {v === 'cmd' && (

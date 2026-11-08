@@ -38,13 +38,13 @@ export function PacksAccueil({ packs }: { packs: PackPublic[] }) {
               </div>
               <div>
                 <h3>{k.nom}</h3>
-                <p className="pk-incl">{k.elements.map((e) => (e.quantite > 1 ? `${e.nom} ×${e.quantite}` : e.nom)).join(' · ')}</p>
+                <p className="pk-incl">{k.elements.map((e) => e.nom).join(' · ')}</p>
                 <div className="meta">
                   <span className="pk-old">{k.economie > 0 ? <s>{formatPrix(k.normal)}</s> : null}</span>
                   <b>{formatPrix(k.final)}</b>
                 </div>
-                <Link className="tlink" href="/services?vue=packs" style={{ marginTop: 18 }} data-ph="accueil-pack">
-                  Découvrir <ArrowRight className="size-3.5" aria-hidden="true" />
+                <Link className="tlink" href={`/reservation?packId=${k.id}`} style={{ marginTop: 18 }} data-ph="accueil-pack">
+                  Réserver <ArrowRight className="size-3.5" aria-hidden="true" />
                 </Link>
               </div>
             </article>

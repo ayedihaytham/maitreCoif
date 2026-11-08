@@ -153,13 +153,10 @@ export function PanierView() {
         )}
         <ShoppingBag aria-hidden="true" />
         <h2>Votre panier est vide</h2>
-        <p>Choisissez des produits ou un pack : vous les réservez en ligne, puis vous les retirez et les réglez au salon.</p>
+        <p>Choisissez des produits : vous les réservez en ligne, puis vous les retirez et les réglez au salon.</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 14 }}>
           <Link className="btn btn-gold" href="/boutique">
             Voir les produits
-          </Link>
-          <Link className="btn btn-ghost" href="/services?vue=packs">
-            Voir les packs
           </Link>
         </div>
       </div>
