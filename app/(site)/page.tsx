@@ -7,6 +7,7 @@ import { ArrowRight, Clock } from 'lucide-react'
 import { BoutiqueAccueil } from '@/components/boutique/accueil'
 import { Cinema } from '@/components/site/cinema'
 import { Intro } from '@/components/site/intro'
+import { Localisation } from '@/components/site/localisation'
 import { PortraitRond } from '@/components/site/portrait'
 import { Reveal } from '@/components/site/reveal'
 import { ReviewCarousel, type AvisAffiche } from '@/components/site/review-carousel'
@@ -417,6 +418,9 @@ export default async function AccueilPage() {
           </Reveal>
         </div>
       </section>
+
+      {/* Où nous trouver */}
+      <Localisation />
     </main>
   )
 }
