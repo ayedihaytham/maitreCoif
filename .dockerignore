@@ -1,0 +1,17 @@
+.git
+.github
+.claude
+.next
+node_modules
+.env
+.env.*
+!.env.example
+tests
+scripts
+deploy
+*.md
+tsconfig.tsbuildinfo
+npm-debug.log*
+docker-compose.yml
+Dockerfile
+.dockerignore

@@ -26,12 +26,15 @@ export async function checkRateLimit(key: string, limit: number, windowMs: numbe
   }
 }
 
-// Sur Vercel, x-vercel-forwarded-for est positionné par la plateforme et ne
-// peut pas être falsifié par le client, contrairement au début de
-// x-forwarded-for.
+// Adresse du client, pour la limitation de débit. L'en-tête à croire dépend de l'hébergement :
+//  - Vercel : x-vercel-forwarded-for est posé par la plateforme (non falsifiable) ;
+//  - serveur dédié : nginx écrase x-real-ip avec l'adresse réelle du visiteur (CF-Connecting-IP derrière
+//    Cloudflare, cf. deploy/nginx). Hors Vercel, x-vercel-forwarded-for N'EST PAS fiable : un visiteur
+//    pourrait l'envoyer lui-même pour contourner la limite, on l'ignore donc.
 export function clientIpFrom(headers: Headers): string {
+  const surVercel = Boolean(process.env.VERCEL)
   return (
-    headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim() ??
+    (surVercel ? headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim() : undefined) ??
     headers.get('x-real-ip') ??
     headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
     'unknown'

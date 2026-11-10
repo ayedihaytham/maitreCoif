@@ -1,0 +1,9 @@
+[Unit]
+Description=Maitre Coif : tâche quotidienne (16:00 UTC, comme sur Vercel)
+
+[Timer]
+OnCalendar=*-*-* 16:00:00 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

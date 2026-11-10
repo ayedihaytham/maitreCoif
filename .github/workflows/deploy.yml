@@ -1,0 +1,143 @@
+name: Déploiement (serveur)
+
+# À chaque push sur main : vérification (types + tests), construction de l'image Docker, publication sur GHCR,
+# puis déploiement sur le serveur en SSH. Voir deploy/README.md pour la configuration (secrets, variables, serveur).
+# Le site Vercel + Neon n'est PAS touché par ce workflow : il reste en secours.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Un seul déploiement à la fois, sans jamais en interrompre un en cours.
+concurrency:
+  group: deploiement-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  verifier:
+    name: Types et tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: maitrecoif_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U test -d maitrecoif_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      # Les tests d'intégration refusent toute base non locale : celle-ci est éphémère, créée pour ce job.
+      DATABASE_URL: postgresql://test:test@127.0.0.1:5432/maitrecoif_test
+      DIRECT_URL: postgresql://test:test@127.0.0.1:5432/maitrecoif_test
+      AUTH_SECRET: secret-de-test-ci
+      SALON_TIMEZONE: Africa/Tunis
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec prisma generate
+      - run: pnpm exec prisma migrate deploy
+      - run: pnpm exec tsc --noEmit
+      - run: pnpm test
+
+  construire:
+    name: Image Docker
+    needs: verifier
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.nom.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: nom
+        run: |
+          # GHCR n'accepte que des minuscules ; le tag est l'empreinte du commit (déploiement et retour arrière précis).
+          echo "image=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+          echo "tag=${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Image des migrations
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: migrate
+          push: true
+          tags: |
+            ${{ steps.nom.outputs.image }}:${{ steps.nom.outputs.tag }}-migrate
+            ${{ steps.nom.outputs.image }}:latest-migrate
+          cache-from: type=gha,scope=migrate
+          cache-to: type=gha,mode=max,scope=migrate
+
+      - name: Image du site
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: runner
+          push: true
+          tags: |
+            ${{ steps.nom.outputs.image }}:${{ steps.nom.outputs.tag }}
+            ${{ steps.nom.outputs.image }}:latest
+          # Valeurs publiques inscrites dans le code du site : variables du dépôt (Settings > Variables > Actions).
+          build-args: |
+            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ vars.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+            NEXT_PUBLIC_SALON_HOST=${{ vars.NEXT_PUBLIC_SALON_HOST }}
+            NEXT_PUBLIC_TURNSTILE_SITE_KEY=${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
+            NEXT_PUBLIC_POSTHOG_KEY=${{ vars.NEXT_PUBLIC_POSTHOG_KEY }}
+            NEXT_PUBLIC_POSTHOG_UI_HOST=${{ vars.NEXT_PUBLIC_POSTHOG_UI_HOST }}
+            NEXT_PUBLIC_SALON_MAP_QUERY=${{ vars.NEXT_PUBLIC_SALON_MAP_QUERY }}
+          cache-from: type=gha,scope=site
+          cache-to: type=gha,mode=max,scope=site
+
+  deployer:
+    name: Déployer sur le serveur
+    needs: construire
+    runs-on: ubuntu-latest
+    # Environnement « production » : permet d'exiger une approbation manuelle avant chaque déploiement si vous le souhaitez.
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clé SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Empreinte du serveur épinglée (secret) : on refuse un serveur qui ne serait pas le bon.
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Copier la configuration (compose et scripts)
+        env:
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+          SSH_CIBLE: ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
+        run: |
+          scp -i ~/.ssh/deploy_key -P "$SSH_PORT" -r deploy/docker-compose.yml deploy/scripts "$SSH_CIBLE:/opt/maitre-coif/"
+
+      - name: Déployer
+        env:
+          TAG: ${{ needs.construire.outputs.tag }}
+          GHCR_JETON: ${{ secrets.GITHUB_TOKEN }}
+          ACTEUR: ${{ github.actor }}
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+          SSH_CIBLE: ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
+        run: |
+          # Le jeton passe par l'entrée standard : il n'apparaît dans aucune ligne de commande.
+          printf '%s' "$GHCR_JETON" | ssh -i ~/.ssh/deploy_key -p "$SSH_PORT" "$SSH_CIBLE" \
+            "chmod +x /opt/maitre-coif/scripts/*.sh && /opt/maitre-coif/scripts/deploy.sh '$TAG' '$ACTEUR'"

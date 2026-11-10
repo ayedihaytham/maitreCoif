@@ -12,6 +12,10 @@ Coif, conforme au [cahier des charges](./Cahier_des_charges_Maitre_Coif.pdf).
 - **Notifications** : Resend (email) et Twilio (SMS, optionnel) — désactivés par défaut, les envois sont
   simplement loggés en console tant qu'aucune clé API n'est configurée
 
+## Déploiement
+
+Hébergement sur serveur dédié (Docker, nginx, Cloudflare, GitHub Actions), avec Vercel + Neon en secours : voir [deploy/README.md](./deploy/README.md).
+
 ## Démarrage en local
 
 ### 1. Dépendances

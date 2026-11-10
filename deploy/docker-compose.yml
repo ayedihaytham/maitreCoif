@@ -1,0 +1,61 @@
+# Maitre Coif — pile de production sur le serveur dédié (/opt/maitre-coif/docker-compose.yml).
+#
+# Isolation vis-à-vis des autres applications du serveur :
+#   - projet Compose « maitrecoif » : son propre réseau privé, ses propres volumes, des noms de conteneurs préfixés ;
+#   - la base n'est publiée sur AUCUN port : seul le conteneur du site peut lui parler ;
+#   - le site n'écoute que sur 127.0.0.1:${APP_PORT} : seul nginx (même machine) l'atteint, pas Internet.
+name: maitrecoif
+
+services:
+  db:
+    image: postgres:18-alpine
+    container_name: maitrecoif-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: maitrecoif
+      POSTGRES_DB: maitrecoif
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?définir POSTGRES_PASSWORD dans .env}
+    volumes:
+      # PostgreSQL 18 range ses données dans un sous-dossier versionné de /var/lib/postgresql.
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U maitrecoif -d maitrecoif']
+      interval: 10s
+      timeout: 5s
+      retries: 6
+    security_opt: ['no-new-privileges:true']
+    mem_limit: 768m
+    logging: &journal
+      driver: json-file
+      options: { max-size: '10m', max-file: '5' }
+
+  app:
+    image: ${IMAGE:?définir IMAGE dans .env}:${TAG:-latest}
+    container_name: maitrecoif-app
+    restart: unless-stopped
+    env_file: app.env
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - '127.0.0.1:${APP_PORT:-3101}:3000'
+    volumes:
+      - next-cache:/app/.next/cache
+    security_opt: ['no-new-privileges:true']
+    cap_drop: [ALL]
+    mem_limit: 1g
+    logging: *journal
+
+  # Migrations Prisma : lancées par le déploiement (docker compose --profile tools run --rm migrate), jamais en continu.
+  migrate:
+    image: ${IMAGE:?définir IMAGE dans .env}:${TAG:-latest}-migrate
+    container_name: maitrecoif-migrate
+    profiles: ['tools']
+    env_file: app.env
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  next-cache:

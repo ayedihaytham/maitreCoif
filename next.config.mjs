@@ -2,6 +2,9 @@ const PRISMA_INUTILE = ['node_modules/.pnpm/@prisma+client*/node_modules/@prisma
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Image Docker (serveur dédié) : sortie « standalone » = serveur Node minimal avec seulement les fichiers utiles.
+  // Vercel ne l'utilise pas : la variable n'y est pas définie.
+  output: process.env.BUILD_STANDALONE === '1' ? 'standalone' : undefined,
   // Les navigateurs réclament /favicon.ico : on les sert avec l'icône de l'application (évite un 404).
   async rewrites() {
     // Suivi d'audience (PostHog) : les envois passent par le site lui-même (/ingest) pour ne pas être
@@ -29,8 +32,8 @@ const nextConfig = {
   // PostHog utilise des adresses terminées par « / » : Next.js ne doit pas les rediriger.
   skipTrailingSlashRedirect: true,
   images: {
-    // L'optimisation d'images de Next.js (redimensionnement, AVIF/WebP) est
-    // gratuite et native sur Vercel — inutile de la désactiver en production.
+    // Optimisation d'images (redimensionnement, AVIF/WebP) : native sur Vercel ; sur serveur dédié elle est
+    // faite par le serveur Node avec « sharp » (dépendance du projet), cache conservé dans .next/cache.
     formats: ['image/avif', 'image/webp'],
   },
 }

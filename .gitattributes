@@ -1,0 +1,7 @@
+# Fichiers exécutés sous Linux (serveur, Docker, GitHub Actions) : toujours des fins de ligne LF,
+# même si le dépôt est cloné sous Windows (un « \r » ferait échouer les scripts shell).
+*.sh text eol=lf
+Dockerfile text eol=lf
+.dockerignore text eol=lf
+deploy/** text eol=lf
+.github/** text eol=lf
