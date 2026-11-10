@@ -118,10 +118,15 @@ jobs:
           SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
         run: |
           install -m 700 -d ~/.ssh
-          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          # « tr -d '\r' » : un secret collé depuis Windows contient des fins de ligne CRLF qui invalident la clé et l'empreinte.
+          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           # Empreinte du serveur épinglée (secret) : on refuse un serveur qui ne serait pas le bon.
-          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '%s\n' "$SSH_KNOWN_HOSTS" | tr -d '\r' > ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+          # Diagnostic sans secret : empreintes lues dans known_hosts et empreinte de la clé de déploiement.
+          if ! ssh-keygen -lf ~/.ssh/known_hosts; then echo "::error::SSH_KNOWN_HOSTS est vide ou invalide : relancez ssh-keyscan -t ed25519 IP et recollez les lignes sans '#'."; exit 1; fi
+          ssh-keygen -lf ~/.ssh/deploy_key
 
       - name: Copier la configuration (compose et scripts)
         env:
