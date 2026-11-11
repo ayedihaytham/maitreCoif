@@ -11,6 +11,30 @@ services:
     image: postgres:18-alpine
     container_name: maitrecoif-db
     restart: unless-stopped
+    # Réglages adaptés aux ressources réservées à ce site (cf. mem_limit / cpus ci-dessous) ;
+    # journaux limités aux avertissements et erreurs (jamais les requêtes ni les connexions).
+    command:
+      - postgres
+      - -c
+      - max_connections=50
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - effective_cache_size=1GB
+      - -c
+      - work_mem=8MB
+      - -c
+      - maintenance_work_mem=64MB
+      - -c
+      - log_min_messages=warning
+      - -c
+      - log_min_error_statement=error
+      - -c
+      - log_connections=off
+      - -c
+      - log_disconnections=off
+      - -c
+      - log_checkpoints=off
     environment:
       POSTGRES_USER: maitrecoif
       POSTGRES_DB: maitrecoif
@@ -20,18 +44,24 @@ services:
       - pgdata:/var/lib/postgresql
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U maitrecoif -d maitrecoif']
-      interval: 10s
+      interval: 30s
       timeout: 5s
       retries: 6
     security_opt: ['no-new-privileges:true']
-    mem_limit: 768m
+    # Ressources de ce site : 4 Go de mémoire et 2 CPU au total (base 1 Go + 0,5 CPU, site 3 Go + 1,5 CPU).
+    # « mem_reservation » : mémoire que Docker garde en priorité à ce conteneur quand le serveur est chargé ;
+    # « mem_limit » / « cpus » : plafonds, pour que l'autre application ne soit jamais privée de ressources.
+    mem_reservation: 768m
+    mem_limit: 1g
+    cpus: 0.5
     # Ce serveur exécute aussi Watchtower (mise à jour automatique des conteneurs) : on l'exclut, nos mises à jour
     # passent uniquement par le déploiement GitHub Actions (aucun redémarrage imprévu de la base).
     labels: &sans-watchtower
       com.centurylinklabs.watchtower.enable: 'false'
+    # Journaux Docker : 3 fichiers de 5 Mo au plus par conteneur (15 Mo), anciens écrasés automatiquement.
     logging: &journal
       driver: json-file
-      options: { max-size: '10m', max-file: '5' }
+      options: { max-size: '5m', max-file: '3' }
 
   app:
     image: ${IMAGE:?définir IMAGE dans .env}:${TAG:-latest}
@@ -47,7 +77,12 @@ services:
       - next-cache:/app/.next/cache
     security_opt: ['no-new-privileges:true']
     cap_drop: [ALL]
-    mem_limit: 1g
+    mem_reservation: 2g
+    mem_limit: 3g
+    cpus: 1.5
+    environment:
+      # Plafond du tas Node sous la limite du conteneur : Node nettoie plus tôt au lieu d'être tué par manque de mémoire.
+      NODE_OPTIONS: '--dns-result-order=ipv4first --max-old-space-size=2048'
     labels: *sans-watchtower
     logging: *journal
 
