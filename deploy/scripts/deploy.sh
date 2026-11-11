@@ -27,7 +27,8 @@ fi
 PRECEDENT="$(cat .tag-courant 2>/dev/null || true)"
 
 echo "==> Démarrage de la base (si besoin)"
-docker compose up -d db
+# --wait : on ne continue que lorsque la base répond (elle peut venir d'être recréée : la sauvegarde qui suit échouerait sinon).
+docker compose up -d --wait --wait-timeout 120 db
 
 if [ -n "$PRECEDENT" ]; then
   echo "==> Sauvegarde avant migration"
