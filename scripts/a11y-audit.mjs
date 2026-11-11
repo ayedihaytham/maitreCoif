@@ -13,7 +13,7 @@ import AxeBuilder from '@axe-core/playwright'
 
 const BASE_URL = process.argv[2] || 'http://localhost:3001'
 
-const PUBLIC_PAGES = ['/', '/equipe', '/services', '/boutique', '/boutique/panier', '/reservation', '/suivi', '/connexion', '/inscription', '/mot-de-passe-oublie']
+const PUBLIC_PAGES = ['/', '/equipe', '/services', '/boutique', '/boutique/panier', '/reservation', '/suivi']
 
 const ADMIN_STORAGE_STATE = process.env.A11Y_STORAGE_STATE
 const SALON_URL = process.env.A11Y_SALON_URL || 'http://salon.localhost:3001'

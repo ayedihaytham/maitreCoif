@@ -11,7 +11,7 @@ const BASE = process.argv[2] || 'http://localhost:3055'
 const SORTIE = process.argv[3]
 const LARGEURS = [320, 375, 768, 1024, 1440]
 
-const PUBLIQUES = ['/', '/services', '/equipe', '/galerie', '/suivi', '/reservation', '/connexion', '/inscription', '/mot-de-passe-oublie']
+const PUBLIQUES = ['/', '/services', '/equipe', '/galerie', '/suivi', '/reservation']
 const ADMIN = ['plan', 'stats', 'svc', 'eq', 'fer', 'gal', 'ana', 'ana0', 'dlg'].map((v) => `/dev-preview?v=${v}`)
 
 const FAUX = {

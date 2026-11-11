@@ -65,12 +65,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Ce créneau n'est pas disponible, merci d'en choisir un autre." }, { status: 409 })
   }
 
-  const session = await auth()
   const rendezVous = await creerRendezVousConfirme({
     codeSuivi: await genererCodeSuiviUnique(),
     coiffeurId,
     prestations,
-    clientUserId: session?.user.role === 'CLIENT' ? session.user.id : null,
+    clientUserId: null, // les clients n'ont pas de compte : réservation sans connexion
     clientNom,
     clientTelephone,
     clientEmail: clientEmail || null,

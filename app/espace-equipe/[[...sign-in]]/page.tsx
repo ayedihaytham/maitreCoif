@@ -26,8 +26,8 @@ export default function EspaceEquipePage() {
           <p className="es-lead">L&apos;authentification de l&apos;équipe n&apos;est pas configurée sur ce déploiement (clés Clerk manquantes).</p>
         )}
       </div>
-      <Link href={siteUrl('/connexion')} className="es-back">
-        Vous êtes client ? Accédez à votre compte
+      <Link href={siteUrl('/')} className="es-back">
+        Retour au site
       </Link>
     </main>
   )

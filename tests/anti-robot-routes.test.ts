@@ -13,8 +13,6 @@ const requete = (corps: unknown) =>
   new Request('http://test/api', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-real-ip': IP }, body: JSON.stringify(corps) })
 
 const ROUTES = [
-  { nom: 'inscription', charger: () => import('@/app/api/auth/register/route') },
-  { nom: 'mot de passe oublié', charger: () => import('@/app/api/auth/forgot-password/route') },
   { nom: 'annulation (suivi)', charger: () => import('@/app/api/rendez-vous/suivi/route') },
   { nom: 'demande de modification', charger: () => import('@/app/api/rendez-vous/modification/route') },
 ]

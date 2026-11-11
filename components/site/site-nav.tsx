@@ -4,7 +4,7 @@ import type { CSSProperties } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, LogOut, Menu, ShoppingBag, User, X } from 'lucide-react'
+import { LayoutDashboard, Menu, ShoppingBag, X } from 'lucide-react'
 
 import { usePanier } from '@/components/boutique/panier'
 import { ThemeLogo } from '@/components/theme-logo'
@@ -24,11 +24,6 @@ const TOUS_LES_LIENS = [
 ]
 
 type Utilisateur = { name?: string | null; role: Role } | null
-
-async function deconnecterClient() {
-  const { signOut } = await import('next-auth/react')
-  signOut({ callbackUrl: '/' })
-}
 
 export function SiteNav({ horaires = [], boutique = true }: { horaires?: { jours: string; heures: string }[]; boutique?: boolean }) {
   // Sans produit en ligne, ni l'onglet Boutique ni le panier n'ont lieu d'être.
@@ -118,9 +113,9 @@ export function SiteNav({ horaires = [], boutique = true }: { horaires?: { jours
     window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })
   }
   const actif = (href: string) => monte && (href === '/' ? pathname === '/' : pathname.startsWith(href))
-  const compteHref = estEquipe ? salonUrl('/planning') : '/compte'
-  const compteLabel = estEquipe ? 'Back-office' : 'Mon compte'
-  const CompteIcone = estEquipe ? LayoutDashboard : User
+  // Seul le personnel (Clerk) a une session : il n'y a plus de « Mon compte » pour les clients.
+  const compteHref = salonUrl('/planning')
+  const compteLabel = 'Back-office'
 
   return (
     <>
@@ -141,17 +136,12 @@ export function SiteNav({ horaires = [], boutique = true }: { horaires?: { jours
         </nav>
 
         <div className="nav-user">
-          {user && (
+          {estEquipe && (
             <>
               <a className="nl" href={compteHref}>
-                <CompteIcone className="size-3.5" aria-hidden="true" />
+                <LayoutDashboard className="size-3.5" aria-hidden="true" />
                 <span>{compteLabel}</span>
               </a>
-              {!estEquipe && (
-                <button type="button" className="icon-btn" aria-label="Se déconnecter" onClick={deconnecterClient}>
-                  <LogOut className="size-3.5" aria-hidden="true" />
-                </button>
-              )}
             </>
           )}
           {boutique && (
@@ -210,16 +200,11 @@ export function SiteNav({ horaires = [], boutique = true }: { horaires?: { jours
             </Link>
           </div>
         )}
-        {user && (
+        {estEquipe && (
           <div className="small">
             <a href={compteHref} tabIndex={ouvert ? 0 : -1}>
               {compteLabel}
             </a>
-            {!estEquipe && (
-              <button type="button" onClick={deconnecterClient} tabIndex={ouvert ? 0 : -1}>
-                Se déconnecter
-              </button>
-            )}
           </div>
         )}
         <div className="menu-foot">
