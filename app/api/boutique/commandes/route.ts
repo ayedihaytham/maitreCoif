@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { notifierConfirmation } from '@/lib/booking'
 import { creerCommande, lireDetail } from '@/lib/boutique'
 import { notifierNouvelleCommande } from '@/lib/boutique-emails'
+import { logPostHog } from '@/lib/posthog-logs'
 import { checkRateLimit, clientIpFrom } from '@/lib/rate-limit'
 import { verifierTurnstile } from '@/lib/turnstile'
 import { commandeSchema } from '@/lib/validators'
@@ -40,6 +41,12 @@ export async function POST(request: Request) {
       serviceNom: resultat.commande.lignes.flatMap((l) => (l.type === 'PACK' ? lireDetail(l.detail).filter((e) => e.type === 'service').map((e) => e.nom) : [])).join(' + ') || 'Prestation du pack',
     })
   }
+
+  logPostHog('store order reserved', {
+    route: '/api/boutique/commandes',
+    includes_appointment: Boolean(resultat.rendezVous),
+    line_count: lignes.length,
+  })
 
   return NextResponse.json({ code: resultat.commande.code }, { status: 201 })
 }

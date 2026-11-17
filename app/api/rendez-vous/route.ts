@@ -8,6 +8,7 @@ import { chargerPrestations, inclurePrestations, totaux } from '@/lib/prestation
 import { prisma } from '@/lib/prisma'
 import { terminerRendezVousPasses } from '@/lib/terminer-passes'
 import { genererCodeSuiviUnique } from '@/lib/code-suivi'
+import { logPostHog } from '@/lib/posthog-logs'
 import { checkRateLimit, clientIpFrom } from '@/lib/rate-limit'
 import { creneauEstProposable, estDatePassee } from '@/lib/slots'
 import { verifierTurnstile } from '@/lib/turnstile'
@@ -83,6 +84,12 @@ export async function POST(request: Request) {
   }
 
   await notifierConfirmation(rendezVous, { coiffeurNom: `${coiffeur.prenom} ${coiffeur.nom}`, serviceNom: pack ? `Pack « ${pack.nom} » (${totaux(prestations).nom})` : totaux(prestations).nom })
+
+  logPostHog('appointment booking confirmed', {
+    route: '/api/rendez-vous',
+    has_pack: Boolean(pack),
+    service_count: prestations.length,
+  })
 
   return NextResponse.json({ id: rendezVous.id, codeSuivi: rendezVous.codeSuivi }, { status: 201 })
 }

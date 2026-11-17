@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { expirerCommandesEchues, rappelerCommandes } from '@/lib/boutique-expiration'
 import { envoyerRappelEmail } from '@/lib/notifications'
+import { logPostHog } from '@/lib/posthog-logs'
 import { prisma } from '@/lib/prisma'
 import { terminerRendezVousPasses } from '@/lib/terminer-passes'
 import { inclurePrestations, prestationsDuRendezVous } from '@/lib/prestations'
@@ -58,6 +59,14 @@ export async function GET(request: Request) {
       envoyes++
     }
   }
+
+  logPostHog('daily reminders completed', {
+    route: '/api/cron/rappels',
+    candidate_count: rendezVous.length,
+    sent_count: envoyes,
+    expired_order_count: commandesExpirees,
+    reminded_order_count: commandesRappelees,
+  })
 
   return NextResponse.json({ date: demain.toISOString().slice(0, 10), candidats: rendezVous.length, envoyes, commandesExpirees, commandesRappelees })
 }

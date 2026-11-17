@@ -1,5 +1,7 @@
 import { ClerkProvider } from '@clerk/nextjs'
 import { frFR } from '@clerk/localizations'
+import { useEffect } from 'react'
+import posthog from 'posthog-js'
 
 import { salonUrl } from '@/lib/salon-host'
 
@@ -36,6 +38,41 @@ const clerkAppearance = {
   },
 }
 
+type StaffSession = {
+  id: string
+  email?: string | null
+  name?: string | null
+  role: string
+}
+
+// L'API renvoie l'identifiant primaire du personnel, plutôt que l'identifiant ou l'email Clerk.
+// Ainsi tous les événements et exceptions du back-office restent associés à la même personne.
+function IdentifierPersonnel({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    if (!posthog.__loaded) return
+
+    let annule = false
+    fetch('/api/session', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { user?: StaffSession | null } | null) => {
+        const user = d?.user
+        if (annule || !user?.id) return
+        posthog.identify(user.id, {
+          ...(user.email ? { email: user.email } : {}),
+          ...(user.name ? { name: user.name } : {}),
+          role: user.role,
+        })
+      })
+      .catch(() => {})
+
+    return () => {
+      annule = true
+    }
+  }, [])
+
+  return <>{children}</>
+}
+
 /**
  * Fournisseur Clerk, monté seulement sur l'espace du personnel (back-office et connexion de
  * l'équipe). Les pages publiques n'en ont pas besoin : sans lui elles ne chargent aucun script
@@ -53,7 +90,7 @@ export function ClerkSalonProvider({ children }: { children: React.ReactNode }) 
       signInFallbackRedirectUrl={salonUrl('/planning')}
       signUpFallbackRedirectUrl={salonUrl('/planning')}
     >
-      {children}
+      <IdentifierPersonnel>{children}</IdentifierPersonnel>
     </ClerkProvider>
   )
 }

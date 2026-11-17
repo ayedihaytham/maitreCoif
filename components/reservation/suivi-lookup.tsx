@@ -112,7 +112,7 @@ export function SuiviLookup({ initialCode = '' }: { initialCode?: string }) {
   const [modifyMessage, setModifyMessage] = useState('')
   const [submittingModifyId, setSubmittingModifyId] = useState<string | null>(null)
 
-  async function search(code: string) {
+  async function search(code: string, captureSuccess = false) {
     setError(null)
     setResults(null)
     setLoading(true)
@@ -125,6 +125,7 @@ export function SuiviLookup({ initialCode = '' }: { initialCode?: string }) {
         return
       }
       if (data.length === 0) setError('Aucune réservation trouvée avec ces informations.')
+      else if (captureSuccess) suivre('reservation_suivi_consulte')
       setResults(data)
     } catch {
       setError('Impossible de contacter le serveur.')
@@ -145,7 +146,7 @@ export function SuiviLookup({ initialCode = '' }: { initialCode?: string }) {
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
-    search(codeSuivi)
+    search(codeSuivi, true)
   }
 
   async function handleCancel(rdv: RendezVousSuivi) {

@@ -9,7 +9,11 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   const session = await auth()
   return NextResponse.json(
-    { user: session?.user ? { name: session.user.name ?? null, role: session.user.role } : null },
+    {
+      user: session?.user
+        ? { id: session.user.id, email: session.user.email ?? null, name: session.user.name ?? null, role: session.user.role }
+        : null,
+    },
     { headers: { 'Cache-Control': 'private, no-store' } },
   )
 }
