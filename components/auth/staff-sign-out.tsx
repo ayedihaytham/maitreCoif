@@ -2,6 +2,7 @@
 
 import { useClerk } from '@clerk/nextjs'
 import { LogOut } from 'lucide-react'
+import posthog from 'posthog-js'
 
 import { Button } from '@/components/ui/button'
 
@@ -18,6 +19,10 @@ export function StaffSignOutButton({
   label?: string
 }) {
   const { signOut } = useClerk()
+  const seDeconnecter = () => {
+    if (posthog.__loaded) posthog.reset()
+    signOut({ redirectUrl })
+  }
 
   return (
     <Button
@@ -25,7 +30,7 @@ export function StaffSignOutButton({
       variant={variant}
       size={label ? 'default' : 'icon-sm'}
       aria-label="Se déconnecter"
-      onClick={() => signOut({ redirectUrl })}
+      onClick={seDeconnecter}
     >
       <LogOut className="size-3.5" />
       {label}

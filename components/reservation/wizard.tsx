@@ -168,10 +168,10 @@ export function ReservationWizard({
   )
 
   // État (libre / complet / fermé) des prochains jours pour ce coiffeur et ce service.
-  // Entonnoir : une étape est comptée quand le visiteur l'atteint (l'étape « coiffeur » est la page elle-même).
-  useEffect(() => {
-    if (step > 0) suivre('reservation_etape', { etape: ETAPES_SUIVI[step] })
-  }, [step])
+  function allerEtape(prochaine: number) {
+    if (prochaine > step) suivre('reservation_etape', { etape: ETAPES_SUIVI[prochaine] })
+    setStep(prochaine)
+  }
 
   useEffect(() => {
     if (!coiffeurId || !serviceId) {
@@ -229,7 +229,7 @@ export function ReservationWizard({
       setDate('')
       setHeureDebut('')
     }
-    setStep(serviceIds.length > 0 || packId ? 2 : 1)
+    allerEtape(serviceIds.length > 0 || packId ? 2 : 1)
   }
 
   function choisirPack(id: string) {
@@ -402,7 +402,7 @@ export function ReservationWizard({
                 className={cn('stp', etat)}
                 disabled={i >= step}
                 aria-current={i === step ? 'step' : undefined}
-                onClick={() => setStep(i)}
+                onClick={() => allerEtape(i)}
               >
                 <span className="n">{i < step ? <Check className="size-4" aria-hidden="true" /> : i + 1}</span>
                 <span className="t">{label}</span>
@@ -526,10 +526,10 @@ export function ReservationWizard({
                 </div>
               )}
               <div style={{ display: 'flex', gap: 12, marginTop: 22, flexWrap: 'wrap' }}>
-                <button type="button" className="btn btn-ghost btn-sm back" onClick={() => setStep(0)}>
+                <button type="button" className="btn btn-ghost btn-sm back" onClick={() => allerEtape(0)}>
                   <ChevronLeft className="size-4" aria-hidden="true" /> Retour
                 </button>
-                <button type="button" className="btn btn-gold" disabled={!service || !coiffeurId} onClick={() => setStep(2)}>
+                <button type="button" className="btn btn-gold" disabled={!service || !coiffeurId} onClick={() => allerEtape(2)}>
                   {coiffeurId ? 'Continuer' : 'Choisissez d’abord un coiffeur'}
                 </button>
               </div>
@@ -661,7 +661,7 @@ export function ReservationWizard({
                 </div>
               )}
 
-              <button type="button" className="btn btn-ghost btn-sm back" style={{ marginTop: 30 }} onClick={() => setStep(1)}>
+              <button type="button" className="btn btn-ghost btn-sm back" style={{ marginTop: 30 }} onClick={() => allerEtape(1)}>
                 <ChevronLeft className="size-4" aria-hidden="true" /> Retour
               </button>
             </div>
@@ -766,7 +766,7 @@ export function ReservationWizard({
                 </p>
               )}
 
-              <button type="button" className="btn btn-ghost btn-sm back" onClick={() => setStep(2)}>
+              <button type="button" className="btn btn-ghost btn-sm back" onClick={() => allerEtape(2)}>
                 <ChevronLeft className="size-4" aria-hidden="true" /> Retour
               </button>
             </form>
@@ -822,7 +822,7 @@ export function ReservationWizard({
               </div>
               <div className="bars" aria-hidden="true" style={{ marginTop: 22 }} />
               {step === 2 && (
-                <button type="button" className="btn btn-gold" style={{ width: '100%', marginTop: 24 }} disabled={!peutContinuer} onClick={() => setStep(3)}>
+                <button type="button" className="btn btn-gold" style={{ width: '100%', marginTop: 24 }} disabled={!peutContinuer} onClick={() => allerEtape(3)}>
                   Continuer
                 </button>
               )}
@@ -858,7 +858,7 @@ export function ReservationWizard({
             <div className="s">{service ? formatPrix(service.prix) : ''}</div>
           </div>
           {step === 2 ? (
-            <button type="button" className="btn btn-gold btn-sm" disabled={!peutContinuer} onClick={() => setStep(3)}>
+            <button type="button" className="btn btn-gold btn-sm" disabled={!peutContinuer} onClick={() => allerEtape(3)}>
               {actionMobile}
             </button>
           ) : (

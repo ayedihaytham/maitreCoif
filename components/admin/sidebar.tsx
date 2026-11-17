@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useClerk } from '@clerk/nextjs'
 import { Activity, ArrowUpRight, BarChart3, CalendarOff, CalendarRange, Gift, Images, LogOut, Package, Scissors, ShoppingBag, Users } from 'lucide-react'
+import posthog from 'posthog-js'
 
 import { ThemeLogo } from '@/components/theme-logo'
 import { ThemeToggle } from '@/components/theme-toggle'
@@ -197,5 +198,9 @@ export function AdminSidebar({ role, nom, prochain = null, aujourdhui = 0, aPrep
 /** Version connectée : la déconnexion passe par Clerk. */
 export function AdminSidebarClerk(props: Omit<Props, 'onSignOut'>) {
   const { signOut } = useClerk()
-  return <AdminSidebar {...props} onSignOut={() => signOut({ redirectUrl: siteUrl('/') })} />
+  const seDeconnecter = () => {
+    if (posthog.__loaded) posthog.reset()
+    signOut({ redirectUrl: siteUrl('/') })
+  }
+  return <AdminSidebar {...props} onSignOut={seDeconnecter} />
 }
