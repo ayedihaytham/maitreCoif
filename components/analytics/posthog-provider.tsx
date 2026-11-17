@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import posthog from 'posthog-js'
 
@@ -20,10 +20,33 @@ const CLE = process.env.NEXT_PUBLIC_POSTHOG_KEY
  */
 export function PostHogProvider() {
   const pathname = usePathname()
+  // Vrai quand PostHog est démarré et que le pays/la ville du visiteur ont été ajoutés : la première page vue part alors complète.
+  const [pret, setPret] = useState(false)
 
   useEffect(() => {
-    if (!CLE || posthog.__loaded || navigateurDePersonnel()) return
-    posthog.init(CLE, {
+    if (!CLE || navigateurDePersonnel()) return
+    let annule = false
+    if (!posthog.__loaded) demarrer()
+    // Pays et ville (en-têtes Cloudflare, jamais l'adresse IP) : le mode sans cookie empêche PostHog de les déduire.
+    fetch('/api/geo', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((lieu: { pays?: string | null; ville?: string | null } | null) => {
+        const proprietes: Record<string, string> = {}
+        if (lieu?.pays) proprietes.$geoip_country_name = lieu.pays
+        if (lieu?.ville) proprietes.$geoip_city_name = lieu.ville
+        if (Object.keys(proprietes).length) posthog.register(proprietes)
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!annule) setPret(true)
+      })
+    return () => {
+      annule = true
+    }
+  }, [])
+
+  function demarrer() {
+    posthog.init(CLE as string, {
       api_host: '/ingest',
       ui_host: process.env.NEXT_PUBLIC_POSTHOG_UI_HOST || 'https://us.posthog.com',
       cookieless_mode: 'always',
@@ -39,13 +62,13 @@ export function PostHogProvider() {
       opt_out_useragent_filter: process.env.NEXT_PUBLIC_POSTHOG_DEBUG === '1',
       before_send: (cr) => nettoyerEvenement(cr),
     })
-  }, [])
+  }
 
-  // Une page vue à chaque changement de page (Next.js ne recharge pas le document).
+  // Une page vue à chaque changement de page (Next.js ne recharge pas le document), dès que le lieu est connu.
   useEffect(() => {
-    if (!CLE || !posthog.__loaded) return
+    if (!CLE || !pret || !posthog.__loaded) return
     posthog.capture('$pageview', { $current_url: nettoyerUrl(window.location.href) })
-  }, [pathname])
+  }, [pathname, pret])
 
   // Clics sur les éléments marqués data-ph="nom" : un événement « clic » avec la cible, rien d'autre.
   useEffect(() => {

@@ -57,6 +57,8 @@ export function construireRequetes(jours: PeriodeJours) {
       FROM events WHERE event = '$pageview' AND ${periode} GROUP BY appareil ORDER BY visiteurs DESC LIMIT 5`,
     pays: `SELECT coalesce(nullif(properties.$geoip_country_name, ''), 'Inconnu') AS pays, count(DISTINCT person_id) AS visiteurs
       FROM events WHERE event = '$pageview' AND ${periode} GROUP BY pays ORDER BY visiteurs DESC LIMIT 6`,
+    villes: `SELECT coalesce(nullif(properties.$geoip_city_name, ''), 'Inconnue') AS ville, count(DISTINCT person_id) AS visiteurs
+      FROM events WHERE event = '$pageview' AND ${periode} GROUP BY ville ORDER BY visiteurs DESC LIMIT 8`,
   }
 }
 export type NomRequete = keyof ReturnType<typeof construireRequetes>
@@ -104,6 +106,7 @@ export interface Analytique {
   sources: { source: string; visiteurs: number }[]
   appareils: { appareil: string; visiteurs: number }[]
   pays: { pays: string; visiteurs: number }[]
+  villes: { ville: string; visiteurs: number }[]
 }
 
 const nombre = (v: unknown) => {
@@ -172,6 +175,7 @@ export function assembler(r: Partial<Record<NomRequete, Lignes>>, jours: Periode
     sources: (r.sources ?? []).map((l) => ({ source: texte(l[0], '$direct'), visiteurs: nombre(l[1]) })),
     appareils: (r.appareils ?? []).map((l) => ({ appareil: LIBELLES_APPAREILS[texte(l[0])] ?? texte(l[0], 'Inconnu'), visiteurs: nombre(l[1]) })),
     pays: (r.pays ?? []).map((l) => ({ pays: texte(l[0], 'Inconnu'), visiteurs: nombre(l[1]) })),
+    villes: (r.villes ?? []).map((l) => ({ ville: texte(l[0], 'Inconnue'), visiteurs: nombre(l[1]) })),
   }
 }
 

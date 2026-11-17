@@ -199,6 +199,12 @@ export function AnalytiqueView({ donnees, periode, erreurs = [] }: { donnees: An
               <Classement vide="Aucune donnée." lignes={d.pays.map((p) => ({ nom: p.pays, valeur: p.visiteurs }))} />
             </div>
           </section>
+          <section className="st-sec" aria-labelledby="an-villes">
+            <h2 id="an-villes">Villes</h2>
+            <div className="ad-card an-box">
+              <Classement vide="Aucune donnée." lignes={d.villes.map((v) => ({ nom: v.ville, valeur: v.visiteurs }))} />
+            </div>
+          </section>
         </div>
       </div>
     </div>

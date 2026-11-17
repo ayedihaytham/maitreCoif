@@ -90,6 +90,11 @@ const analytique = {
     { pays: 'France', visiteurs: 41 },
     { pays: 'Libya', visiteurs: 9 },
   ],
+  villes: [
+    { ville: 'Sfax', visiteurs: 512 },
+    { ville: 'Tunis', visiteurs: 203 },
+    { ville: 'Sousse', visiteurs: 65 },
+  ],
 }
 
 export function PreviewClient() {
