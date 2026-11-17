@@ -3,7 +3,7 @@ const PRISMA_INUTILE = ['node_modules/.pnpm/@prisma+client*/node_modules/@prisma
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Image Docker (serveur dédié) : sortie « standalone » = serveur Node minimal avec seulement les fichiers utiles.
-  // Vercel ne l'utilise pas : la variable n'y est pas définie.
+  // En développement local, la variable n'est pas définie.
   output: process.env.BUILD_STANDALONE === '1' ? 'standalone' : undefined,
   // Les navigateurs réclament /favicon.ico : on les sert avec l'icône de l'application (évite un 404).
   async rewrites() {
@@ -19,7 +19,7 @@ const nextConfig = {
       { source: '/ingest/:path*', destination: `${ingestion}/:path*` },
     ]
   },
-  // Taille des fonctions serveur (Vercel « Functions Storage »). Chaque route embarquait ~58 Mo de modules
+  // Taille de l'image Docker. Chaque route embarquait ~58 Mo de modules
   // WebAssembly de Prisma pour d'autres bases de données (MySQL, SQLite, SQL Server, CockroachDB...) et pour les
   // environnements « edge » : inutiles ici, car le site utilise PostgreSQL avec le moteur natif de Prisma.
   outputFileTracingExcludes: {
@@ -32,8 +32,7 @@ const nextConfig = {
   // PostHog utilise des adresses terminées par « / » : Next.js ne doit pas les rediriger.
   skipTrailingSlashRedirect: true,
   images: {
-    // Optimisation d'images (redimensionnement, AVIF/WebP) : native sur Vercel ; sur serveur dédié elle est
-    // faite par le serveur Node avec « sharp » (dépendance du projet), cache conservé dans .next/cache.
+    // Optimisation d'images (redimensionnement, AVIF/WebP) : faite par le serveur Node avec « sharp » (dépendance du projet), cache conservé dans .next/cache.
     formats: ['image/avif', 'image/webp'],
   },
 }

@@ -73,7 +73,7 @@ export async function GET(request: Request) {
 }
 
 // `||` plutôt que `??` : une variable d'environnement définie mais vide
-// ("" côté Vercel, par ex.) doit retomber sur le défaut, pas donner 0.
+// ("" dans app.env, par ex.) doit retomber sur le défaut, pas donner 0.
 const CANCELLATION_DEADLINE_HOURS = Number(process.env.CANCELLATION_DEADLINE_HOURS || 2)
 
 export async function POST(request: Request) {

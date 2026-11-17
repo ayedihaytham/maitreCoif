@@ -8,13 +8,13 @@ Coif, conforme au [cahier des charges](./Cahier_des_charges_Maitre_Coif.pdf).
 - **Frontend** : Next.js 16 (App Router), React 19, Tailwind CSS v4, shadcn/ui (`@base-ui/react`)
 - **Backend** : API routes Next.js
 - **Base de données** : PostgreSQL + Prisma ORM
-- **Authentification** : Auth.js v5 (NextAuth), credentials + JWT, `bcryptjs` pour le hachage des mots de passe
+- **Authentification** : Clerk, réservée à l'équipe (gérant et coiffeurs). Les clients n'ont pas de compte
 - **Notifications** : Resend (email) et Twilio (SMS, optionnel) — désactivés par défaut, les envois sont
   simplement loggés en console tant qu'aucune clé API n'est configurée
 
 ## Déploiement
 
-Hébergement sur serveur dédié (Docker, nginx, Cloudflare, GitHub Actions), avec Vercel + Neon en secours : voir [deploy/README.md](./deploy/README.md).
+Hébergement sur serveur dédié (Docker, nginx, Cloudflare, GitHub Actions) : voir [deploy/README.md](./deploy/README.md).
 
 ## Démarrage en local
 
@@ -37,8 +37,7 @@ docker compose up -d
 Cela démarre un Postgres local sur `localhost:5433` (le port 5432 est volontairement évité s'il est déjà
 utilisé par un autre service sur votre machine — adaptez `docker-compose.yml` et `.env` si besoin).
 
-**b) Neon / Supabase (recommandé pour la production)** — créez un projet gratuit et récupérez l'URL de
-connexion PostgreSQL.
+**b) Une autre base PostgreSQL** — renseignez simplement son URL de connexion dans `.env`.
 
 ### 3. Variables d'environnement
 
@@ -51,8 +50,6 @@ dernier avec `npx auth secret` ou `openssl rand -base64 32`).
 pnpm db:migrate   # applique le schéma Prisma
 pnpm db:seed      # crée un gérant, deux coiffeurs, des services et des rendez-vous d'exemple
 ```
-
-Compte créé par le seed (espace client, Auth.js) : `client@example.com` / `Client123!`.
 
 Le **personnel** (gérant et coiffeurs) se connecte avec [Clerk](https://clerk.com), pas avec un mot de passe stocké
 en base : le seed crée leurs fiches (`gerant@maitrecoif.fr`, `julien@maitrecoif.fr`, `lucas@maitrecoif.fr`), mais il
@@ -84,7 +81,6 @@ proxy.ts           Middleware de contrôle d'accès (RBAC) — convention Next.j
 ## Modèle d'accès (RBAC)
 
 - **Visiteur / Client invité** : accueil, services, équipe, réservation, suivi (par code de suivi uniquement) — sans compte.
-- **Client** : + historique de ses rendez-vous, avis, modification du profil (`/compte`).
 - **Coiffeur** : + son propre planning et ses rendez-vous (`/admin/planning`).
 - **Administrateur** (le gérant, qui est aussi un coiffeur) : + gestion de l'équipe, des services et des
   statistiques, validation de tous les rendez-vous.
@@ -135,12 +131,12 @@ gérant) affiche les chiffres.
    Sans cela, PostHog ignore tous les événements envoyés sans cookie.
 4. *Account settings → Personal API keys → Create personal API key* : étendue **Query → Read** (lecture seule, rien
    d'autre), puis copiez la clé (`phx_…`). Elle ne s'affiche qu'une fois.
-5. Dans Vercel (*Settings → Environment Variables*, environnement **Production** seulement, pour ne pas compter vos essais) :
-   - `NEXT_PUBLIC_POSTHOG_KEY` = la Project API key (publique par nature : type « Config » dans Vercel) ;
-   - `POSTHOG_PERSONAL_API_KEY` = la clé personnelle (type **Secret**, ne jamais la publier) ;
+5. Renseignez les clés (en production seulement, pour ne pas compter vos essais) :
+   - `NEXT_PUBLIC_POSTHOG_KEY` = la Project API key (publique par nature) : variable GitHub du dépôt (*Settings → Secrets and variables → Actions → Variables*), inscrite dans le site à la construction ;
+   - `POSTHOG_PERSONAL_API_KEY` = la clé personnelle (**secrète**, ne jamais la publier) : fichier `app.env` du serveur ;
    - `POSTHOG_PROJECT_ID` = le numéro du projet.
    Les adresses par défaut sont celles de la région UE ; pour la région US, voir `.env.example`.
-6. Redéployez. Visitez le site, puis ouvrez *Activity* dans PostHog : vos pages vues apparaissent en quelques secondes.
+6. Redéployez (poussez sur `main`, ou relancez le workflow) et redémarrez le site pour `app.env`. Visitez le site, puis ouvrez *Activity* dans PostHog : vos pages vues apparaissent en quelques secondes.
    Le back-office → Analytique affiche les chiffres (mis à jour toutes les 5 minutes).
 
 **En cas de problème**
@@ -158,20 +154,20 @@ La réservation en ligne est protégée par trois barrières : un champ piège i
 
 **Activer Turnstile (gratuit, 3 minutes)** :
 1. Sur dash.cloudflare.com → Turnstile → « Add widget », domaine `maitrecoif.com` (ajoutez aussi `localhost` pour les essais), mode « Managed ».
-2. Copiez les deux clés dans Vercel (Settings → Environment Variables) : `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (clé du site) et `TURNSTILE_SECRET_KEY` (clé secrète), puis redéployez.
+2. Renseignez `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (clé du **site**, variable GitHub du dépôt, puis redéployez) et `TURNSTILE_SECRET_KEY` (clé **secrète**, fichier `app.env` du serveur, puis redémarrez le site). Les deux clés doivent provenir du même widget.
 3. Tant que `TURNSTILE_SECRET_KEY` est vide, la vérification est désactivée (les deux autres barrières restent actives).
 
 Pour essayer en local avec les clés de test de Cloudflare (le widget affiche « Success! » tout seul) :
 `NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA`.
 
 **Attaques par saturation (DDoS)** : un captcha arrête les robots qui réservent, pas le trafic de masse. Ce second risque se traite avant
-l'application : sur Vercel, activez le pare-feu (Firewall → « Attack Challenge Mode » en cas d'attaque, et une règle de limitation de
-débit sur `/api/*`) ; ou placez le domaine derrière le proxy Cloudflare.
+l'application : le domaine est derrière le proxy Cloudflare (nuage orange) ; en cas d'attaque, activez « Under Attack Mode » (Security → Settings)
+et une règle de limitation de débit sur `/api/*`.
 
 ## Rappels automatiques
 
-`vercel.json` déclenche chaque jour `/api/cron/rappels` (rappel J-1 par email, et par WhatsApp si activé). Définissez
-`CRON_SECRET` dans Vercel (le modèle WhatsApp `rappel_rdv` n'est utile que si vous activez WhatsApp).
+Un minuteur systemd du serveur (`deploy/systemd`) déclenche chaque jour `/api/cron/rappels` (rappel J-1 par email, et par WhatsApp si activé).
+`CRON_SECRET` est défini dans `app.env` (le modèle WhatsApp `rappel_rdv` n'est utile que si vous activez WhatsApp).
 
 ## Tests et audit d'accessibilité
 
@@ -184,19 +180,19 @@ Le test d'intégration (`tests/booking-overlap.test.ts`) et l'audit d'accessibil
 locale (`docker compose up -d`) et le serveur de dev (`pnpm dev`) tournent — l'audit prend l'URL du serveur
 en argument (`pnpm a11y http://localhost:3000`, `http://localhost:3001` par défaut).
 
-## Déploiement (Vercel + Neon/Supabase)
+## Déploiement
 
-1. Créez une base PostgreSQL managée (Neon ou Supabase) et récupérez son `DATABASE_URL`.
-2. Poussez le projet sur GitHub, importez-le sur [Vercel](https://vercel.com).
-3. Renseignez les variables d'environnement de `.env.example` dans les paramètres du projet Vercel
-   (`DATABASE_URL`, `AUTH_SECRET`, `AUTH_URL` = URL de production, et éventuellement les clés Resend/Twilio).
-4. Exécutez les migrations sur la base de production : `DATABASE_URL=... pnpm prisma migrate deploy`.
-5. (Optionnel) Lancez `pnpm db:seed` une première fois pour créer le compte administrateur initial, puis
-   mettez l'email réel du gérant sur sa fiche (SQL ou Prisma Studio) pour qu'il corresponde à son compte Clerk.
+Le site tourne sur un serveur dédié (Docker, nginx, Cloudflare) et se déploie par GitHub Actions à chaque `push` sur `main` :
+voir [deploy/README.md](./deploy/README.md) (installation, variables, sauvegardes, reprise après sinistre). Les migrations de la base sont
+appliquées automatiquement à chaque déploiement, après une sauvegarde.
+
+Pour une première installation uniquement : lancez `pnpm db:seed` pour créer le compte administrateur initial, puis mettez l'email réel du
+gérant sur sa fiche (SQL ou Prisma Studio) pour qu'il corresponde à son compte Clerk. **Ne lancez jamais le seed sur la base de production
+en service.**
 
 ## Guide rapide du back-office (pour le gérant et son équipe)
 
-- **Connexion** : `/espace-equipe` (Clerk) avec l'adresse email de la fiche équipe. Les clients utilisent `/connexion`.
+- **Connexion** : `salon.maitrecoif.com/connexion` (Clerk) avec l'adresse email de la fiche équipe. Les clients n'ont pas de compte : ils réservent directement et suivent leur rendez-vous avec leur code.
 - **Planning** (`/admin/planning`) : naviguez par jour, terminez ou annulez un rendez-vous. Les réservations
   sont **confirmées automatiquement** dès qu'un créneau est réservé (pas de validation manuelle) ; le statut
   "en attente" ne réapparaît que si un client demande une modification depuis la page de suivi, pour que la
@@ -237,16 +233,14 @@ pnpm db:seed      # réinitialise les données de démonstration
   les appelle depuis le site public. Sans `NEXT_PUBLIC_SALON_HOST`, le back-office n'est servi nulle part.
 - **Local** : `NEXT_PUBLIC_SALON_HOST=salon.localhost:3000`, puis ouvrir `http://salon.localhost:3000` (les navigateurs
   résolvent `*.localhost` vers votre machine).
-- **Deux systèmes, une règle** : les clients restent sur Auth.js (`/connexion`, `/compte`, site public) ; le
-  personnel utilise Clerk. `auth()` de `lib/auth.ts` renvoie la session du personnel (Clerk) en priorité, sinon celle
-  du client : le reste du code n'a pas changé.
+- **Un seul système d'authentification** : Clerk, pour l'équipe uniquement. Il n'y a pas de compte client : on réserve
+  sans compte et on suit son rendez-vous avec son code. `auth()` de `lib/auth.ts` renvoie la session du personnel.
 - **Les rôles restent en base** : un compte Clerk n'a accès au back-office que si son **email vérifié** correspond à
   un membre actif (`COIFFEUR` ou `ADMIN`) de la table `User` (`lib/staff.ts`). Un compte Clerk inconnu est renvoyé
   sur `/acces-refuse`.
 - **Ajouter un membre** : la page Équipe crée la fiche et envoie automatiquement une invitation Clerk par email ;
-  la personne y crée son mot de passe, puis se connecte sur le sous-domaine. Aucun mot de passe n'est stocké pour
-  le personnel (Auth.js le refuse).
-- **Sans clés Clerk** (preview, tests) : le site public et l'espace client fonctionnent, le back-office est fermé.
+  la personne y crée son mot de passe, puis se connecte sur le sous-domaine. Aucun mot de passe n'est stocké par le site.
+- **Sans clés Clerk** (preview, tests) : le site public fonctionne, le back-office est fermé.
 
 ## Design du site public (« Séance »)
 

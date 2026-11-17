@@ -214,7 +214,7 @@ export function AnalytiqueNonConfigure() {
         <div className="ad-card an-box">
           <h2 style={{ margin: '0 0 12px', font: '600 16px/1.3 var(--a-sans)' }}>PostHog n&apos;est pas encore relié</h2>
           <p className="st-note" style={{ maxWidth: '62ch', marginTop: 0 }}>
-            Pour afficher les chiffres ici, ajoutez ces deux variables d&apos;environnement dans Vercel (Settings, Environment Variables), puis redéployez :
+            Pour afficher les chiffres ici, ajoutez ces deux variables d&apos;environnement dans le fichier app.env du serveur (/opt/maitre-coif), puis relancez le site :
           </p>
           <ul className="an-vars">
             <li>

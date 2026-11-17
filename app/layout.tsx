@@ -1,4 +1,3 @@
-import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { connection } from 'next/server'
 import { Cormorant_Garamond, Manrope } from 'next/font/google'
@@ -29,8 +28,8 @@ const THEME_SCRIPT = `try{var t=localStorage.getItem('mc-theme');document.docume
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   // Hébergement sur un serveur dédié (Docker) : l'image est construite sans accès à la base de production,
   // donc aucune page ne doit être pré-rendue avec des données figées au moment du build. RENDER_DYNAMIC=1
-  // (défini à la construction et à l'exécution de l'image) les rend à chaque requête. Sur Vercel la variable
-  // n'existe pas : le comportement d'origine (pages régénérées toutes les 60 s) est inchangé.
+  // (défini à la construction et à l'exécution de l'image) les rend à chaque requête. En développement local,
+  // la variable n'existe pas et les pages gardent leur régénération périodique.
   if (process.env.RENDER_DYNAMIC === '1') await connection()
 
   return (
@@ -42,7 +41,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <body className={`${manrope.variable} ${cormorant.variable}`}>
         <ThemeSync />
         {children}
-        {process.env.NODE_ENV === 'production' && process.env.VERCEL && <Analytics />}
       </body>
     </html>
   )

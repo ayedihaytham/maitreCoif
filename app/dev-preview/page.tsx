@@ -8,6 +8,6 @@ import { PreviewClient } from './preview-client'
 export const dynamic = 'force-dynamic'
 
 export default function DevPreviewPage() {
-  if (process.env.DEV_PREVIEW !== '1' || process.env.NODE_ENV === 'production' && process.env.VERCEL) notFound()
+  if (process.env.DEV_PREVIEW !== '1' || process.env.NODE_ENV === 'production' && process.env.RENDER_DYNAMIC === '1') notFound()
   return <PreviewClient />
 }

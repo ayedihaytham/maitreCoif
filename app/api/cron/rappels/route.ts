@@ -8,7 +8,7 @@ import { inclurePrestations, prestationsDuRendezVous } from '@/lib/prestations'
 import { maintenantSalon } from '@/lib/slots'
 import { envoyerRappelWhatsapp } from '@/lib/whatsapp'
 
-// Appelée une fois par jour par Vercel Cron (cf. vercel.json). Vercel envoie
+// Appelée une fois par jour par le minuteur systemd du serveur (deploy/scripts/rappels.sh), qui envoie
 // `Authorization: Bearer $CRON_SECRET` ; sans ce secret, la route est fermée.
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET

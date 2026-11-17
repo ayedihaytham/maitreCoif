@@ -2,7 +2,6 @@ name: Déploiement (serveur)
 
 # À chaque push sur main : vérification (types + tests), construction de l'image Docker, publication sur GHCR,
 # puis déploiement sur le serveur en SSH. Voir deploy/README.md pour la configuration (secrets, variables, serveur).
-# Le site Vercel + Neon n'est PAS touché par ce workflow : il reste en secours.
 on:
   push:
     branches: [main]

@@ -1,5 +1,5 @@
 // Garde-fou : les tests d'intégration créent et suppriment des données. Ils
-// refusent de tourner contre une base distante (Neon, production...) sauf
+// refusent de tourner contre une base distante (production...) sauf
 // autorisation explicite via ALLOW_REMOTE_TEST_DB=1.
 export function assertLocalDatabase() {
   if (process.env.ALLOW_REMOTE_TEST_DB === '1') return

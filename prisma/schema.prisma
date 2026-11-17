@@ -147,7 +147,7 @@ model Avis {
 // Galerie de photos du salon, gérée par l'administrateur et affichée aux
 // visiteurs sur le site public (accueil). L'image est stockée en base
 // (data URI, redimensionnée côté client avant envoi) pour rester compatible
-// avec un déploiement serverless (Vercel) sans stockage fichier externe.
+// sans stockage de fichiers externe.
 model PhotoSalon {
   id           String   @id @default(uuid())
   url          String   @db.Text

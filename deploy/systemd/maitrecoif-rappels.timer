@@ -1,5 +1,5 @@
 [Unit]
-Description=Maitre Coif : tâche quotidienne (16:00 UTC, comme sur Vercel)
+Description=Maitre Coif : tâche quotidienne (16:00 UTC)
 
 [Timer]
 OnCalendar=*-*-* 16:00:00 UTC

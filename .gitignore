@@ -20,9 +20,6 @@ yarn-error.log*
 .env*
 !.env.example
 
-# vercel
-.vercel
-
 # assistant session files
 .claude/
 
