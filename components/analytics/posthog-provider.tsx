@@ -25,7 +25,7 @@ export function PostHogProvider() {
     if (!CLE || posthog.__loaded || navigateurDePersonnel()) return
     posthog.init(CLE, {
       api_host: '/ingest',
-      ui_host: process.env.NEXT_PUBLIC_POSTHOG_UI_HOST || 'https://eu.posthog.com',
+      ui_host: process.env.NEXT_PUBLIC_POSTHOG_UI_HOST || 'https://us.posthog.com',
       cookieless_mode: 'always',
       person_profiles: 'identified_only',
       autocapture: false,

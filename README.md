@@ -124,7 +124,7 @@ gérant) affiche les chiffres.
   les laissent passer.
 
 **Configuration (une fois)**
-1. Créez un compte sur posthog.com, région **EU Cloud** (données en Europe), puis un projet « Maitre Coif ».
+1. Créez un compte sur posthog.com (le site est réglé par défaut sur la région **US Cloud** ; pour l'**EU Cloud**, voir `.env.example`), puis un projet « Maitre Coif ».
 2. *Project settings → General* : notez la **Project API key** (`phc_…`) et le **Project ID** (numéro). Réglez le fuseau
    horaire du projet sur `Africa/Tunis` (sinon les jours sont découpés à l'heure UTC).
 3. *Project settings* → rubrique **Cookieless server hash mode** (ou « Web analytics → Cookieless ») : **activez-le**.

@@ -26,7 +26,7 @@ export function configurationPostHog(): ConfigPostHog | null {
   const cle = process.env.POSTHOG_PERSONAL_API_KEY?.trim()
   const projet = process.env.POSTHOG_PROJECT_ID?.trim()
   if (!cle || !projet) return null
-  return { cle, projet, hote: (process.env.POSTHOG_API_HOST?.trim() || 'https://eu.posthog.com').replace(/\/$/, '') }
+  return { cle, projet, hote: (process.env.POSTHOG_API_HOST?.trim() || 'https://us.posthog.com').replace(/\/$/, '') }
 }
 
 // ───────────────────────── Requêtes ─────────────────────────

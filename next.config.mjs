@@ -8,10 +8,11 @@ const nextConfig = {
   // Les navigateurs réclament /favicon.ico : on les sert avec l'icône de l'application (évite un 404).
   async rewrites() {
     // Suivi d'audience (PostHog) : les envois passent par le site lui-même (/ingest) pour ne pas être
-    // bloqués par les bloqueurs de publicité. Région UE par défaut ; POSTHOG_INGEST_HOST / POSTHOG_ASSETS_HOST
-    // permettent de viser une autre région (ex. https://us.i.posthog.com) ou un serveur de test.
-    const ingestion = (process.env.POSTHOG_INGEST_HOST || 'https://eu.i.posthog.com').replace(/\/$/, '')
-    const ressources = (process.env.POSTHOG_ASSETS_HOST || 'https://eu-assets.i.posthog.com').replace(/\/$/, '')
+    // bloqués par les bloqueurs de publicité. Région US par défaut (celle du compte PostHog du salon). ATTENTION : ces adresses sont lues
+    // à la CONSTRUCTION de l'image (pas au démarrage) : POSTHOG_INGEST_HOST / POSTHOG_ASSETS_HOST permettent de viser une autre
+    // région (ex. https://eu.i.posthog.com) mais doivent alors être fournies au build.
+    const ingestion = (process.env.POSTHOG_INGEST_HOST || 'https://us.i.posthog.com').replace(/\/$/, '')
+    const ressources = (process.env.POSTHOG_ASSETS_HOST || 'https://us-assets.i.posthog.com').replace(/\/$/, '')
     return [
       { source: '/favicon.ico', destination: '/icon.png' },
       { source: '/ingest/static/:path*', destination: `${ressources}/static/:path*` },
