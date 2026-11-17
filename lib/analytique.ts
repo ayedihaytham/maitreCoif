@@ -72,7 +72,9 @@ async function executer(config: ConfigPostHog, requete: string): Promise<Lignes>
   const res = await fetch(`${config.hote}/api/projects/${encodeURIComponent(config.projet)}/query/`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${config.cle}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ query: { kind: 'HogQLQuery', query: requete } }),
+    // force_blocking : PostHog garde sinon en mémoire (plusieurs minutes) un résultat déjà calculé, par exemple « 0 »
+    // avant les premières visites ; notre propre mémoire de 5 minutes (ci-dessous) limite déjà le nombre d'appels.
+    body: JSON.stringify({ refresh: 'force_blocking', query: { kind: 'HogQLQuery', query: requete } }),
     signal: AbortSignal.timeout(15_000),
     cache: 'no-store',
   })
