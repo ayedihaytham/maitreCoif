@@ -143,6 +143,7 @@
 .mc .h-cs:nth-child(1){transform:translate3d(0,calc(var(--fi,0) * 7vh),0)}
 .mc .h-cs:nth-child(2){transform:translate3d(0,calc(var(--fi,0) * -3vh),0)}
 .mc .h-cs:nth-child(3){transform:translate3d(0,calc(var(--fi,0) * 11vh),0)}
+.mc .h-cs:nth-child(4){transform:translate3d(0,calc(var(--fi,0) * -6vh),0)}
 .mc .h-cs::before{content:"";position:absolute;left:50%;top:-90px;width:130%;height:480px;transform:translateX(-50%);clip-path:polygon(44% 0,56% 0,100% 100%,0 100%);background:linear-gradient(180deg,rgba(255,243,214,.3),rgba(255,243,214,.05) 60%,rgba(255,243,214,0));filter:blur(14px);opacity:.55;transition:opacity .5s;pointer-events:none}
 .mc .h-cs:hover::before{opacity:1}
 .mc .h-cs .tag{position:relative;margin-bottom:22px;font:600 10px/1 var(--mc-sans);letter-spacing:.3em;text-transform:uppercase;color:var(--mc-muted)}
@@ -154,10 +155,16 @@
 .mc .h-cs .chips{margin-top:16px}
 .mc .h-cs p{position:relative;margin:14px 0 0;max-width:30ch;font-size:14px;line-height:1.65;color:var(--mc-muted)}
 .mc .h-cs .tlink{position:relative;margin-top:22px}
+/* Plus de trois coiffeurs : autant de colonnes que de places, portraits et noms un peu plus petits. */
+.mc .h-cast-grid.dense{grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:clamp(10px,2vw,30px)}
+.mc .h-cast-grid.dense .h-cs{padding-left:clamp(4px,1vw,14px);padding-right:clamp(4px,1vw,14px)}
+.mc .h-cast-grid.dense .h-cs .pt{--d:min(210px,17vw)}
+.mc .h-cast-grid.dense .h-cs h3{font-size:clamp(24px,2.7vw,38px)}
 @media (max-width:1000px){
-  .mc .h-cast-grid{grid-template-columns:minmax(0,1fr);gap:70px;max-width:440px;margin-left:auto;margin-right:auto}
+  .mc .h-cast-grid,.mc .h-cast-grid.dense{grid-template-columns:minmax(0,1fr);gap:70px;max-width:440px;margin-left:auto;margin-right:auto}
   .mc .h-cs:nth-child(n){transform:none}
-  .mc .h-cs .pt{--d:min(220px,60vw)}
+  .mc .h-cs .pt,.mc .h-cast-grid.dense .h-cs .pt{--d:min(220px,60vw)}
+  .mc .h-cast-grid.dense .h-cs h3{font-size:clamp(28px,3.6vw,48px)}
 }
 
 /* ───────────────────────── Plan 5 · La critique (sous-titres) ───────────────────────── */

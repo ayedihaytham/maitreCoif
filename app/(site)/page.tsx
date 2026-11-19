@@ -35,7 +35,8 @@ async function getAccueilData() {
     prisma.user.findMany({
       where: { role: { in: ['COIFFEUR', 'ADMIN'] }, actif: true },
       orderBy: { dateCreation: 'asc' },
-      take: 3,
+      // Toute l'équipe active est présentée : le client choisit librement son coiffeur (plafond de sécurité seulement).
+      take: 8,
     }),
     prisma.avis.findMany({
       where: { note: { gte: 4 }, commentaire: { not: null } },
@@ -340,7 +341,7 @@ export default async function AccueilPage() {
               </Link>
             </Reveal>
 
-            <div className="h-cast-grid">
+            <div className={`h-cast-grid${equipe.length > 3 ? ' dense' : ''}`}>
               {equipe.map((c, i) => (
                 <Reveal as="article" key={c.id} className="h-cs" delay={i}>
                   <div className="tag">
