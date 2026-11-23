@@ -19,9 +19,6 @@
 /* ───────────────────────── Lecteur (barre du bas) ───────────────────────── */
 .mc .h-hud{position:fixed;left:0;right:0;bottom:0;z-index:70;height:56px;display:block;padding:0;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.9) 60%);font:500 10.5px/1 var(--mc-sans);letter-spacing:.22em;text-transform:uppercase;color:var(--mc-muted);transition:opacity .5s}
 .mc .h-hud.off{opacity:0;pointer-events:none}
-/* Section en cours : au-dessus de la barre, à gauche */
-.mc .h-hud-rec{position:absolute;left:var(--h-pad);bottom:20px;display:flex;align-items:center;gap:10px;color:var(--mc-ivory)}
-.mc .h-hud-rec .rec{margin:0}
 /* La barre occupe toute la largeur de la page, collée en bas */
 .mc .h-hud-track{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgb(var(--mc-fg-rgb) / .2)}
 .mc .h-hud-fill{position:absolute;left:0;top:0;bottom:0;width:100%;transform:scaleX(0);transform-origin:0 50%;will-change:transform;background:var(--mc-gold);box-shadow:0 0 12px rgba(212,175,55,.85)}
@@ -114,15 +111,15 @@
 .mc .h-card .meta{display:flex;align-items:center;justify-content:space-between;padding-top:18px;margin-top:18px;border-top:1px solid rgb(var(--mc-fg-rgb) / .12);font-size:13px;color:var(--mc-muted);font-variant-numeric:tabular-nums}
 .mc .h-card .meta b{font:600 17px/1 var(--mc-sans);color:var(--mc-gold-ink)}
 @media (max-width:760px){.mc .h-reel{--dof-blur:2.5px;--dof-dim:.26}}
-/* Téléphone : les pellicules (prestations, galerie, packs) ne défilent plus à l'horizontale pendant le défilement vertical :
-   les cartes sont simplement empilées, l'une sous l'autre. Les « !important » l'emportent sur les styles écrits par le script. */
+/* Téléphone : la page défile normalement vers le bas ; les pellicules (prestations, galerie, packs) gardent leurs cartes en rangée
+   et se parcourent d'un geste du doigt à l'horizontale (avec accroche sur chaque carte). Les « !important » l'emportent sur les
+   styles que le script écrit pour le défilement épinglé du bureau. */
 @media (max-width:760px){
   .mc .h-reel{height:auto!important}
   .mc .h-stage{position:static;height:auto;overflow:visible;gap:28px;padding:84px 0 56px}
-  .mc .h-strip,.mc .h-reel.rev .h-strip{flex-direction:column!important;width:auto;padding:0 var(--h-pad);gap:22px;transform:none!important}
-  .mc .h-card{width:100%;height:auto;min-height:360px;filter:none!important;transform:none!important}
-  .mc .h-card.ph{height:min(64svh,440px)}
-  .mc .h-card .flare{display:none}
+  .mc .h-strip,.mc .h-reel.rev .h-strip{flex-direction:row!important;width:auto;transform:none!important;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .mc .h-strip::-webkit-scrollbar{display:none}
+  .mc .h-card{filter:none!important;transform:none!important;scroll-snap-align:center}
 }
 @media (prefers-reduced-motion:reduce),(scripting:none){
   .mc .h-reel{height:auto}

@@ -42,7 +42,6 @@ interface Pellicule {
  */
 export function Cinema({ hud: avecLecteur = true }: { hud?: boolean }) {
   const hud = useRef<HTMLDivElement>(null)
-  const scene = useRef<HTMLSpanElement>(null)
   const fill = useRef<HTMLDivElement>(null)
   const marques = useRef<(HTMLButtonElement | null)[]>([])
   // Repère dont le nom est affiché un instant après un appui (le survol n'existe pas au toucher).
@@ -59,7 +58,6 @@ export function Cinema({ hud: avecLecteur = true }: { hud?: boolean }) {
     const hero = document.querySelector<HTMLElement>('.h-hero')
 
     let raf = 0
-    let derniere = -1
     let derniereProgression = -1
 
     function demander() {
@@ -107,7 +105,6 @@ export function Cinema({ hud: avecLecteur = true }: { hud?: boolean }) {
       const lus: [HTMLElement, DOMRect][] = []
       if (!reduit) for (const el of visibles) lus.push([el, el.getBoundingClientRect()])
       const course = document.documentElement.scrollHeight - vh
-      const rectScenes = avecLecteur ? scenes.map((el) => el.getBoundingClientRect()) : []
 
       // ───── 2. ÉCRITURES ─────
       for (const [el, r] of lus) {
@@ -150,22 +147,6 @@ export function Cinema({ hud: avecLecteur = true }: { hud?: boolean }) {
         derniereProgression = progression
         if (fill.current) fill.current.style.transform = `scaleX(${progression.toFixed(4)})`
         hud.current?.classList.toggle('off', progression > 0.985)
-      }
-
-      // Scène courante : celle dont la plus grande partie est à l'écran.
-      let meilleure = 0
-      let surface = -1
-      scenes.forEach((el, i) => {
-        const r = rectScenes[i]
-        const visible = Math.min(r.bottom, vh) - Math.max(r.top, 0)
-        if (visible > surface) {
-          surface = visible
-          meilleure = Number(el.getAttribute('data-scene') ?? i)
-        }
-      })
-      if (meilleure !== derniere) {
-        derniere = meilleure
-        if (scene.current) scene.current.textContent = SCENES[meilleure] ?? ''
       }
     }
 
@@ -252,9 +233,6 @@ export function Cinema({ hud: avecLecteur = true }: { hud?: boolean }) {
         <>
           {/* Lecteur : scène courante et barre de lecture cliquable */}
           <div className="h-hud" ref={hud} role="group" aria-label="Navigation dans la page : sections">
-            <span className="h-hud-rec" aria-live="off">
-              <span ref={scene}>Ouverture</span>
-            </span>
             <div className="h-hud-track">
               <div className="h-hud-fill" ref={fill} />
               {SCENES.map((nom, n) => (
@@ -271,7 +249,6 @@ export function Cinema({ hud: avecLecteur = true }: { hud?: boolean }) {
                 />
               ))}
             </div>
-            <span aria-hidden="true" />
           </div>
         </>
       )}
