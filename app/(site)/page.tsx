@@ -322,7 +322,7 @@ export default async function AccueilPage() {
             </Reveal>
 
             <ProjecteurDefs />
-            <div className={`h-cast-grid spot${equipe.length > 3 ? ' dense' : ''}`}>
+            <div className={`h-cast-grid pjs${equipe.length > 3 ? ' dense' : ''}`}>
               {equipe.map((c, i) => (
                 <Reveal as="article" key={c.id} className="h-cs" delay={i}>
                   <Projecteur />

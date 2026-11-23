@@ -172,14 +172,14 @@
    tige jusqu'au rail. Les cartes montent et descendent avec le défilement (--off) : la tige s'allonge ou se raccourcit d'autant,
    et l'espace sous le titre (marge de la grille) est calculé pour que rien ne passe sur « Rencontrez nos coiffeurs ». */
 .mc .h-cs .pj,.mc .h-cs .pj-tige,.mc .h-cs .pj-support{display:none}
-.mc .h-cast-grid.spot{position:relative;margin-top:calc(236px + 11vh)}
-.mc .h-cast-grid.spot::before{content:"";position:absolute;left:50%;width:100vw;margin-left:-50vw;top:calc(-1 * (191px + 11vh + 8px));height:9px;background:linear-gradient(180deg,#524e46,#24221e);box-shadow:0 8px 22px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.12)}
-.mc .h-cast-grid.spot .h-cs:nth-child(1){--off:calc(var(--fi,0) * 7vh)}
-.mc .h-cast-grid.spot .h-cs:nth-child(2){--off:calc(var(--fi,0) * -3vh)}
-.mc .h-cast-grid.spot .h-cs:nth-child(3){--off:calc(var(--fi,0) * 11vh)}
-.mc .h-cast-grid.spot .h-cs:nth-child(4){--off:calc(var(--fi,0) * -6vh)}
-.mc .h-cast-grid.spot .h-cs .pj{display:block;position:absolute;left:50%;top:-90px;width:84px;height:92px;transform:translate(-50%,-100%);z-index:2;overflow:visible;pointer-events:none}
-.mc .h-cast-grid.spot .h-cs .pj-tige{display:block;position:absolute;left:50%;top:-182px;width:6px;height:calc(11vh + 8px + var(--off,0px));transform:translate(-50%,-100%);background:linear-gradient(90deg,#2c2a26,#6b665b,#2a2824);z-index:1;pointer-events:none}
+.mc .h-cast-grid.pjs{position:relative;margin-top:calc(236px + 11vh);clip-path:inset(calc(-1 * (191px + 11vh + 8px)) -100vw -420px -100vw)}
+.mc .h-cast-grid.pjs::before{content:"";position:absolute;left:50%;width:100vw;margin-left:-50vw;top:calc(-1 * (191px + 11vh + 8px));height:9px;background:linear-gradient(180deg,#524e46,#24221e);box-shadow:0 8px 22px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.12)}
+.mc .h-cast-grid.pjs .h-cs:nth-child(1){--off:calc(var(--fi,0) * 7vh)}
+.mc .h-cast-grid.pjs .h-cs:nth-child(2){--off:calc(var(--fi,0) * -3vh)}
+.mc .h-cast-grid.pjs .h-cs:nth-child(3){--off:calc(var(--fi,0) * 11vh)}
+.mc .h-cast-grid.pjs .h-cs:nth-child(4){--off:calc(var(--fi,0) * -6vh)}
+.mc .h-cast-grid.pjs .h-cs .pj{display:block;position:absolute;left:50%;top:-90px;width:84px;height:92px;transform:translate(-50%,-100%);z-index:2;overflow:visible;pointer-events:none}
+.mc .h-cast-grid.pjs .h-cs .pj-tige{display:block;position:absolute;left:50%;top:-182px;width:6px;height:calc(11vh + 8px + 28px + var(--off,0px));transform:translate(-50%,-100%);background:linear-gradient(90deg,#2c2a26,#6b665b,#2a2824);z-index:1;pointer-events:none}
 .mc .h-cs .pj-allume,.mc .h-cs .pj-halo{opacity:0;transition:opacity .5s}
 .mc .h-cs .pj-eteint{transition:opacity .5s}
 .mc .h-cs:hover .pj-allume,.mc .h-cs:hover .pj-halo,.mc .h-cs:focus-within .pj-allume,.mc .h-cs:focus-within .pj-halo,.mc .h-cs.lit .pj-allume,.mc .h-cs.lit .pj-halo{opacity:1}
@@ -211,12 +211,12 @@
 /* Projecteurs, colonne unique : déclaré après le bloc ci-dessus pour l'emporter sur son espacement (« gap ») */
 @media (max-width:1000px){
   /* Colonne unique : pas de rail, un petit support au plafond par coiffeur, projecteur un peu plus petit */
-  .mc .h-cast-grid.spot{margin-top:176px;gap:176px}
-  .mc .h-cast-grid.spot::before{display:none}
-  .mc .h-cast-grid.spot .h-cs::before{top:-64px}
-  .mc .h-cast-grid.spot .h-cs .pj-tige{display:none}
-  .mc .h-cast-grid.spot .h-cs .pj{top:-64px;width:63px;height:69px}
-  .mc .h-cast-grid.spot .h-cs .pj-support{display:block;position:absolute;left:50%;top:-140px;width:64px;height:7px;transform:translateX(-50%);border-radius:2px;background:linear-gradient(180deg,#524e46,#24221e);box-shadow:0 6px 14px rgba(0,0,0,.6);pointer-events:none}
+  .mc .h-cast-grid.pjs{margin-top:176px;gap:176px;clip-path:none}
+  .mc .h-cast-grid.pjs::before{display:none}
+  .mc .h-cast-grid.pjs .h-cs::before{top:-64px}
+  .mc .h-cast-grid.pjs .h-cs .pj-tige{display:none}
+  .mc .h-cast-grid.pjs .h-cs .pj{top:-64px;width:63px;height:69px}
+  .mc .h-cast-grid.pjs .h-cs .pj-support{display:block;position:absolute;left:50%;top:-140px;width:64px;height:7px;transform:translateX(-50%);border-radius:2px;background:linear-gradient(180deg,#524e46,#24221e);box-shadow:0 6px 14px rgba(0,0,0,.6);pointer-events:none}
 }
 
 /* ───────────────────────── Plan 5 · La critique (sous-titres) ───────────────────────── */
