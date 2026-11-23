@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Check, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
 
@@ -116,6 +116,12 @@ export function ReservationWizard({
   const [serviceIds, setServiceIds] = useState<string[]>(serviceInitial)
   // Un pack remplace les prestations choisies une à une (et inversement) : l'un ou l'autre.
   const [packId, setPackId] = useState(packInitial)
+  // À chaque changement d'étape, on remonte au début de l'étape (sinon, sur téléphone, la page reste au bas de la liste précédente),
+  // et on retient l'instant d'arrivée : un second appui sur le bouton fixe du bas (« Continuer » puis « Confirmer » sont au même endroit)
+  // ne doit pas valider un formulaire encore vide.
+  const racine = useRef<HTMLDivElement>(null)
+  const arriveeEtape = useRef(0)
+  const premierAffichage = useRef(true)
   // Onglet de l'étape « Prestations » : les packs d'abord quand il y en a ; sinon seulement les prestations.
   const [onglet, setOnglet] = useState<'packs' | 'services'>(packs.length > 0 && serviceInitial.length === 0 ? 'packs' : 'services')
   const pack = packs.find((k) => k.id === packId)
@@ -166,6 +172,16 @@ export function ReservationWizard({
       }),
     [todayISO],
   )
+
+  // Changement d'étape : retour au début de l'étape et instant d'arrivée (voir plus haut).
+  useEffect(() => {
+    arriveeEtape.current = Date.now()
+    if (premierAffichage.current) {
+      premierAffichage.current = false
+      return
+    }
+    racine.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [step])
 
   // État (libre / complet / fermé) des prochains jours pour ce coiffeur et ce service.
   // Entonnoir : une étape est comptée quand le visiteur l'atteint (l'étape « coiffeur » est la page elle-même).
@@ -249,6 +265,8 @@ export function ReservationWizard({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    // Double appui sur le bouton du bas juste après « Continuer » : on ignore, sans message d'erreur.
+    if (Date.now() - arriveeEtape.current < 900) return
     setFieldErrors({})
     setSubmitError(null)
 
@@ -258,6 +276,8 @@ export function ReservationWizard({
     if (clientEmail && !/^\S+@\S+\.\S+$/.test(clientEmail)) errors.clientEmail = 'Email invalide'
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors)
+      // Amène le premier champ en erreur au centre de l'écran (la barre fixe du bas ne le masque pas).
+      requestAnimationFrame(() => document.querySelector('.inp.bad')?.scrollIntoView({ behavior: 'smooth', block: 'center' }))
       return
     }
 
@@ -387,11 +407,12 @@ export function ReservationWizard({
 
   const pageJours = jours.slice(page * JOURS_PAR_PAGE, (page + 1) * JOURS_PAR_PAGE)
   const peutContinuer = step === 2 && Boolean(heureDebut)
-  const actionMobile = step === 2 ? 'Continuer' : step === 3 ? 'Confirmer' : null
-  const afficherBarre = (step === 2 && Boolean(coiffeur && service)) || step === 3
+  const actionMobile = step === 1 || step === 2 ? 'Continuer' : step === 3 ? 'Confirmer' : null
+  // Barre fixe du bas (téléphone) : dès qu'une prestation ou un pack est choisi, on peut continuer sans redescendre au bout de la liste.
+  const afficherBarre = (step === 1 && Boolean(service && coiffeurId)) || (step === 2 && Boolean(coiffeur && service)) || step === 3
 
   return (
-    <div className={cn(afficherBarre && 'has-mbar')}>
+    <div ref={racine} style={{ scrollMarginTop: 84 }} className={cn(afficherBarre && 'has-mbar')}>
       <ol className="steps" aria-label="Étapes de la réservation">
         {STEPS.map((label, i) => {
           const etat = i < step ? 'done' : i === step ? 'cur' : ''
@@ -850,14 +871,28 @@ export function ReservationWizard({
       {/* Barre fixe sur mobile : le billet reste visible pendant le défilement */}
       {afficherBarre && actionMobile && (
         <div className="mbar">
-          <div>
-            <div className="lbl dim" style={{ fontSize: 9.5 }}>
-              Récapitulatif{date ? ` · ${dateLongue(date)}` : ''}
+          {step === 1 ? (
+            <div>
+              <div className="lbl dim" style={{ fontSize: 9.5 }}>
+                {pack ? `Pack « ${pack.nom} »` : `${choisies.length} prestation${choisies.length > 1 ? 's' : ''}`}
+              </div>
+              <div className="t">{service ? formatPrix(service.prix) : ''}</div>
+              <div className="s">{service ? `${service.duree} min` : ''}</div>
             </div>
-            <div className="t">{heureDebut && heureFin ? `${heureDebut} — ${heureFin}` : '– – : – –'}</div>
-            <div className="s">{service ? formatPrix(service.prix) : ''}</div>
-          </div>
-          {step === 2 ? (
+          ) : (
+            <div>
+              <div className="lbl dim" style={{ fontSize: 9.5 }}>
+                Récapitulatif{date ? ` · ${dateLongue(date)}` : ''}
+              </div>
+              <div className="t">{heureDebut && heureFin ? `${heureDebut} — ${heureFin}` : '– – : – –'}</div>
+              <div className="px">{service ? formatPrix(service.prix) : ''}</div>
+            </div>
+          )}
+          {step === 1 ? (
+            <button type="button" className="btn btn-gold btn-sm" onClick={() => setStep(2)}>
+              {actionMobile}
+            </button>
+          ) : step === 2 ? (
             <button type="button" className="btn btn-gold btn-sm" disabled={!peutContinuer} onClick={() => setStep(3)}>
               {actionMobile}
             </button>
