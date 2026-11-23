@@ -81,10 +81,6 @@ export default async function AccueilPage() {
   const moyenne = statsAvis._avg.note
   const nbAvis = statsAvis._count._all
 
-  // Bandeau défilant : les noms des prestations, répétés pour toujours remplir la largeur.
-  const noms = tousLesServices.map((s) => s.nom)
-  const bandeau = noms.length > 0 ? Array.from({ length: Math.max(1, Math.ceil(8 / noms.length)) }).flatMap(() => noms) : []
-
   const photoPrincipale = photosSalon[0]
   const photoSecondaire = photosSalon[1]
 
@@ -147,23 +143,6 @@ export default async function AccueilPage() {
           <i />
         </div>
       </section>
-
-      {bandeau.length > 0 && (
-        <div className="mq" aria-hidden="true">
-          <div className="mq-track">
-            {[0, 1].map((g) => (
-              <div className="mq-grp" key={g}>
-                {bandeau.map((nom, i) => (
-                  <span key={i} style={{ display: 'contents' }}>
-                    <span>{nom}</span>
-                    <i />
-                  </span>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Les packs : même pellicule que les prestations, défilant dans l'autre sens */}
       <PacksAccueil packs={packs} />

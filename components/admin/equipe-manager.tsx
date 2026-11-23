@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { resizeImageToDataUrl } from '@/lib/image-client'
@@ -401,19 +400,7 @@ export function EquipeManager({ initial }: { initial: Coiffeur[] }) {
               <Label htmlFor="telephone">Téléphone</Label>
               <Input id="telephone" value={form.telephone} onChange={(e) => setForm((f) => ({ ...f, telephone: e.target.value }))} className="mt-1.5" />
             </div>
-            <div>
-              <Label htmlFor="specialites">Spécialités (séparées par des virgules)</Label>
-              <Input
-                id="specialites"
-                value={form.specialites}
-                onChange={(e) => setForm((f) => ({ ...f, specialites: e.target.value }))}
-                className="mt-1.5"
-              />
-            </div>
-            <div>
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea id="bio" value={form.bio} onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))} className="mt-1.5" rows={2} />
-            </div>
+            {/* Champs « Spécialités » et « Bio » masqués du formulaire (les valeurs existantes en base sont conservées et renvoyées telles quelles). */}
             <div>
               <Label>Rôle</Label>
               <Select value={form.role} onValueChange={(v) => setForm((f) => ({ ...f, role: v as Role }))}>

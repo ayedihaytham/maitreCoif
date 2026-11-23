@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { borner } from '@/lib/utils'
 
@@ -45,6 +45,9 @@ export function Cinema({ hud: avecLecteur = true }: { hud?: boolean }) {
   const scene = useRef<HTMLSpanElement>(null)
   const fill = useRef<HTMLDivElement>(null)
   const marques = useRef<(HTMLButtonElement | null)[]>([])
+  // Repère dont le nom est affiché un instant après un appui (le survol n'existe pas au toucher).
+  const [ouvert, setOuvert] = useState<number | null>(null)
+  const minuterie = useRef(0)
 
   useEffect(() => {
     const reduit = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -176,7 +179,12 @@ export function Cinema({ hud: avecLecteur = true }: { hud?: boolean }) {
         const m = marques.current[n]
         if (m && course > 0) {
           m.hidden = false
-          m.style.left = `${(borner(haut / course) * 100).toFixed(2)}%`
+          const pos = borner(haut / course)
+          m.style.left = `${(pos * 100).toFixed(2)}%`
+          // Près d'un bord, l'étiquette du nom s'aligne sur ce bord pour ne pas sortir de l'écran.
+          if (pos < 0.1) m.dataset.bord = 'g'
+          else if (pos > 0.9) m.dataset.bord = 'd'
+          else delete m.dataset.bord
         }
       })
     }
@@ -228,6 +236,9 @@ export function Cinema({ hud: avecLecteur = true }: { hud?: boolean }) {
   }, [avecLecteur])
 
   function aller(n: number) {
+    setOuvert(n)
+    window.clearTimeout(minuterie.current)
+    minuterie.current = window.setTimeout(() => setOuvert(null), 2200)
     const reduit = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     document.querySelector(`[data-scene="${n}"]`)?.scrollIntoView({ behavior: reduit ? 'auto' : 'smooth', block: 'start' })
   }
@@ -250,7 +261,8 @@ export function Cinema({ hud: avecLecteur = true }: { hud?: boolean }) {
                 <button
                   key={nom}
                   type="button"
-                  className="h-mark"
+                  className={n === ouvert ? 'h-mark ouvert' : 'h-mark'}
+                  data-nom={nom}
                   aria-label={`Aller à la section : ${nom}`}
                   ref={(el) => {
                     marques.current[n] = el

@@ -97,7 +97,7 @@
 :root[data-theme="light"] .ad :is(.pl-panel,.ad-card,.bg-anthracite){box-shadow:0 10px 30px rgba(27,25,21,.1)}
 :root[data-theme="light"] [data-slot="dialog-content"]{box-shadow:0 30px 80px rgba(27,25,21,.28)}
 :root[data-theme="light"] [data-slot="dialog-overlay"]{background:rgba(27,25,21,.5)}
-:root[data-theme="light"] .mc .h-hud{left:50%;right:auto;bottom:14px;width:min(1100px,calc(100% - 40px));transform:translateX(-50%);height:46px;padding:0 22px;border-radius:3px;background:rgba(250,248,243,.94);border:1px solid var(--mc-line-gold);box-shadow:0 10px 30px rgba(27,25,21,.14);backdrop-filter:blur(8px)}
+:root[data-theme="light"] .mc .h-hud{background:linear-gradient(180deg,rgba(250,248,243,0),rgba(250,248,243,.96) 60%)}
 :root[data-theme="light"] .mc .nl sup{opacity:1}
 :root[data-theme="light"] .mc .menu{background:var(--mc-ink)}
 .mc .menu-foot .theme-toggle{display:flex}

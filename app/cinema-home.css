@@ -17,19 +17,27 @@
 @keyframes mc-grain{0%{transform:translate(0,0)}20%{transform:translate(-3%,2%)}40%{transform:translate(2%,-3%)}60%{transform:translate(-2%,-1%)}80%{transform:translate(3%,3%)}100%{transform:translate(0,0)}}
 
 /* ───────────────────────── Lecteur (barre du bas) ───────────────────────── */
-.mc .h-hud{position:fixed;left:0;right:0;bottom:0;z-index:70;height:52px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2.4fr) minmax(0,1fr);align-items:center;gap:24px;padding:10px var(--h-pad) 0;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.9) 55%);font:500 10.5px/1 var(--mc-sans);letter-spacing:.22em;text-transform:uppercase;color:var(--mc-muted);transition:opacity .5s}
+.mc .h-hud{position:fixed;left:0;right:0;bottom:0;z-index:70;height:56px;display:block;padding:0;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.9) 60%);font:500 10.5px/1 var(--mc-sans);letter-spacing:.22em;text-transform:uppercase;color:var(--mc-muted);transition:opacity .5s}
 .mc .h-hud.off{opacity:0;pointer-events:none}
-.mc .h-hud-rec{display:flex;align-items:center;gap:10px;color:var(--mc-ivory)}
+/* Section en cours : au-dessus de la barre, à gauche */
+.mc .h-hud-rec{position:absolute;left:var(--h-pad);bottom:20px;display:flex;align-items:center;gap:10px;color:var(--mc-ivory)}
 .mc .h-hud-rec .rec{margin:0}
-.mc .h-hud-track{position:relative;height:2px;background:rgb(var(--mc-fg-rgb) / .2)}
+/* La barre occupe toute la largeur de la page, collée en bas */
+.mc .h-hud-track{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgb(var(--mc-fg-rgb) / .2)}
 .mc .h-hud-fill{position:absolute;left:0;top:0;bottom:0;width:100%;transform:scaleX(0);transform-origin:0 50%;will-change:transform;background:var(--mc-gold);box-shadow:0 0 12px rgba(212,175,55,.85)}
-.mc .h-mark{position:absolute;top:50%;width:26px;height:34px;margin:-17px 0 0 -13px;padding:0;background:none;border:0}
+.mc .h-mark{position:absolute;top:50%;width:30px;height:40px;margin:-20px 0 0 -15px;padding:0;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .mc .h-mark::after{content:"";position:absolute;left:50%;top:50%;width:1px;height:10px;margin-top:-5px;background:rgb(var(--mc-fg-rgb) / .6);transition:height .2s,background .2s}
-.mc .h-mark:hover::after,.mc .h-mark:focus-visible::after{height:18px;margin-top:-9px;background:var(--mc-gold)}
+/* Nom de la section : au survol, au clavier, et au toucher (data-nom visible un instant après l'appui) */
+.mc .h-mark::before{content:attr(data-nom);position:absolute;left:50%;bottom:calc(100% + 6px);transform:translate(-50%,6px);padding:7px 11px;white-space:nowrap;font:600 10px/1 var(--mc-sans);letter-spacing:.18em;text-transform:uppercase;color:var(--mc-on-gold,#0a0a0a);background:var(--mc-gold);border-radius:2px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
+.mc .h-mark[data-bord="g"]::before{left:0;transform:translate(-15px,6px)}
+.mc .h-mark[data-bord="d"]::before{left:auto;right:0;transform:translate(15px,6px)}
+.mc .h-mark:hover::before,.mc .h-mark:focus-visible::before,.mc .h-mark.ouvert::before{opacity:1;transform:translate(-50%,0)}
+.mc .h-mark[data-bord="g"]:hover::before,.mc .h-mark[data-bord="g"]:focus-visible::before,.mc .h-mark[data-bord="g"].ouvert::before{transform:translate(-15px,0)}
+.mc .h-mark[data-bord="d"]:hover::before,.mc .h-mark[data-bord="d"]:focus-visible::before,.mc .h-mark[data-bord="d"].ouvert::before{transform:translate(15px,0)}
+.mc .h-mark:hover::after,.mc .h-mark:focus-visible::after,.mc .h-mark.ouvert::after{height:18px;margin-top:-9px;background:var(--mc-gold)}
 .mc .h-hud-tc{text-align:right;color:var(--mc-ivory);font-variant-numeric:tabular-nums;letter-spacing:.16em}
 @media (max-width:700px){
-  .mc .h-hud{grid-template-columns:auto minmax(0,1fr) auto;gap:14px;letter-spacing:.12em;font-size:9.5px}
-  .mc .h-hud-rec span{display:none}
+  .mc .h-hud{letter-spacing:.12em;font-size:9.5px}
 }
 
 /* ───────────────────────── Intro : le rideau s'ouvre ───────────────────────── */
@@ -106,6 +114,16 @@
 .mc .h-card .meta{display:flex;align-items:center;justify-content:space-between;padding-top:18px;margin-top:18px;border-top:1px solid rgb(var(--mc-fg-rgb) / .12);font-size:13px;color:var(--mc-muted);font-variant-numeric:tabular-nums}
 .mc .h-card .meta b{font:600 17px/1 var(--mc-sans);color:var(--mc-gold-ink)}
 @media (max-width:760px){.mc .h-reel{--dof-blur:2.5px;--dof-dim:.26}}
+/* Téléphone : les pellicules (prestations, galerie, packs) ne défilent plus à l'horizontale pendant le défilement vertical :
+   les cartes sont simplement empilées, l'une sous l'autre. Les « !important » l'emportent sur les styles écrits par le script. */
+@media (max-width:760px){
+  .mc .h-reel{height:auto!important}
+  .mc .h-stage{position:static;height:auto;overflow:visible;gap:28px;padding:84px 0 56px}
+  .mc .h-strip,.mc .h-reel.rev .h-strip{flex-direction:column!important;width:auto;padding:0 var(--h-pad);gap:22px;transform:none!important}
+  .mc .h-card{width:100%;height:auto;min-height:360px;filter:none!important;transform:none!important}
+  .mc .h-card.ph{height:min(64svh,440px)}
+  .mc .h-card .flare{display:none}
+}
 @media (prefers-reduced-motion:reduce),(scripting:none){
   .mc .h-reel{height:auto}
   .mc .h-stage{position:static;height:auto;padding:90px 0}
