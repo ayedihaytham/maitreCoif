@@ -10,6 +10,7 @@ import { Intro } from '@/components/site/intro'
 import { PacksAccueil } from '@/components/site/packs-accueil'
 import { Localisation } from '@/components/site/localisation'
 import { PortraitRond } from '@/components/site/portrait'
+import { Projecteur, ProjecteurDefs } from '@/components/site/projecteur'
 import { Reveal } from '@/components/site/reveal'
 import { ReviewCarousel, type AvisAffiche } from '@/components/site/review-carousel'
 import { chargerCatalogue, chargerPacksPrestations } from '@/lib/boutique'
@@ -320,9 +321,11 @@ export default async function AccueilPage() {
               </Link>
             </Reveal>
 
-            <div className={`h-cast-grid${equipe.length > 3 ? ' dense' : ''}`}>
+            <ProjecteurDefs />
+            <div className={`h-cast-grid spot${equipe.length > 3 ? ' dense' : ''}`}>
               {equipe.map((c, i) => (
                 <Reveal as="article" key={c.id} className="h-cs" delay={i}>
+                  <Projecteur />
                   <div className="tag">
                     <b>{c.role === 'ADMIN' ? 'Gérant · Fondateur' : 'Coiffeur'}</b>
                   </div>

@@ -165,6 +165,33 @@
 .mc .h-cs .tag b{color:var(--mc-gold-ink);font-weight:600}
 .mc .h-cs .pt{--d:min(250px,26vw);filter:grayscale(1) contrast(1.12) brightness(.92);transition:filter .6s,transform .6s var(--h-ease),box-shadow .6s}
 .mc .h-cs:hover .pt{filter:none;transform:scale(1.04);box-shadow:0 0 0 calc(var(--d) * .035) rgba(212,175,55,.18),0 0 90px rgba(255,243,214,.22)}
+.mc .h-cs h3{transition:color .5s}
+/* ───── Projecteurs au-dessus des coiffeurs ─────
+   Chaque coiffeur est éclairé par un projecteur de scène suspendu à un rail. Le cône de lumière (::before) part de la lentille.
+   Géométrie (px, depuis le haut de la carte) : cône à -90, projecteur de 92 de haut juste au-dessus (donc de -182 à -90),
+   tige jusqu'au rail. Les cartes montent et descendent avec le défilement (--off) : la tige s'allonge ou se raccourcit d'autant,
+   et l'espace sous le titre (marge de la grille) est calculé pour que rien ne passe sur « Rencontrez nos coiffeurs ». */
+.mc .h-cs .pj,.mc .h-cs .pj-tige,.mc .h-cs .pj-support{display:none}
+.mc .h-cast-grid.spot{position:relative;margin-top:calc(236px + 11vh)}
+.mc .h-cast-grid.spot::before{content:"";position:absolute;left:50%;width:100vw;margin-left:-50vw;top:calc(-1 * (191px + 11vh + 8px));height:9px;background:linear-gradient(180deg,#524e46,#24221e);box-shadow:0 8px 22px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.12)}
+.mc .h-cast-grid.spot .h-cs:nth-child(1){--off:calc(var(--fi,0) * 7vh)}
+.mc .h-cast-grid.spot .h-cs:nth-child(2){--off:calc(var(--fi,0) * -3vh)}
+.mc .h-cast-grid.spot .h-cs:nth-child(3){--off:calc(var(--fi,0) * 11vh)}
+.mc .h-cast-grid.spot .h-cs:nth-child(4){--off:calc(var(--fi,0) * -6vh)}
+.mc .h-cast-grid.spot .h-cs .pj{display:block;position:absolute;left:50%;top:-90px;width:84px;height:92px;transform:translate(-50%,-100%);z-index:2;overflow:visible;pointer-events:none}
+.mc .h-cast-grid.spot .h-cs .pj-tige{display:block;position:absolute;left:50%;top:-182px;width:6px;height:calc(11vh + 8px + var(--off,0px));transform:translate(-50%,-100%);background:linear-gradient(90deg,#2c2a26,#6b665b,#2a2824);z-index:1;pointer-events:none}
+.mc .h-cs .pj-allume,.mc .h-cs .pj-halo{opacity:0;transition:opacity .5s}
+.mc .h-cs .pj-eteint{transition:opacity .5s}
+.mc .h-cs:hover .pj-allume,.mc .h-cs:hover .pj-halo,.mc .h-cs:focus-within .pj-allume,.mc .h-cs:focus-within .pj-halo,.mc .h-cs.lit .pj-allume,.mc .h-cs.lit .pj-halo{opacity:1}
+.mc .h-cs:hover .pj-eteint,.mc .h-cs:focus-within .pj-eteint,.mc .h-cs.lit .pj-eteint{opacity:0}
+/* Sans survol possible (téléphone, tablette) : le coiffeur qui arrive au centre de l'écran est éclairé tout seul, comme
+   sous un projecteur ; les autres restent dans la pénombre. La classe .lit est posée par le script (components/site/cinema.tsx). */
+@media (hover:none),(max-width:1000px){
+  .mc .h-cast-grid .h-cs::before{opacity:.14}
+  .mc .h-cast-grid .h-cs.lit::before{opacity:1}
+  .mc .h-cast-grid .h-cs.lit .pt{filter:none;transform:scale(1.04);box-shadow:0 0 0 calc(var(--d) * .035) rgba(212,175,55,.22),0 0 90px rgba(255,243,214,.3)}
+  .mc .h-cast-grid .h-cs.lit h3{color:var(--mc-gold-ink)}
+}
 .mc .h-cs h3{position:relative;margin:30px 0 0;font:400 clamp(28px,3.6vw,48px)/1.02 var(--mc-serif)}
 .mc .h-cs .role{position:relative;margin-top:12px}
 .mc .h-cs .chips{margin-top:16px}
@@ -180,6 +207,16 @@
   .mc .h-cs:nth-child(n){transform:none}
   .mc .h-cs .pt,.mc .h-cast-grid.dense .h-cs .pt{--d:min(220px,60vw)}
   .mc .h-cast-grid.dense .h-cs h3{font-size:clamp(28px,3.6vw,48px)}
+}
+/* Projecteurs, colonne unique : déclaré après le bloc ci-dessus pour l'emporter sur son espacement (« gap ») */
+@media (max-width:1000px){
+  /* Colonne unique : pas de rail, un petit support au plafond par coiffeur, projecteur un peu plus petit */
+  .mc .h-cast-grid.spot{margin-top:176px;gap:176px}
+  .mc .h-cast-grid.spot::before{display:none}
+  .mc .h-cast-grid.spot .h-cs::before{top:-64px}
+  .mc .h-cast-grid.spot .h-cs .pj-tige{display:none}
+  .mc .h-cast-grid.spot .h-cs .pj{top:-64px;width:63px;height:69px}
+  .mc .h-cast-grid.spot .h-cs .pj-support{display:block;position:absolute;left:50%;top:-140px;width:64px;height:7px;transform:translateX(-50%);border-radius:2px;background:linear-gradient(180deg,#524e46,#24221e);box-shadow:0 6px 14px rgba(0,0,0,.6);pointer-events:none}
 }
 
 /* ───────────────────────── Plan 5 · La critique (sous-titres) ───────────────────────── */

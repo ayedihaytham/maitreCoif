@@ -170,6 +170,23 @@ export function Cinema({ hud: avecLecteur = true }: { hud?: boolean }) {
       })
     }
 
+    // Équipe, sans survol possible (téléphone, tablette) : le coiffeur qui passe au centre de l'écran s'éclaire (classe « lit »,
+    // voir cinema-home.css), comme sous un projecteur. Sur ordinateur, c'est le survol de la souris qui s'en charge.
+    let projecteurs: IntersectionObserver | null = null
+    if (window.matchMedia('(hover: none), (max-width: 1000px)').matches) {
+      const coiffeurs = tous('.h-cast-grid .h-cs')
+      if (coiffeurs.length > 0) {
+        const obs = new IntersectionObserver(
+          (entrees) => {
+            for (const e of entrees) e.target.classList.toggle('lit', e.isIntersecting)
+          },
+          { rootMargin: '-33% 0px -33% 0px' }, // tiers central de l'écran
+        )
+        coiffeurs.forEach((el) => obs.observe(el))
+        projecteurs = obs
+      }
+    }
+
     // Lumière qui suit la souris sur le premier plan (lissée), sur écran à souris.
     let cx = 0.68
     let cy = 0.46
@@ -208,6 +225,7 @@ export function Cinema({ hud: avecLecteur = true }: { hud?: boolean }) {
     return () => {
       window.clearTimeout(t)
       observateur.disconnect()
+      projecteurs?.disconnect()
       window.removeEventListener('scroll', demander)
       window.removeEventListener('resize', surRedim)
       window.removeEventListener('pointermove', surSouris)
