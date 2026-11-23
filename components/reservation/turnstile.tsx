@@ -36,6 +36,9 @@ function chargerScript(): Promise<void> {
  */
 export function TurnstileWidget({ onToken }: { onToken: (token: string) => void }) {
   const containerRef = useRef<HTMLDivElement>(null)
+  // Échec du widget (réseau, navigateur, extension de confidentialité...) : on le dit et on propose de réessayer.
+  const [erreur, setErreur] = useState(false)
+  const [essai, setEssai] = useState(0)
 
   useEffect(() => {
     if (!SITE_KEY || !containerRef.current) return
@@ -47,21 +50,50 @@ export function TurnstileWidget({ onToken }: { onToken: (token: string) => void 
         if (annule || !containerRef.current || !window.turnstile) return
         widgetId = window.turnstile.render(containerRef.current, {
           sitekey: SITE_KEY,
-          callback: onToken,
+          callback: (token: string) => {
+            setErreur(false)
+            onToken(token)
+          },
           'expired-callback': () => onToken(''),
-          'error-callback': () => onToken(''),
+          'error-callback': () => {
+            setErreur(true)
+            onToken('')
+          },
         })
       })
-      .catch(() => onToken(''))
+      .catch(() => {
+        setErreur(true)
+        onToken('')
+      })
 
     return () => {
       annule = true
       if (widgetId && window.turnstile) window.turnstile.remove(widgetId)
     }
-  }, [onToken])
+  }, [onToken, essai])
 
   if (!SITE_KEY) return null
-  return <div ref={containerRef} />
+  return (
+    <div>
+      <div ref={containerRef} />
+      {erreur && (
+        <p className="hint" role="alert" style={{ margin: '10px 0 0' }}>
+          La vérification n&apos;a pas abouti.{' '}
+          <button
+            type="button"
+            style={{ textDecoration: 'underline', color: 'var(--mc-gold-ink)', background: 'none', border: 0, padding: 0, cursor: 'pointer', font: 'inherit' }}
+            onClick={() => {
+              setErreur(false)
+              setEssai((n) => n + 1)
+            }}
+          >
+            Réessayer
+          </button>
+          . Si le problème persiste, désactivez les protections de suivi de votre navigateur pour ce site ou essayez un autre navigateur.
+        </p>
+      )}
+    </div>
+  )
 }
 
 export const ANTI_ROBOT_ACTIF = Boolean(SITE_KEY)
