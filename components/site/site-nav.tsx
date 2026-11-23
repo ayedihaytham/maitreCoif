@@ -1,7 +1,7 @@
 'use client'
 
 import type { CSSProperties } from 'react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LayoutDashboard, Menu, ShoppingBag, X } from 'lucide-react'
@@ -56,22 +56,10 @@ export function SiteNav({ horaires = [], boutique = true }: { horaires?: { jours
   }, [])
   const [defile, setDefile] = useState(false)
   const [ouvert, setOuvert] = useState(false)
-  const entete = useRef<HTMLElement>(null)
 
-  // Transparent sur le plan d'ouverture, plein dès qu'on défile ; la ligne dorée
-  // du bas de la barre indique la progression dans la page.
+  // Transparent sur le plan d'ouverture, plein dès qu'on défile.
   useEffect(() => {
-    let attente = false
-    const onScroll = () => {
-      setDefile(window.scrollY > 40)
-      if (attente) return
-      attente = true
-      requestAnimationFrame(() => {
-        const course = document.documentElement.scrollHeight - window.innerHeight
-        entete.current?.style.setProperty('--sp', String(course > 0 ? Math.min(1, window.scrollY / course) : 0))
-        attente = false
-      })
-    }
+    const onScroll = () => setDefile(window.scrollY > 40)
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onScroll)
@@ -119,7 +107,7 @@ export function SiteNav({ horaires = [], boutique = true }: { horaires?: { jours
 
   return (
     <>
-      <header ref={entete} className={cn('nav', (defile || ouvert) && 'solid')}>
+      <header className={cn('nav', (defile || ouvert) && 'solid')}>
         <div className="nav-left">
           <Link className="logo" href="/" aria-label="Maitre Coif, accueil" onClick={(e) => versLeHaut(e, "/")}>
             <ThemeLogo priority />
@@ -165,7 +153,6 @@ export function SiteNav({ horaires = [], boutique = true }: { horaires?: { jours
             {ouvert ? <X className="size-6" aria-hidden="true" /> : <Menu className="size-6" aria-hidden="true" />}
           </button>
         </div>
-        <i className="nav-progress" aria-hidden="true" />
       </header>
 
       {/* Menu mobile plein écran */}

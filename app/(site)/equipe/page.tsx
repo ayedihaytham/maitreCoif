@@ -5,6 +5,7 @@ import { ArrowRight, Star } from 'lucide-react'
 import { Cinema } from '@/components/site/cinema'
 import { PageHero } from '@/components/site/page-hero'
 import { PortraitRond } from '@/components/site/portrait'
+import { Projecteur, ProjecteurDefs } from '@/components/site/projecteur'
 import { Reveal } from '@/components/site/reveal'
 import { attribuerPortraits } from '@/lib/portraits'
 import { prisma } from '@/lib/prisma'
@@ -64,9 +65,12 @@ export default async function EquipePage() {
           {equipe.length === 0 ? (
             <p className="empty-state">L&apos;équipe sera bientôt annoncée.</p>
           ) : (
-            <div className="h-cast-grid wide">
+            <>
+            <ProjecteurDefs />
+            <div className="h-cast-grid wide pjs">
               {equipe.map((m, i) => (
                 <Reveal as="article" key={m.id} className="h-cs" delay={i % 3}>
+                  <Projecteur />
                   <div className="tag">
                     <b>{m.role}</b>
                   </div>
@@ -94,6 +98,7 @@ export default async function EquipePage() {
                 </Reveal>
               ))}
             </div>
+            </>
           )}
         </div>
       </section>

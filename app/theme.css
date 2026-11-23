@@ -66,7 +66,7 @@
 
 /* ───── Bouton de bascule de thème ───── */
 .theme-toggle{display:inline-flex;align-items:center;justify-content:center;flex:none;width:40px;height:40px;padding:0;background:transparent;border:1px solid var(--mc-line);border-radius:2px;color:var(--mc-soft);cursor:pointer;transition:color .2s,border-color .2s,background .2s}
-.theme-toggle:hover{color:var(--mc-gold-ink);border-color:var(--mc-line-gold)}
+@media (hover:hover) and (min-width:761px){.theme-toggle:hover{color:var(--mc-gold-ink);border-color:var(--mc-line-gold)}}
 .theme-toggle:focus-visible{outline:2px solid #d4af37;outline-offset:3px}
 .theme-toggle svg{width:17px;height:17px}
 .theme-toggle .i-moon{display:none}
@@ -90,9 +90,10 @@
 .mc .menu-foot .theme-toggle{margin-bottom:18px}
 
 /* ───── Thème clair : ombres plus douces, barre de lecture en pastille claire ───── */
-:root[data-theme="light"] .mc :is(.tk,.hz,.res,.h-card,.h-card.on,.fr,.fr:hover,.cc,.cc:hover,.ph-small,.card-form,.scanner,.h-next,.mbar){box-shadow:0 14px 38px rgba(27,25,21,.12)}
+:root[data-theme="light"] .mc :is(.tk,.hz,.res,.h-card,.h-card.on,.fr,.cc,.ph-small,.card-form,.scanner,.h-next,.mbar){box-shadow:0 14px 38px rgba(27,25,21,.12)}
+@media (hover:hover) and (min-width:761px){:root[data-theme="light"] .mc :is(.fr:hover,.cc:hover){box-shadow:0 14px 38px rgba(27,25,21,.12)}}
 :root[data-theme="light"] .mc .pt{box-shadow:0 10px 26px rgba(27,25,21,.18)}
-:root[data-theme="light"] .mc .h-cs:hover .pt{box-shadow:0 12px 34px rgba(27,25,21,.22)}
+@media (hover:hover) and (min-width:761px){:root[data-theme="light"] .mc .h-cs:hover .pt{box-shadow:0 12px 34px rgba(27,25,21,.22)}}
 :root[data-theme="light"] .mc .h-card .flare{opacity:.4}
 :root[data-theme="light"] .ad :is(.pl-panel,.ad-card,.bg-anthracite){box-shadow:0 10px 30px rgba(27,25,21,.1)}
 :root[data-theme="light"] [data-slot="dialog-content"]{box-shadow:0 30px 80px rgba(27,25,21,.28)}

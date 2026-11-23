@@ -113,12 +113,12 @@
 
 /* ───── Réservations de produits ───── */
 .bo-cmd{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1.6fr) 150px auto;gap:18px 22px;align-items:center;padding:18px 22px;transition:border-color .25s}
-.bo-cmd:hover{border-color:var(--a-line-gold)}
+@media (hover:hover) and (min-width:761px){.bo-cmd:hover{border-color:var(--a-line-gold)}}
 .bo-cmd.off{opacity:.62}
 .bo-cmd-who{display:grid;gap:4px;min-width:0}
 .bo-cmd-who b{font-size:15px}
 .bo-cmd-who a{display:inline-flex;align-items:center;gap:8px;min-width:0;font-size:12.5px;color:var(--a-muted);overflow-wrap:anywhere}
-.bo-cmd-who a:hover{color:var(--a-gold-ink)}
+@media (hover:hover) and (min-width:761px){.bo-cmd-who a:hover{color:var(--a-gold-ink)}}
 .bo-cmd-who svg{flex:none;width:13px;height:13px}
 .bo-cmd-art ul{display:grid;gap:6px;margin:0;padding:0;list-style:none;font-size:14px;line-height:1.5}
 .bo-cmd-art li em{font-style:normal;color:var(--a-gold-ink)}

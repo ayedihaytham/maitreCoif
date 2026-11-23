@@ -28,10 +28,14 @@
 .mc .h-mark::before{content:attr(data-nom);position:absolute;left:50%;bottom:calc(100% + 6px);transform:translate(-50%,6px);padding:7px 11px;white-space:nowrap;font:600 10px/1 var(--mc-sans);letter-spacing:.18em;text-transform:uppercase;color:var(--mc-on-gold,#0a0a0a);background:var(--mc-gold);border-radius:2px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
 .mc .h-mark[data-bord="g"]::before{left:0;transform:translate(-15px,6px)}
 .mc .h-mark[data-bord="d"]::before{left:auto;right:0;transform:translate(15px,6px)}
-.mc .h-mark:hover::before,.mc .h-mark:focus-visible::before,.mc .h-mark.ouvert::before{opacity:1;transform:translate(-50%,0)}
-.mc .h-mark[data-bord="g"]:hover::before,.mc .h-mark[data-bord="g"]:focus-visible::before,.mc .h-mark[data-bord="g"].ouvert::before{transform:translate(-15px,0)}
-.mc .h-mark[data-bord="d"]:hover::before,.mc .h-mark[data-bord="d"]:focus-visible::before,.mc .h-mark[data-bord="d"].ouvert::before{transform:translate(15px,0)}
-.mc .h-mark:hover::after,.mc .h-mark:focus-visible::after,.mc .h-mark.ouvert::after{height:18px;margin-top:-9px;background:var(--mc-gold)}
+.mc .h-mark:focus-visible::before,.mc .h-mark.ouvert::before{opacity:1;transform:translate(-50%,0)}
+@media (hover:hover) and (min-width:761px){.mc .h-mark:hover::before{opacity:1;transform:translate(-50%,0)}}
+.mc .h-mark[data-bord="g"]:focus-visible::before,.mc .h-mark[data-bord="g"].ouvert::before{transform:translate(-15px,0)}
+@media (hover:hover) and (min-width:761px){.mc .h-mark[data-bord="g"]:hover::before{transform:translate(-15px,0)}}
+.mc .h-mark[data-bord="d"]:focus-visible::before,.mc .h-mark[data-bord="d"].ouvert::before{transform:translate(15px,0)}
+@media (hover:hover) and (min-width:761px){.mc .h-mark[data-bord="d"]:hover::before{transform:translate(15px,0)}}
+.mc .h-mark:focus-visible::after,.mc .h-mark.ouvert::after{height:18px;margin-top:-9px;background:var(--mc-gold)}
+@media (hover:hover) and (min-width:761px){.mc .h-mark:hover::after{height:18px;margin-top:-9px;background:var(--mc-gold)}}
 .mc .h-hud-tc{text-align:right;color:var(--mc-ivory);font-variant-numeric:tabular-nums;letter-spacing:.16em}
 @media (max-width:700px){
   .mc .h-hud{letter-spacing:.12em;font-size:9.5px}
@@ -160,11 +164,11 @@
 .mc .h-cs:nth-child(3){transform:translate3d(0,calc(var(--fi,0) * 11vh),0)}
 .mc .h-cs:nth-child(4){transform:translate3d(0,calc(var(--fi,0) * -6vh),0)}
 .mc .h-cs::before{content:"";position:absolute;left:50%;top:-90px;width:130%;height:480px;transform:translateX(-50%);clip-path:polygon(44% 0,56% 0,100% 100%,0 100%);background:linear-gradient(180deg,rgba(255,243,214,.3),rgba(255,243,214,.05) 60%,rgba(255,243,214,0));filter:blur(14px);opacity:.55;transition:opacity .5s;pointer-events:none}
-.mc .h-cs:hover::before{opacity:1}
+@media (hover:hover) and (min-width:761px){.mc .h-cs:hover::before{opacity:1}}
 .mc .h-cs .tag{position:relative;margin-bottom:22px;font:600 10px/1 var(--mc-sans);letter-spacing:.3em;text-transform:uppercase;color:var(--mc-muted)}
 .mc .h-cs .tag b{color:var(--mc-gold-ink);font-weight:600}
 .mc .h-cs .pt{--d:min(250px,26vw);filter:grayscale(1) contrast(1.12) brightness(.92);transition:filter .6s,transform .6s var(--h-ease),box-shadow .6s}
-.mc .h-cs:hover .pt{filter:none;transform:scale(1.04);box-shadow:0 0 0 calc(var(--d) * .035) rgba(212,175,55,.18),0 0 90px rgba(255,243,214,.22)}
+@media (hover:hover) and (min-width:761px){.mc .h-cs:hover .pt{filter:none;transform:scale(1.04);box-shadow:0 0 0 calc(var(--d) * .035) rgba(212,175,55,.18),0 0 90px rgba(255,243,214,.22)}}
 .mc .h-cs h3{transition:color .5s}
 /* ───── Projecteurs au-dessus des coiffeurs ─────
    Chaque coiffeur est éclairé par un projecteur de scène suspendu à un rail. Le cône de lumière (::before) part de la lentille.
@@ -182,8 +186,10 @@
 .mc .h-cast-grid.pjs .h-cs .pj-tige{display:block;position:absolute;left:50%;top:-182px;width:6px;height:calc(11vh + 8px + 28px + var(--off,0px));transform:translate(-50%,-100%);background:linear-gradient(90deg,#2c2a26,#6b665b,#2a2824);z-index:1;pointer-events:none}
 .mc .h-cs .pj-allume,.mc .h-cs .pj-halo{opacity:0;transition:opacity .5s}
 .mc .h-cs .pj-eteint{transition:opacity .5s}
-.mc .h-cs:hover .pj-allume,.mc .h-cs:hover .pj-halo,.mc .h-cs:focus-within .pj-allume,.mc .h-cs:focus-within .pj-halo,.mc .h-cs.lit .pj-allume,.mc .h-cs.lit .pj-halo{opacity:1}
-.mc .h-cs:hover .pj-eteint,.mc .h-cs:focus-within .pj-eteint,.mc .h-cs.lit .pj-eteint{opacity:0}
+.mc .h-cs:focus-within .pj-allume,.mc .h-cs:focus-within .pj-halo,.mc .h-cs.lit .pj-allume,.mc .h-cs.lit .pj-halo{opacity:1}
+@media (hover:hover) and (min-width:761px){.mc .h-cs:hover .pj-allume,.mc .h-cs:hover .pj-halo{opacity:1}}
+.mc .h-cs:focus-within .pj-eteint,.mc .h-cs.lit .pj-eteint{opacity:0}
+@media (hover:hover) and (min-width:761px){.mc .h-cs:hover .pj-eteint{opacity:0}}
 /* Sans survol possible (téléphone, tablette) : le coiffeur qui arrive au centre de l'écran est éclairé tout seul, comme
    sous un projecteur ; les autres restent dans la pénombre. La classe .lit est posée par le script (components/site/cinema.tsx). */
 @media (hover:none),(max-width:1000px){
@@ -230,6 +236,10 @@
 
 /* ───────────────────────── Plan 6 · Fin (le clap) ───────────────────────── */
 .mc .h-end{position:relative;min-height:100svh;overflow:hidden;display:flex;align-items:center;justify-content:center;text-align:center;background:radial-gradient(70% 90% at 50% 118%,rgba(212,175,55,.34),rgb(var(--mc-bg-rgb) / 0) 70%),var(--mc-ink);border-top:1px solid rgba(212,175,55,.25);padding:clamp(90px,12vh,130px) 0 clamp(110px,14vh,160px)}
+/* Fond de la section finale : « éventail Art déco ». Des rayons et des arcs dorés très fins partent du bas de la section et
+   s'estompent avant d'atteindre le texte (masque elliptique centré sous la section). Fixe, sans image, sans animation. */
+.mc .h-end::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:repeating-conic-gradient(from -90deg at 50% 108%,rgba(212,175,55,.2) 0 .35deg,transparent .35deg 6deg),repeating-radial-gradient(circle at 50% 108%,rgba(212,175,55,.26) 0 1px,transparent 1px 74px);-webkit-mask-image:radial-gradient(85% 100% at 50% 108%,#000 16%,transparent 78%);mask-image:radial-gradient(85% 100% at 50% 108%,#000 16%,transparent 78%)}
+.mc .h-end .wrap{position:relative;z-index:2}
 .mc .h-clap{position:relative;width:min(660px,90vw);margin:0 auto;transform:rotate(-1.6deg);filter:drop-shadow(0 40px 70px rgba(0,0,0,.7))}
 .mc .h-clap-arm,.mc .h-clap-base{height:clamp(40px,6.4vw,58px);border:2px solid var(--mc-ivory);background:repeating-linear-gradient(115deg,var(--mc-ivory) 0 46px,var(--mc-ink) 46px 92px)}
 .mc .h-clap-arm{position:relative;z-index:2;transform-origin:0 100%;transform:rotate(-24deg) translateY(-4px)}
@@ -258,10 +268,13 @@
 .mc .page-h1{animation:mc-focus 1.4s var(--h-ease) both}
 @keyframes mc-focus{from{opacity:0;filter:blur(14px);letter-spacing:.04em;transform:translateY(24px)}to{opacity:1;filter:none;letter-spacing:-.005em;transform:none}}
 /* mise au point sur la ligne survolée : les autres passent au second plan */
-.mc .s-list:hover .s-row:not(:hover){opacity:.38;filter:blur(1.5px)}
+/* La ligne survolée ressort, les autres s'estompent : seulement quand une ligne est réellement survolée (pas quand la souris est sur
+   un titre de catégorie ou entre deux lignes), et seulement sur un appareil à souris (au toucher, « survol » reste collé après un appui). */
+@media (hover:hover){
+@media (hover:hover) and (min-width:761px){.mc .s-list:has(.s-row:hover) .s-row:not(:hover){opacity:.38;filter:blur(1.5px)}}}
 .mc .s-row{transition:background .3s,padding .3s,opacity .35s,filter .35s}
 .mc .t-grid .cc::after{content:"";position:absolute;left:50%;top:-70px;width:120%;height:340px;transform:translateX(-50%);clip-path:polygon(44% 0,56% 0,100% 100%,0 100%);background:linear-gradient(180deg,rgba(255,243,214,.22),rgba(255,243,214,0));filter:blur(12px);opacity:.5;transition:opacity .5s;pointer-events:none}
-.mc .t-grid .cc:hover::after{opacity:1}
+@media (hover:hover) and (min-width:761px){.mc .t-grid .cc:hover::after{opacity:1}}
 
 /* ───────────────────────── Mouvement réduit ───────────────────────── */
 @media (prefers-reduced-motion:reduce){
